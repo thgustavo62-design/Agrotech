@@ -1,0 +1,27 @@
+name: Backup diário
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 03h em Brasília (UTC-3)
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Dump do banco
+        run: supabase db dump --db-url "$DB_URL" -f backup.sql
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+      - name: Guardar artefato (30 dias)
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ github.run_id }}
+          path: backup.sql
+          retention-days: 30

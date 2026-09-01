@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "@agrotech/agro-core": "../../packages/agro-core/src/index.ts",
+    "@agrotech/agro-core/parsers": "../../packages/agro-core/src/parsers/index.ts",
+    "std/": "https://deno.land/std@0.224.0/",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+  },
+  "lint": { "rules": { "tags": ["recommended"] } }
+}

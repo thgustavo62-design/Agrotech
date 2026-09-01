@@ -1,0 +1,56 @@
+/* Tokens herdados do protótipo (agrotech.html). A migração de UI vem por tela;
+   estes são os que a régua e o perfil da CTC precisam. */
+:root {
+  --papel: #eef1ec;
+  --papel-2: #fff;
+  --papel-3: #f7f9f5;
+  --tinta: #111a14;
+  --grafite: #59635c;
+  --grafite-2: #8b948c;
+  --linha: #dce1d8;
+  --linha-forte: #c4ccbf;
+  --folha: #0f5c43;
+
+  --c-mb: #b4342a;
+  --c-b: #d9762a;
+  --c-m: #dfa92a;
+  --c-bom: #4b963e;
+  --c-mbom: #1b7355;
+
+  --ca: #2e7d5b;
+  --mg: #7fa83b;
+  --k: #dfa92a;
+  --al: #b4342a;
+  --hal: #6b5b4b;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--papel);
+  color: var(--tinta);
+  font: 15px/1.5 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--folha); }
+
+.regua-linha { display: grid; grid-template-columns: 150px 70px 1fr; gap: 14px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--linha); }
+.regua-nome { font-size: 13px; font-weight: 600; }
+.regua-nome small { display: block; font-weight: 400; color: var(--grafite-2); font-size: 11px; }
+.regua-valor { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; text-align: right; }
+.regua { position: relative; height: 30px; }
+.faixas { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin-top: 7px; gap: 2px; }
+.faixas i { flex: 1; border-radius: 2px; }
+.marca-valor { position: absolute; top: 1px; width: 2px; height: 22px; background: var(--tinta); border-radius: 2px; }
+.regua-classe { font-size: 11px; font-weight: 700; }
+
+.perfil { display: flex; height: 52px; border-radius: 8px; overflow: hidden; border: 1px solid var(--linha-forte); }
+.perfil div { display: flex; align-items: center; justify-content: center; color: #fff; font: 700 11.5px 'IBM Plex Mono', monospace; text-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+.legenda { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 11.5px; color: var(--grafite); }
+.legenda span { display: flex; align-items: center; gap: 6px; }
+.legenda i { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+.nota { font-size: 12px; color: var(--grafite-2); }
+
+.tela-login { max-width: 380px; margin: 12vh auto; padding: 28px; background: var(--papel-2); border: 1px solid var(--linha); border-radius: 12px; }
+.tela-login h1 { font-size: 22px; margin: 0 0 4px; }
+.tela-login p { color: var(--grafite); font-size: 13px; margin: 0 0 20px; }

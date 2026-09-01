@@ -1,0 +1,1416 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AgroTech — módulo do agrônomo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --papel:#EEF1EC;
+  --papel-2:#FFFFFF;
+  --papel-3:#F7F9F5;
+  --tinta:#111A14;
+  --grafite:#59635C;
+  --grafite-2:#8B948C;
+  --linha:#DCE1D8;
+  --linha-forte:#C4CCBF;
+  --folha:#0F5C43;
+  --folha-clara:#E2EFE7;
+  --calcario:#F6F1E4;
+
+  /* escala de interpretacao - derivada da fita de pH */
+  --c-mb:#B4342A;
+  --c-b:#D9762A;
+  --c-m:#DFA92A;
+  --c-bom:#4B963E;
+  --c-mbom:#1B7355;
+
+  --ca:#2E7D5B; --mg:#7FA83B; --k:#DFA92A; --na:#9AA0A6; --al:#B4342A; --hal:#6B5B4B;
+
+  --r:12px;
+  --r-p:8px;
+  --sombra:0 1px 2px rgba(17,26,20,.04), 0 8px 24px -18px rgba(17,26,20,.45);
+  --sombra-alta:0 2px 4px rgba(17,26,20,.05), 0 18px 40px -24px rgba(17,26,20,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papel);
+  color:var(--tinta);
+  font-family:'Archivo',system-ui,-apple-system,Segoe UI,sans-serif;
+  font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.025em;line-height:1.12}
+h1{font-size:28px}
+h2{font-size:19px}
+h3{font-size:15px}
+a{color:var(--folha)}
+button{font-family:inherit}
+::selection{background:var(--folha);color:#fff}
+
+/* ---------- estrutura ---------- */
+.topo{
+  position:sticky;top:0;z-index:40;
+  background:linear-gradient(180deg,#152019 0%,#111A14 100%);
+  color:#EAEFE9;
+  display:flex;align-items:center;gap:14px;
+  padding:11px 20px;
+  border-bottom:1px solid #0a110c;
+}
+.marca{display:flex;align-items:baseline;gap:9px;font-weight:800;letter-spacing:-.035em;font-size:19px}
+.marca::before{
+  content:"";width:9px;height:9px;border-radius:2px;background:#4FB286;
+  transform:rotate(45deg);margin-right:1px
+}
+.marca span{color:#7FC6A3;font-weight:500;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+.topo .quem{margin-left:auto;text-align:right;font-size:11.5px;color:#98A39B;line-height:1.35}
+.topo .quem b{display:block;color:#EAEFE9;font-size:13px;font-weight:600}
+
+.abas{
+  position:sticky;top:45px;z-index:35;
+  background:rgba(238,241,236,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--linha);
+  display:flex;gap:4px;padding:8px 14px;overflow-x:auto;scrollbar-width:none;
+}
+.abas::-webkit-scrollbar{display:none}
+.aba{
+  border:1px solid transparent;background:none;padding:7px 13px;cursor:pointer;border-radius:99px;
+  font-size:13px;font-weight:600;color:var(--grafite);white-space:nowrap;
+}
+.aba:hover{color:var(--tinta);background:rgba(17,26,20,.05)}
+.aba[aria-current="true"]{color:#fff;background:var(--folha);border-color:var(--folha)}
+main{max-width:1100px;margin:0 auto;padding:26px 18px 90px}
+
+.cabecalho-vista{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.cabecalho-vista p{margin:5px 0 0;color:var(--grafite);font-size:13.5px;max-width:60ch}
+.cabecalho-vista .acoes{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.olho{
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--folha);
+  font-weight:700;display:block;margin-bottom:5px
+}
+
+/* ---------- componentes ---------- */
+.cartao{background:var(--papel-2);border:1px solid var(--linha);border-radius:var(--r);padding:18px;box-shadow:var(--sombra)}
+.cartao+.cartao{margin-top:14px}
+.grade{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:820px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+label{display:block;font-size:11px;font-weight:700;color:var(--grafite);margin-bottom:5px;letter-spacing:.02em}
+label .un{font-weight:400;text-transform:none;letter-spacing:0;color:var(--grafite-2)}
+input,select,textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--linha-forte);border-radius:var(--r-p);
+  background:#fff;color:var(--tinta);font-family:inherit;font-size:14px;
+}
+input.mono,td input{font-family:'IBM Plex Mono',monospace}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--folha);outline-offset:1px;border-color:var(--folha)}
+input::placeholder{color:var(--grafite-2)}
+textarea{min-height:82px;resize:vertical}
+
+.btn{
+  border:1px solid var(--tinta);background:var(--tinta);color:#fff;
+  padding:9px 15px;border-radius:var(--r-p);font-size:13px;font-weight:600;cursor:pointer;
+}
+.btn:hover{background:#000}
+.btn.sec{background:#fff;color:var(--tinta);border-color:var(--linha-forte)}
+.btn.sec:hover{border-color:var(--tinta)}
+.btn.verde{background:var(--folha);border-color:var(--folha)}
+.btn.verde:hover{background:#0b4834}
+.btn.mini{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn.perigo{color:var(--c-mb);border-color:var(--linha-forte);background:#fff}
+.btn.perigo:hover{border-color:var(--c-mb);background:#FDF3F2}
+.btn:focus-visible,.aba:focus-visible{outline:2px solid var(--folha);outline-offset:2px}
+
+.lista{display:flex;flex-direction:column;gap:8px}
+.item{
+  display:flex;align-items:center;gap:12px;background:var(--papel-2);
+  border:1px solid var(--linha);border-radius:var(--r);padding:13px 15px;
+}
+.item:hover{border-color:var(--linha-forte)}
+.item .cresce{flex:1;min-width:0}
+.item h3{font-size:14.5px}
+.item small{color:var(--grafite);font-size:12px}
+.vazio{
+  border:1px dashed var(--linha-forte);border-radius:var(--r);padding:32px 22px;text-align:center;
+  color:var(--grafite);font-size:13.5px;background:var(--papel-3)
+}
+.vazio b{display:block;color:var(--tinta);font-size:15.5px;margin-bottom:5px}
+
+.tag{
+  display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;
+  background:var(--folha-clara);color:var(--folha);white-space:nowrap;letter-spacing:.01em
+}
+.tag.cinza{background:#EAEDE7;color:var(--grafite)}
+.tag.alerta{background:#FBEEDF;color:#8F5410}
+.tag.ruim{background:#FAE6E3;color:#8E2419}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grafite);padding:8px;border-bottom:1px solid var(--linha-forte);font-weight:700}
+td{padding:8px;border-bottom:1px solid var(--linha)}
+tbody tr:hover td,table tr:hover td{background:var(--papel-3)}
+td.num,th.num{text-align:right;font-family:'IBM Plex Mono',monospace}
+.rolagem{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---------- regua de interpretacao (elemento-assinatura) ---------- */
+.regua-linha{display:grid;grid-template-columns:150px 70px 1fr;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--linha)}
+.regua-linha:last-child{border-bottom:0}
+.regua-nome{font-size:13px;font-weight:600;line-height:1.25}
+.regua-nome small{display:block;font-weight:400;color:var(--grafite-2);font-size:11px;font-family:'IBM Plex Mono',monospace}
+.regua-valor{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;text-align:right}
+.regua{position:relative;height:30px}
+.faixas{display:flex;height:10px;border-radius:99px;overflow:hidden;margin-top:7px;gap:2px}
+.faixas i{flex:1;border-radius:2px}
+.faixas i:first-child{border-radius:99px 2px 2px 99px}
+.faixas i:last-child{border-radius:2px 99px 99px 2px}
+.marca-valor{
+  position:absolute;top:1px;width:2px;height:22px;background:var(--tinta);
+  transform:translateX(-1px);border-radius:2px
+}
+.marca-valor::after{
+  content:"";position:absolute;top:-2px;left:-3.5px;width:9px;height:9px;
+  background:var(--tinta);border-radius:99px;border:2px solid var(--papel-2)
+}
+.regua-classe{font-size:11px;font-weight:700;letter-spacing:.02em}
+@media(max-width:640px){
+  .regua-linha{grid-template-columns:1fr 76px;grid-template-areas:"nome valor" "regua regua";gap:6px 10px}
+  .regua-nome{grid-area:nome}.regua-valor{grid-area:valor}.regua{grid-area:regua}
+}
+
+/* ---------- perfil da CTC ---------- */
+.perfil{display:flex;height:52px;border-radius:var(--r-p);overflow:hidden;border:1px solid var(--linha-forte)}
+.perfil div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.legenda{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:11.5px;color:var(--grafite)}
+.legenda span{display:flex;align-items:center;gap:6px}
+.legenda i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+
+.metrica{background:var(--papel-2);border:1px solid var(--linha);border-radius:var(--r);padding:14px 15px;position:relative;overflow:hidden}
+.metrica::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--folha);opacity:.5}
+.metrica b{display:block;font-family:'IBM Plex Mono',monospace;font-size:25px;font-weight:600;letter-spacing:-.03em;margin:3px 0 1px}
+.metrica span{font-size:10px;color:var(--grafite);text-transform:uppercase;letter-spacing:.11em;font-weight:700}
+.metrica em{font-style:normal;font-size:12px;color:var(--grafite-2)}
+
+.aviso{
+  border:1px solid #E8D9B0;border-left:3px solid #C79A28;background:#FCF7EA;padding:12px 14px;
+  border-radius:0 var(--r-p) var(--r-p) 0;font-size:12.5px;color:#5A4614;line-height:1.5
+}
+.nota{font-size:12px;color:var(--grafite-2);line-height:1.45}
+
+/* ---------- modal ---------- */
+.fundo{position:fixed;inset:0;background:rgba(17,26,20,.5);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;z-index:60;padding:0}
+@media(min-width:640px){.fundo{align-items:center;padding:26px}}
+.modal{
+  background:var(--papel);width:100%;max-width:760px;max-height:92vh;overflow:auto;
+  border-radius:18px 18px 0 0;padding:20px;box-shadow:var(--sombra-alta)
+}
+@media(min-width:640px){.modal{border-radius:var(--r)}}
+.modal.estreito{max-width:420px}
+.modal-topo{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.modal-topo .btn{margin-left:auto}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  background:var(--tinta);color:#fff;padding:11px 18px;border-radius:99px;font-size:13px;font-weight:500;
+  z-index:80;box-shadow:0 14px 34px -12px rgba(0,0,0,.55)
+}
+
+/* ---------- laudo ---------- */
+.folha-a4{background:#fff;border:1px solid var(--linha);border-radius:var(--r);padding:34px;max-width:840px;margin:0 auto}
+.folha-a4 h2{border-bottom:2px solid var(--tinta);padding-bottom:6px;margin:24px 0 11px;font-size:16px}
+.folha-a4 .cabecalho{display:flex;justify-content:space-between;gap:20px;border-bottom:3px solid var(--folha);padding-bottom:13px}
+.assina{margin-top:50px;text-align:center;font-size:12.5px}
+.assina hr{border:0;border-top:1px solid var(--tinta);width:290px;margin:0 auto 6px}
+
+@page{size:A4;margin:16mm 14mm}
+@media print{
+  .topo,.abas,.cabecalho-vista .acoes,.nao-imprime{display:none!important}
+  body{background:#fff;font-size:11pt}
+  main{padding:0;max-width:none}
+  .folha-a4{border:0;padding:0;max-width:none;box-shadow:none}
+  .cartao,table,.regua-linha{break-inside:avoid}
+  a[href]::after{content:""}
+}
+@media (prefers-reduced-motion:no-preference){
+  .item,.btn,.aba{transition:border-color .15s ease,background .15s ease,color .15s ease}
+  .modal{animation:sobe .18s ease-out}
+  @keyframes sobe{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+}
+</style>
+
+<header class="topo">
+  <div class="marca">AgroTech <span>Assistência técnica</span></div>
+  <div class="quem" id="quem"></div>
+</header>
+
+<nav class="abas" id="abas"></nav>
+<main id="vista"></main>
+<div id="modal"></div>
+
+<script>
+/* ============================================================
+   AgroTech — módulo de campo do agrônomo
+   Armazenamento: window.storage (artifact) com queda para localStorage
+   ============================================================ */
+
+const Store = {
+  chave:'agrotech.v1',
+  async ler(){
+    try{ if(window.storage){ const r = await window.storage.get(this.chave); if(r&&r.value) return JSON.parse(r.value); } }catch(e){}
+    try{ const v = localStorage.getItem(this.chave); if(v) return JSON.parse(v); }catch(e){}
+    return null;
+  },
+  async gravar(d){
+    const s = JSON.stringify(d);
+    try{ if(window.storage){ await window.storage.set(this.chave,s); return; } }catch(e){}
+    try{ localStorage.setItem(this.chave,s); }catch(e){}
+  }
+};
+
+const id = () => (crypto.randomUUID ? crypto.randomUUID() : 'x'+Date.now()+Math.random().toString(16).slice(2));
+const n = v => { const x = parseFloat(String(v).replace(',','.')); return isFinite(x)?x:0; };
+const f = (v,c=1) => (isFinite(v)?v:0).toLocaleString('pt-BR',{minimumFractionDigits:c,maximumFractionDigits:c});
+const hoje = () => new Date().toISOString().slice(0,10);
+const dataBR = s => s ? s.split('-').reverse().join('/') : '—';
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ============================================================
+   TABELAS DE REFERÊNCIA (editáveis na aba Tabelas)
+   Base: Alvarez V. et al. — 5ª Aproximação/MG, com ajustes para
+   as culturas do Espírito Santo. Calibre com a sua base regional.
+   ============================================================ */
+
+const PADRAO = {
+  // faixas: 4 quebras => 5 classes
+  faixas:{
+    pH:      {rot:'pH em água',      un:'',            q:[4.5,5.4,6.0,7.0], nomes:['Ac. muito elevada','Ac. elevada','Ac. média','Adequado','Alcalino'], cores:['mb','b','m','mbom','m']},
+    MO:      {rot:'Matéria orgânica',un:'dag/kg',      q:[0.7,2.0,4.0,7.0]},
+    P:       {rot:'Fósforo (Mehlich-1)',un:'mg/dm³',   q:null},         // depende da argila
+    K:       {rot:'Potássio',        un:'mg/dm³',      q:[15,40,70,120]},
+    Ca:      {rot:'Cálcio',          un:'cmolc/dm³',   q:[0.4,1.2,2.4,4.0]},
+    Mg:      {rot:'Magnésio',        un:'cmolc/dm³',   q:[0.15,0.45,0.90,1.50]},
+    Al:      {rot:'Alumínio trocável',un:'cmolc/dm³',  q:[0.2,0.5,1.0,2.0], inv:true},
+    HAl:     {rot:'Acidez potencial (H+Al)',un:'cmolc/dm³',q:[1.0,2.5,5.0,9.0], inv:true},
+    S:       {rot:'Enxofre',         un:'mg/dm³',      q:[2.5,5.0,10.0,15.0]},
+    B:       {rot:'Boro',            un:'mg/dm³',      q:[0.15,0.35,0.60,0.90]},
+    Zn:      {rot:'Zinco',           un:'mg/dm³',      q:[0.4,0.9,1.5,2.2]},
+    Cu:      {rot:'Cobre',           un:'mg/dm³',      q:[0.3,0.7,1.2,1.8]},
+    Mn:      {rot:'Manganês',        un:'mg/dm³',      q:[2,5,8,12]},
+    Fe:      {rot:'Ferro',           un:'mg/dm³',      q:[8,18,30,45]},
+    SB:      {rot:'Soma de bases',   un:'cmolc/dm³',   q:[0.6,1.8,3.6,6.0]},
+    t:       {rot:'CTC efetiva (t)', un:'cmolc/dm³',   q:[0.8,2.3,4.6,8.0]},
+    T:       {rot:'CTC a pH 7 (T)',  un:'cmolc/dm³',   q:[1.6,4.3,8.6,15.0]},
+    V:       {rot:'Saturação por bases (V)',un:'%',    q:[20,40,60,80]},
+    m:       {rot:'Saturação por alumínio (m)',un:'%', q:[15,30,50,75], inv:true}
+  },
+  // fósforo por classe de argila
+  fosforo:[
+    {argila:'60–100%', min:60, q:[2.7,5.4,8.0,12.0]},
+    {argila:'35–60%',  min:35, q:[4.0,8.0,12.0,18.0]},
+    {argila:'15–35%',  min:15, q:[6.6,12.0,20.0,30.0]},
+    {argila:'0–15%',   min:0,  q:[10.0,20.0,30.0,45.0]}
+  ],
+  culturas:{
+    'cafe-conilon':{nome:'Café conilon – produção', un:'sc/ha (60 kg benef.)', ref:60, V2:60, m_max:20,
+      N:350, P:[80,60,45,30,20], K:[320,280,240,180,120],
+      parc:['Set–out (após 1ª chuva) – 30% N, todo o P, 30% K','Nov–dez – 40% N, 40% K','Jan–fev – 30% N, 30% K'],
+      obs:'Conilon responde bem a K; manter relação K/Mg equilibrada. Boro em cobertura ou foliar na florada.'},
+    'cafe-arabica':{nome:'Café arábica – produção', un:'sc/ha (60 kg benef.)', ref:30, V2:60, m_max:20,
+      N:300, P:[70,50,40,25,15], K:[280,240,200,150,100],
+      parc:['Out–nov – 1/3 N, todo o P, 1/3 K','Dez–jan – 1/3 N, 1/3 K','Fev–mar – 1/3 N, 1/3 K'],
+      obs:'Aplicar na projeção da saia. Zn e B foliares no pré-florada e chumbinho.'},
+    'pimenta-do-reino':{nome:'Pimenta-do-reino', un:'t/ha (grão seco)', ref:3, V2:60, m_max:15,
+      N:200, P:[120,90,70,50,30], K:[220,180,150,120,80],
+      parc:['Início das chuvas – 25% N, todo o P, 25% K','60 dias – 25% N, 25% K','120 dias – 25% N, 25% K','180 dias – 25% N, 25% K'],
+      obs:'Sensível a encharcamento e a Fusarium; evitar ferir raízes na adubação. Matéria orgânica é decisiva.'},
+    'mamao':{nome:'Mamão', un:'t/ha', ref:60, V2:70, m_max:10,
+      N:350, P:[180,140,100,70,40], K:[450,380,300,240,160],
+      parc:['Mensal a partir do 1º mês pós-plantio, 12 parcelas iguais de N e K','Todo o P no plantio (cova)'],
+      obs:'Alta exigência em B e Ca – deficiência causa deformação e "pé-de-galinha". Fertirrigação é o padrão.'},
+    'banana':{nome:'Banana', un:'t/ha', ref:30, V2:70, m_max:10,
+      N:300, P:[100,80,60,40,20], K:[500,420,350,280,200],
+      parc:['4 a 6 parcelas ao longo do período chuvoso','Todo o P na cova/plantio'],
+      obs:'Cultura extratora de K. Aplicar em meia-lua a 30–40 cm do pseudocaule.'},
+    'tomate':{nome:'Tomate', un:'t/ha', ref:80, V2:70, m_max:10,
+      N:250, P:[600,450,300,200,100], K:[500,400,300,220,150],
+      parc:['Plantio – todo o P, 20% N, 20% K','Semanal via fertirrigação – restante'],
+      obs:'Exige Ca alto (evita fundo-preto) e boro. Não aplicar N em excesso no início.'},
+    'milho':{nome:'Milho – grão', un:'t/ha', ref:8, V2:60, m_max:15,
+      N:140, P:[120,90,70,50,30], K:[100,80,60,40,30],
+      parc:['Plantio – todo o P, 20–30 kg N, metade do K','V4 – 40% N','V8 – 40% N e restante do K'],
+      obs:'Zn é o micro mais limitante. Não ultrapassar 60 kg/ha de K2O no sulco.'},
+    'feijao':{nome:'Feijão', un:'t/ha', ref:2.5, V2:60, m_max:15,
+      N:70, P:[90,70,50,40,20], K:[80,60,40,30,20],
+      parc:['Plantio – todo o P e K, 20 kg N','V4 – restante do N'],
+      obs:'Ciclo curto: parcelar pouco. Atenção a Mo e Zn.'},
+    'cana':{nome:'Cana-de-açúcar', un:'t/ha', ref:90, V2:60, m_max:20,
+      N:120, P:[150,120,90,60,30], K:[180,150,120,90,60],
+      parc:['Plantio – todo o P, N e K no sulco','Soqueira – N e K após o corte'],
+      obs:'Considerar o aporte de K da vinhaça, se houver.'},
+    'pastagem':{nome:'Pastagem – braquiária', un:'UA/ha', ref:2, V2:50, m_max:30,
+      N:100, P:[90,70,50,40,20], K:[80,60,40,30,20],
+      parc:['Início das chuvas – todo o P, metade de N e K','Meio da estação – restante'],
+      obs:'Adubação de manutenção anual conforme a lotação. Corrigir P antes de aumentar N.'},
+    'eucalipto':{nome:'Eucalipto', un:'m³/ha/ano', ref:40, V2:50, m_max:40,
+      N:60, P:[150,120,90,60,40], K:[120,100,80,60,40],
+      parc:['Plantio – todo o P na cova','30 e 90 dias – N e K em coroamento','12 meses – manutenção'],
+      obs:'Tolerante a acidez. B é limitante em solos arenosos (seca-de-ponteiro).'}
+  },
+  fertilizantes:[
+    {nome:'Ureia',                    N:45, P:0,  K:0,  extra:'—'},
+    {nome:'Sulfato de amônio',        N:20, P:0,  K:0,  extra:'24% S'},
+    {nome:'Nitrato de amônio',        N:32, P:0,  K:0,  extra:'—'},
+    {nome:'MAP',                      N:11, P:52, K:0,  extra:'—'},
+    {nome:'Superfosfato simples',     N:0,  P:18, K:0,  extra:'16% Ca, 10% S'},
+    {nome:'Superfosfato triplo',      N:0,  P:41, K:0,  extra:'12% Ca'},
+    {nome:'Cloreto de potássio',      N:0,  P:0,  K:60, extra:'—'},
+    {nome:'Sulfato de potássio',      N:0,  P:0,  K:48, extra:'16% S'},
+    {nome:'NPK 20-05-20',             N:20, P:5,  K:20, extra:'formulado'},
+    {nome:'NPK 20-00-20',             N:20, P:0,  K:20, extra:'formulado'}
+  ],
+  pragas:[
+    {cultura:'cafe-conilon', alvo:'Broca-do-café', nivel:'3–5% de frutos brocados', metodo:'Amostrar 100 frutos em 10 plantas/talhão'},
+    {cultura:'cafe-conilon', alvo:'Ácaro-da-mancha-anular', nivel:'Presença em 10% das folhas', metodo:'Lupa de campo, folhas do terço médio'},
+    {cultura:'cafe-conilon', alvo:'Ferrugem', nivel:'5% de incidência foliar', metodo:'Contar folhas com pústulas em 30 plantas'},
+    {cultura:'cafe-arabica', alvo:'Bicho-mineiro', nivel:'20–30% de folhas minadas', metodo:'2 folhas do 3º/4º par, 30 plantas'},
+    {cultura:'cafe-arabica', alvo:'Ferrugem', nivel:'5% de incidência foliar', metodo:'Contar folhas com pústulas em 30 plantas'},
+    {cultura:'mamao',   alvo:'Ácaro-rajado',   nivel:'10% de folhas com colônia', metodo:'Folha nº 5 a partir do ápice'},
+    {cultura:'mamao',   alvo:'Mosca-branca',   nivel:'5 adultos/folha',           metodo:'Batida de folha ao amanhecer'},
+    {cultura:'banana',  alvo:'Sigatoka-negra', nivel:'Estádio 4 na folha 2–4',    metodo:'Sistema de pré-aviso (10 plantas)'},
+    {cultura:'banana',  alvo:'Moleque-da-bananeira', nivel:'5 insetos/isca',      metodo:'Iscas tipo telha, 20/ha'},
+    {cultura:'pimenta-do-reino', alvo:'Fusariose', nivel:'Qualquer planta com sintoma', metodo:'Inspeção e erradicação imediata'},
+    {cultura:'tomate',  alvo:'Traça-do-tomateiro', nivel:'2 lagartas/planta',     metodo:'Armadilha de feromônio + inspeção'},
+    {cultura:'milho',   alvo:'Lagarta-do-cartucho', nivel:'20% de plantas raspadas', metodo:'10 plantas em 5 pontos'}
+  ]
+};
+
+const FENOLOGIA = {
+  'cafe-conilon':['Repouso','Indução floral','Florada','Chumbinho','Granação','Maturação','Colheita','Pós-colheita/poda'],
+  'cafe-arabica':['Repouso','Indução floral','Florada','Chumbinho','Granação','Maturação','Colheita','Pós-colheita'],
+  'mamao':['Mudas','Crescimento vegetativo','Florescimento','Frutificação','Colheita'],
+  'banana':['Plantio','Crescimento','Diferenciação floral','Emissão do cacho','Enchimento','Colheita'],
+  'pimenta-do-reino':['Brotação','Floração','Enchimento de grãos','Maturação','Colheita','Poda/condução'],
+  'tomate':['Mudas','Vegetativo','Floração','Frutificação','Colheita'],
+  'milho':['V2–V4','V6–V8','V10–VT','Florescimento (R1)','Enchimento (R3–R4)','Maturação (R6)'],
+  'feijao':['V2–V3','V4','R5 pré-floração','R6 floração','R8 enchimento','R9 maturação'],
+  'cana':['Brotação','Perfilhamento','Crescimento','Maturação','Colheita'],
+  'pastagem':['Rebrota','Crescimento','Pré-pastejo','Pós-pastejo','Diferimento'],
+  'eucalipto':['Implantação','0–12 meses','1–3 anos','3–5 anos','Corte']
+};
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+
+let S = null;
+const vazio = () => ({
+  consultor:{nome:'',crea:'',fone:'',email:'',empresa:'Campo Forte Soluções Agrícolas'},
+  produtores:[], talhoes:[], analises:[], visitas:[],
+  tab: JSON.parse(JSON.stringify(PADRAO))
+});
+
+async function salvar(){ await Store.gravar(S); }
+
+/* ============================================================
+   CÁLCULOS AGRONÔMICOS
+   ============================================================ */
+
+function classificar(v, quebras){
+  if(!quebras) return 0;
+  let i=0; while(i<quebras.length && v>quebras[i]) i++;
+  return i; // 0..4
+}
+const NOMES_CLASSE = ['Muito baixo','Baixo','Médio','Bom','Muito bom'];
+const NOMES_INV    = ['Muito baixo','Baixo','Médio','Alto','Muito alto'];
+const CORES = ['var(--c-mb)','var(--c-b)','var(--c-m)','var(--c-bom)','var(--c-mbom)'];
+const CORES_INV = ['var(--c-mbom)','var(--c-bom)','var(--c-m)','var(--c-b)','var(--c-mb)'];
+
+function faixaP(argila){
+  const t = S.tab.fosforo.find(x => argila >= x.min) || S.tab.fosforo[S.tab.fosforo.length-1];
+  return t;
+}
+
+function calcular(a){
+  const Kc = n(a.K)/391;                       // K de mg/dm³ para cmolc/dm³
+  const Na = n(a.Na)/230;
+  const SB = n(a.Ca)+n(a.Mg)+Kc+Na;
+  const t  = SB + n(a.Al);
+  const T  = SB + n(a.HAl);
+  const V  = T>0 ? 100*SB/T : 0;
+  const m  = t>0 ? 100*n(a.Al)/t : 0;
+  const r  = {
+    Kc, SB, t, T, V, m,
+    CaMg: n(a.Mg)>0 ? n(a.Ca)/n(a.Mg) : 0,
+    CaK:  Kc>0 ? n(a.Ca)/Kc : 0,
+    MgK:  Kc>0 ? n(a.Mg)/Kc : 0,
+    partCa: T>0 ? 100*n(a.Ca)/T : 0,
+    partMg: T>0 ? 100*n(a.Mg)/T : 0,
+    partK:  T>0 ? 100*Kc/T : 0,
+    faixaP: faixaP(n(a.argila))
+  };
+  r.classeP = classificar(n(a.P), r.faixaP.q);
+  r.classeK = classificar(n(a.K), S.tab.faixas.K.q);
+  return r;
+}
+
+function calagem(a, r, cult, prnt, prof){
+  const V2 = cult ? cult.V2 : 60;
+  const fatorProf = prof===40 ? 2 : prof===30 ? 1.5 : 1;
+  const nc_sb = Math.max(0, (V2 - r.V) * r.T / 100);
+  // método alumínio + cálcio e magnésio
+  const argila = n(a.argila);
+  const Y = argila>=60?4 : argila>=35?3 : argila>=15?2 : 1;
+  const mMax = cult ? cult.m_max : 20;
+  const nc_al = Math.max(0, Y*(n(a.Al) - (mMax*r.t/100))) + Math.max(0, 2 - (n(a.Ca)+n(a.Mg)));
+  const escolhido = Math.max(nc_sb, nc_al);
+  const corrigido = prnt>0 ? escolhido * (100/prnt) * fatorProf : 0;
+  return {V2, nc_sb, nc_al, Y, escolhido, corrigido, fatorProf};
+}
+
+function gessagem(a, r){
+  const argila = n(a.argila);
+  const precisa = n(a.Al) > 0.5 || n(a.Ca) < 0.5 || r.m > 20;
+  return { precisa, dose: 50*argila, criterio: precisa
+    ? 'Indicado: há alumínio ou baixo Ca no perfil. Confirme com análise de subsuperfície (20–40 cm).'
+    : 'Não indicado pela camada 0–20 cm. Só avalie gesso com análise de 20–40 cm mostrando Ca < 0,5 ou m > 20%.' };
+}
+
+function adubacao(a, r, cult, prod){
+  if(!cult) return null;
+  const fator = cult.ref>0 && prod>0 ? prod/cult.ref : 1;
+  const N   = Math.round(cult.N * fator);
+  const P2O5= Math.round(cult.P[r.classeP] * fator);
+  const K2O = Math.round(cult.K[r.classeK] * fator);
+  return {N, P2O5, K2O, fator};
+}
+
+function diagnostico(a, r, cult){
+  const d = [];
+  const push = (g,txt) => d.push({g,txt});
+  if(n(a.pH) < 5.0) push('crit','pH abaixo de 5,0 – acidez elevada limita a absorção de P, Ca, Mg e a atividade microbiana.');
+  else if(n(a.pH) > 6.8) push('atencao','pH acima de 6,8 – risco de indisponibilizar Zn, Mn, Fe e B.');
+  if(r.m > (cult?cult.m_max:20)) push('crit','Saturação por alumínio de '+f(r.m,0)+'% acima do limite da cultura – o alumínio está podando o sistema radicular.');
+  if(r.V < (cult?cult.V2:60)-10) push('crit','Saturação por bases em '+f(r.V,0)+'%, contra os '+(cult?cult.V2:60)+'% desejados. Calagem é a primeira intervenção.');
+  if(r.classeP <= 1) push('crit','Fósforo '+NOMES_CLASSE[r.classeP].toLowerCase()+' para solo com '+f(n(a.argila),0)+'% de argila – resposta esperada à adubação fosfatada é alta.');
+  if(r.classeK <= 1) push('atencao','Potássio '+NOMES_CLASSE[r.classeK].toLowerCase()+' – priorize o parcelamento para reduzir perda por lixiviação.');
+  if(n(a.MO) < 2) push('atencao','Matéria orgânica baixa ('+f(n(a.MO),1)+' dag/kg) – avaliar adubação orgânica, cobertura morta ou braquiária na entrelinha.');
+  if(r.CaMg > 0 && (r.CaMg < 2 || r.CaMg > 5)) push('atencao','Relação Ca/Mg em '+f(r.CaMg,1)+':1, fora da faixa de 2:1 a 5:1 – escolha o corretivo (calcário calcítico ou dolomítico) por essa relação.');
+  if(r.MgK > 0 && r.MgK < 3) push('atencao','Relação Mg/K em '+f(r.MgK,1)+':1 – excesso relativo de K pode induzir deficiência de Mg.');
+  if(n(a.B) <= S.tab.faixas.B.q[1]) push('atencao','Boro baixo – corrigir via solo (bórax/ulexita) ou foliar, principalmente em café, mamão e eucalipto.');
+  if(n(a.Zn) <= S.tab.faixas.Zn.q[1]) push('atencao','Zinco baixo – aplicar via solo com o formulado ou foliar no crescimento vegetativo.');
+  if(n(a.S) <= S.tab.faixas.S.q[1]) push('atencao','Enxofre baixo – preferir superfosfato simples ou sulfato de amônio como fonte.');
+  if(!d.length) push('ok','Nenhuma limitação química relevante na camada analisada. Manter a fertilidade com adubação de reposição.');
+  return d;
+}
+
+/* ============================================================
+   COMPONENTES VISUAIS
+   ============================================================ */
+
+const COR_CURTA = {mb:'var(--c-mb)',b:'var(--c-b)',m:'var(--c-m)',bom:'var(--c-bom)',mbom:'var(--c-mbom)'};
+
+function regua(rot, un, valor, quebras, inv, nomesCfg, coresCfg){
+  if(!quebras) return '';
+  const i = classificar(valor, quebras);
+  const nomes = nomesCfg || (inv?NOMES_INV:NOMES_CLASSE);
+  const cores = (coresCfg||[]).length===5
+    ? coresCfg.map(c => COR_CURTA[c] || c)
+    : (inv?CORES_INV:CORES);
+  const lo = i===0 ? 0 : quebras[i-1];
+  const hi = i===4 ? quebras[3]*1.6 : quebras[i];
+  const frac = hi>lo ? Math.min(1,Math.max(0,(valor-lo)/(hi-lo))) : .5;
+  const pos = Math.min(99.5, i*20 + frac*20);
+  return `<div class="regua-linha">
+    <div class="regua-nome">${rot}<small>${un||'&nbsp;'}</small></div>
+    <div class="regua-valor">${f(valor, valor<10?2:0)}</div>
+    <div class="regua">
+      <div class="regua-classe" style="color:${cores[i]}">${nomes[i]}</div>
+      <div class="faixas">${cores.map((c,k)=>`<i style="background:${c};opacity:${k===i?1:.28}"></i>`).join('')}</div>
+      <div class="marca-valor" style="left:${pos}%"></div>
+    </div>
+  </div>`;
+}
+
+function perfilCTC(a,r){
+  const Al=n(a.Al), HAl=n(a.HAl), Ca=n(a.Ca), Mg=n(a.Mg), K=r.Kc;
+  const tot = Ca+Mg+K+HAl;
+  if(tot<=0) return '';
+  const p = v => 100*v/tot;
+  const seg = (v,cor) => p(v)<6 ? `<div style="background:${cor};flex:0 0 ${p(v)}%"></div>` : `<div style="background:${cor};flex:0 0 ${p(v)}%">${f(p(v),0)}%</div>`;
+  // o Al ja esta contido na acidez potencial (H+Al): mostramos a fracao dentro do proprio segmento
+  const fracAl = HAl>0 ? Math.min(100, 100*Al/HAl) : 0;
+  const corHAl = `linear-gradient(90deg, var(--al) 0 ${fracAl}%, var(--hal) ${fracAl}% 100%)`;
+  return `<div class="perfil">
+      ${seg(Ca,'var(--ca)')}${seg(Mg,'var(--mg)')}${seg(K,'var(--k)')}${seg(HAl,corHAl)}
+    </div>
+    <div class="legenda">
+      <span><i style="background:var(--ca)"></i>Ca ${f(p(Ca),0)}% <em class="nota">(ideal 50–60)</em></span>
+      <span><i style="background:var(--mg)"></i>Mg ${f(p(Mg),0)}% <em class="nota">(ideal 15–20)</em></span>
+      <span><i style="background:var(--k)"></i>K ${f(p(K),1)}% <em class="nota">(ideal 3–5)</em></span>
+      <span><i style="background:var(--hal)"></i>H+Al ${f(p(HAl),0)}%</span>
+      <span><i style="background:var(--al)"></i>Al ${f(Al,2)} cmolc – m ${f(r.m,0)}% <em class="nota">(parte do H+Al)</em></span>
+    </div>`;
+}
+
+function toast(msg){
+  const d = document.createElement('div');
+  d.className='toast'; d.textContent=msg; document.body.appendChild(d);
+  setTimeout(()=>d.remove(),2200);
+}
+
+function perguntar(msg, rotuloOk){
+  return new Promise(resolve => {
+    const alvo = document.getElementById('modal');
+    const anterior = alvo.innerHTML;
+    alvo.insertAdjacentHTML('beforeend', `
+      <div class="fundo" id="confirmar">
+        <div class="modal estreito" role="alertdialog" aria-modal="true">
+          <h2 style="font-size:17px;margin-bottom:8px">Confirmar</h2>
+          <p style="font-size:13.5px;color:var(--grafite);margin:0 0 18px">${esc(msg)}</p>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn sec" id="cf_nao">Cancelar</button>
+            <button class="btn perigo" id="cf_sim">${esc(rotuloOk||'Excluir')}</button>
+          </div>
+        </div>
+      </div>`);
+    const fim = v => { const c=document.getElementById('confirmar'); if(c) c.remove(); resolve(v); };
+    document.getElementById('cf_sim').onclick = () => fim(true);
+    document.getElementById('cf_nao').onclick = () => fim(false);
+    document.getElementById('cf_sim').focus();
+  });
+}
+
+function modal(titulo, corpo, rodape){
+  document.getElementById('modal').innerHTML = `
+    <div class="fundo" onclick="if(event.target===this)app.fecharModal()">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-topo"><h2>${titulo}</h2>
+          <button class="btn sec mini" onclick="app.fecharModal()">Fechar</button></div>
+        ${corpo}
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">${rodape||''}</div>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+
+const ABAS = [
+  ['painel','Painel'],
+  ['produtores','Produtores'],
+  ['talhoes','Talhões'],
+  ['analises','Análises de solo'],
+  ['monitoramento','Monitoramento'],
+  ['tabelas','Tabelas'],
+  ['config','Consultor']
+];
+let atual = 'painel';
+
+function render(){
+  document.getElementById('quem').innerHTML = S.consultor.nome
+    ? `<b>${esc(S.consultor.nome)}</b>${esc(S.consultor.crea?'CREA '+S.consultor.crea:'')}`
+    : `<b>Identifique-se</b>Aba Consultor`;
+  document.getElementById('abas').innerHTML = ABAS.map(([k,r])=>
+    `<button class="aba" aria-current="${k===atual}" onclick="app.ir('${k}')">${r}</button>`).join('');
+  document.getElementById('vista').innerHTML = ({
+    painel:vPainel, produtores:vProdutores, talhoes:vTalhoes, analises:vAnalises,
+    monitoramento:vMonitoramento, tabelas:vTabelas, config:vConfig
+  })[atual]();
+  window.scrollTo({top:0});
+}
+
+/* ============================================================
+   VISTAS
+   ============================================================ */
+
+function vPainel(){
+  const alertas = [];
+  S.analises.forEach(a=>{
+    const t = S.talhoes.find(x=>x.id===a.talhaoId); if(!t) return;
+    const r = calcular(a);
+    const c = S.tab.culturas[t.cultura];
+    if(r.V < (c?c.V2:60)-10) alertas.push([t, a, 'V em '+f(r.V,0)+'% – calagem pendente']);
+    else if(r.m > (c?c.m_max:20)) alertas.push([t, a, 'm em '+f(r.m,0)+'% – alumínio acima do tolerado']);
+    else if(r.classeP<=1) alertas.push([t, a, 'Fósforo '+NOMES_CLASSE[r.classeP].toLowerCase()]);
+  });
+  const areaTotal = S.talhoes.reduce((s,t)=>s+n(t.area),0);
+  const ultimas = [...S.visitas].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,5);
+
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Visão geral da carteira</span><h1>Painel</h1>
+      <p>O que está aberto na assistência técnica hoje.</p></div>
+    <div class="acoes">
+      <button class="btn verde" onclick="app.novaAnalise()">Lançar análise</button>
+      <button class="btn sec" onclick="app.novaVisita()">Registrar visita</button>
+    </div>
+  </div>
+
+  <div class="grade g4">
+    <div class="metrica"><span>Produtores</span><b>${S.produtores.length}</b></div>
+    <div class="metrica"><span>Talhões</span><b>${S.talhoes.length}</b><em>${f(areaTotal,1)} ha no total</em></div>
+    <div class="metrica"><span>Análises</span><b>${S.analises.length}</b></div>
+    <div class="metrica"><span>Visitas</span><b>${S.visitas.length}</b></div>
+  </div>
+
+  <div class="cartao" style="margin-top:14px">
+    <span class="olho">Pendências químicas</span>
+    <h2 style="margin:4px 0 12px">Talhões que pedem intervenção</h2>
+    ${alertas.length ? `<div class="lista">${alertas.map(([t,a,txt])=>`
+      <div class="item">
+        <div class="cresce"><h3>${esc(t.nome)}</h3><small>${esc(nomeProdutor(t.produtorId))} · análise de ${dataBR(a.data)}</small></div>
+        <span class="tag ruim">${esc(txt)}</span>
+        <button class="btn sec mini" onclick="app.verAnalise('${a.id}')">Abrir</button>
+      </div>`).join('')}</div>`
+    : `<div class="vazio"><b>Nada crítico em aberto</b>Todas as análises lançadas estão dentro das faixas das respectivas culturas.</div>`}
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Caderno de campo</span>
+    <h2 style="margin:4px 0 12px">Últimas visitas</h2>
+    ${ultimas.length ? `<div class="lista">${ultimas.map(v=>{
+      const t = S.talhoes.find(x=>x.id===v.talhaoId);
+      return `<div class="item"><div class="cresce">
+        <h3>${esc(t?t.nome:'Talhão removido')} — ${dataBR(v.data)}</h3>
+        <small>${esc(v.fenologia||'—')}${v.ocorrencias&&v.ocorrencias.length?' · '+v.ocorrencias.length+' ocorrência(s)':''}</small>
+      </div><button class="btn sec mini" onclick="app.verVisita('${v.id}')">Abrir</button></div>`;
+    }).join('')}</div>` : `<div class="vazio"><b>Nenhuma visita registrada</b>Comece pelo botão "Registrar visita".</div>`}
+  </div>`;
+}
+
+const nomeProdutor = pid => (S.produtores.find(p=>p.id===pid)||{}).nome || '—';
+
+function vProdutores(){
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Carteira</span><h1>Produtores</h1>
+      <p>Quem você atende e onde ficam as propriedades.</p></div>
+    <div class="acoes"><button class="btn verde" onclick="app.editarProdutor()">Novo produtor</button></div>
+  </div>
+  ${S.produtores.length ? `<div class="lista">${S.produtores.map(p=>{
+    const ts = S.talhoes.filter(t=>t.produtorId===p.id);
+    const ha = ts.reduce((s,t)=>s+n(t.area),0);
+    return `<div class="item">
+      <div class="cresce"><h3>${esc(p.nome)}</h3>
+        <small>${esc(p.propriedade||'—')} · ${esc(p.municipio||'—')} · ${ts.length} talhão(ões), ${f(ha,1)} ha</small></div>
+      <button class="btn sec mini" onclick="app.editarProdutor('${p.id}')">Editar</button>
+      <button class="btn perigo mini" onclick="app.excluir('produtores','${p.id}')">Excluir</button>
+    </div>`;}).join('')}</div>`
+  : `<div class="vazio"><b>Nenhum produtor cadastrado</b>O produtor é a raiz de tudo: talhões, análises e visitas ficam ligados a ele.</div>`}`;
+}
+
+function vTalhoes(){
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Unidades de manejo</span><h1>Talhões</h1>
+      <p>Cada talhão carrega cultura, área e produtividade esperada – é o que alimenta a recomendação.</p></div>
+    <div class="acoes"><button class="btn verde" onclick="app.editarTalhao()">Novo talhão</button></div>
+  </div>
+  ${S.talhoes.length ? `<div class="lista">${S.talhoes.map(t=>{
+    const c = S.tab.culturas[t.cultura];
+    const na = S.analises.filter(a=>a.talhaoId===t.id).length;
+    return `<div class="item">
+      <div class="cresce"><h3>${esc(t.nome)}</h3>
+        <small>${esc(nomeProdutor(t.produtorId))} · ${f(n(t.area),1)} ha · ${esc(t.variedade||'—')} · ${na} análise(s)</small></div>
+      <span class="tag">${esc(c?c.nome.split(' –')[0]:'—')}</span>
+      <button class="btn sec mini" onclick="app.editarTalhao('${t.id}')">Editar</button>
+      <button class="btn perigo mini" onclick="app.excluir('talhoes','${t.id}')">Excluir</button>
+    </div>`;}).join('')}</div>`
+  : `<div class="vazio"><b>Nenhum talhão cadastrado</b>Cadastre um produtor primeiro, depois divida a área em talhões.</div>`}`;
+}
+
+function vAnalises(){
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Fertilidade</span><h1>Análises de solo</h1>
+      <p>Lance o laudo do laboratório e o AgroTech interpreta, calcula calagem e monta a adubação.</p></div>
+    <div class="acoes"><button class="btn verde" onclick="app.novaAnalise()">Lançar análise</button></div>
+  </div>
+  ${S.analises.length ? `<div class="lista">${[...S.analises].sort((a,b)=>b.data.localeCompare(a.data)).map(a=>{
+    const t = S.talhoes.find(x=>x.id===a.talhaoId);
+    const r = calcular(a);
+    const cls = r.V>=60?'':'ruim';
+    return `<div class="item">
+      <div class="cresce"><h3>${esc(t?t.nome:'Talhão removido')} — ${dataBR(a.data)}</h3>
+        <small class="mono">pH ${f(n(a.pH),1)} · V ${f(r.V,0)}% · m ${f(r.m,0)}% · P ${f(n(a.P),1)} · K ${f(n(a.K),0)}</small></div>
+      <span class="tag ${cls}">V ${f(r.V,0)}%</span>
+      <button class="btn mini" onclick="app.verAnalise('${a.id}')">Interpretar</button>
+      <button class="btn perigo mini" onclick="app.excluir('analises','${a.id}')">Excluir</button>
+    </div>`;}).join('')}</div>`
+  : `<div class="vazio"><b>Nenhuma análise lançada</b>Você precisa de um talhão cadastrado para lançar a primeira.</div>`}`;
+}
+
+function vMonitoramento(){
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Caderno de campo</span><h1>Monitoramento</h1>
+      <p>Registro de visita com fenologia, amostragem e comparação com o nível de controle.</p></div>
+    <div class="acoes"><button class="btn verde" onclick="app.novaVisita()">Registrar visita</button></div>
+  </div>
+  ${S.visitas.length ? `<div class="lista">${[...S.visitas].sort((a,b)=>b.data.localeCompare(a.data)).map(v=>{
+    const t = S.talhoes.find(x=>x.id===v.talhaoId);
+    const acima = (v.ocorrencias||[]).filter(o=>o.acima).length;
+    return `<div class="item">
+      <div class="cresce"><h3>${esc(t?t.nome:'Talhão removido')} — ${dataBR(v.data)}</h3>
+        <small>${esc(v.fenologia||'—')} · ${(v.ocorrencias||[]).length} ocorrência(s)</small></div>
+      ${acima?`<span class="tag ruim">${acima} acima do nível</span>`:`<span class="tag">Sob controle</span>`}
+      <button class="btn sec mini" onclick="app.verVisita('${v.id}')">Abrir</button>
+      <button class="btn perigo mini" onclick="app.excluir('visitas','${v.id}')">Excluir</button>
+    </div>`;}).join('')}</div>`
+  : `<div class="vazio"><b>Caderno vazio</b>Cada visita vira histórico do talhão e entra no laudo.</div>`}`;
+}
+
+function vTabelas(){
+  const c = S.tab.culturas;
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Base técnica</span><h1>Tabelas de referência</h1>
+      <p>Os números abaixo são o ponto de partida (5ª Aproximação/MG e recomendações do Incaper para as culturas do ES). Ajuste para a sua realidade – a recomendação do app segue exatamente o que estiver aqui.</p></div>
+    <div class="acoes">
+      <button class="btn sec" onclick="app.exportar()">Exportar backup</button>
+      <button class="btn sec" onclick="app.importar()">Importar backup</button>
+      <button class="btn sec" onclick="app.restaurarTabelas()">Restaurar padrão</button>
+    </div>
+  </div>
+
+  <div class="aviso nao-imprime" style="margin-bottom:14px">
+    O app calcula, o agrônomo decide. Toda recomendação sai com a sua assinatura e CREA – confira dose, fonte e época antes de entregar ao produtor.
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Doses de referência</span>
+    <h2 style="margin:4px 0 4px">Adubação por cultura</h2>
+    <p class="nota" style="margin:0 0 12px">N em kg/ha na produtividade de referência. P₂O₅ e K₂O em kg/ha por classe do solo, da mais pobre para a mais rica. O app corrige proporcionalmente à produtividade esperada do talhão.</p>
+    <div class="rolagem"><table>
+      <tr><th>Cultura</th><th class="num">Produt. ref.</th><th class="num">V desejado</th><th class="num">N</th><th>P₂O₅ (MB–MBom)</th><th>K₂O (MB–MBom)</th></tr>
+      ${Object.entries(c).map(([k,v])=>`<tr>
+        <td>${esc(v.nome)}<br><small class="nota">${esc(v.un)}</small></td>
+        <td class="num"><input class="mono" style="width:74px" value="${v.ref}" onchange="app.setCult('${k}','ref',this.value)"></td>
+        <td class="num"><input class="mono" style="width:60px" value="${v.V2}" onchange="app.setCult('${k}','V2',this.value)"></td>
+        <td class="num"><input class="mono" style="width:74px" value="${v.N}" onchange="app.setCult('${k}','N',this.value)"></td>
+        <td><input class="mono" value="${v.P.join(', ')}" onchange="app.setCultArr('${k}','P',this.value)"></td>
+        <td><input class="mono" value="${v.K.join(', ')}" onchange="app.setCultArr('${k}','K',this.value)"></td>
+      </tr>`).join('')}
+    </table></div>
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Interpretação</span>
+    <h2 style="margin:4px 0 12px">Fósforo por classe de argila (Mehlich-1)</h2>
+    <div class="rolagem"><table>
+      <tr><th>Argila</th><th>Muito baixo até</th><th>Baixo até</th><th>Médio até</th><th>Bom até</th><th>Acima disso</th></tr>
+      ${S.tab.fosforo.map(x=>`<tr><td>${x.argila}</td>${x.q.map(q=>`<td class="num">${f(q,1)}</td>`).join('')}<td class="num">Muito bom</td></tr>`).join('')}
+    </table></div>
+    <p class="nota" style="margin-top:8px">Demais nutrientes seguem as faixas do sistema de interpretação clássico e aparecem na régua de cada análise.</p>
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Fitossanidade</span>
+    <h2 style="margin:4px 0 12px">Níveis de controle</h2>
+    <div class="rolagem"><table>
+      <tr><th>Cultura</th><th>Alvo</th><th>Nível de controle</th><th>Amostragem</th></tr>
+      ${S.tab.pragas.map(p=>`<tr><td>${esc((c[p.cultura]||{}).nome||p.cultura)}</td><td>${esc(p.alvo)}</td>
+        <td>${esc(p.nivel)}</td><td class="nota">${esc(p.metodo)}</td></tr>`).join('')}
+    </table></div>
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Fontes</span>
+    <h2 style="margin:4px 0 12px">Fertilizantes e teores de garantia</h2>
+    <div class="rolagem"><table>
+      <tr><th>Produto</th><th class="num">% N</th><th class="num">% P₂O₅</th><th class="num">% K₂O</th><th>Outros</th></tr>
+      ${S.tab.fertilizantes.map(x=>`<tr><td>${esc(x.nome)}</td><td class="num">${x.N}</td><td class="num">${x.P}</td><td class="num">${x.K}</td><td class="nota">${esc(x.extra)}</td></tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+
+function vConfig(){
+  const c = S.consultor;
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Responsável técnico</span><h1>Consultor</h1>
+      <p>Estes dados assinam todo laudo emitido pelo app.</p></div>
+  </div>
+  <div class="cartao">
+    <div class="grade g2">
+      <div><label>Nome</label><input id="c_nome" value="${esc(c.nome)}"></div>
+      <div><label>CREA</label><input id="c_crea" value="${esc(c.crea)}"></div>
+      <div><label>Telefone</label><input id="c_fone" value="${esc(c.fone)}"></div>
+      <div><label>E-mail</label><input id="c_email" value="${esc(c.email)}"></div>
+      <div style="grid-column:1/-1"><label>Empresa</label><input id="c_empresa" value="${esc(c.empresa)}"></div>
+    </div>
+    <div style="margin-top:14px"><button class="btn verde" onclick="app.salvarConsultor()">Salvar</button></div>
+  </div>
+  <div class="cartao">
+    <span class="olho">Dados</span>
+    <h2 style="margin:4px 0 8px">Backup</h2>
+    <p class="nota" style="margin:0 0 12px">Tudo fica gravado neste dispositivo. Exporte o arquivo antes de trocar de aparelho ou de navegador.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sec" onclick="app.exportar()">Exportar backup</button>
+      <button class="btn sec" onclick="app.importar()">Importar backup</button>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   FORMULÁRIOS
+   ============================================================ */
+
+const campo = (id,rot,un,val,tipo) =>
+  `<div><label>${rot} ${un?`<span class="un">${un}</span>`:''}</label>
+   <input class="mono" id="${id}" type="${tipo||'text'}" inputmode="decimal" value="${val??''}"></div>`;
+
+function formProdutor(p){
+  return `<div class="grade g2">
+    <div style="grid-column:1/-1"><label>Nome do produtor</label><input id="p_nome" value="${esc(p.nome)}"></div>
+    <div><label>Propriedade</label><input id="p_prop" value="${esc(p.propriedade)}"></div>
+    <div><label>Município</label><input id="p_mun" value="${esc(p.municipio)}"></div>
+    <div><label>Telefone</label><input id="p_fone" value="${esc(p.fone)}"></div>
+    <div><label>Área total <span class="un">ha</span></label><input class="mono" id="p_area" value="${esc(p.area)}"></div>
+    <div style="grid-column:1/-1"><label>Observações</label><textarea id="p_obs">${esc(p.obs)}</textarea></div>
+  </div>`;
+}
+
+function formTalhao(t){
+  return `<div class="grade g2">
+    <div><label>Produtor</label><select id="t_prod">${S.produtores.map(p=>
+      `<option value="${p.id}" ${p.id===t.produtorId?'selected':''}>${esc(p.nome)}</option>`).join('')}</select></div>
+    <div><label>Nome do talhão</label><input id="t_nome" value="${esc(t.nome)}"></div>
+    <div><label>Cultura</label><select id="t_cult" onchange="app.trocouCultura()">${Object.entries(S.tab.culturas).map(([k,c])=>
+      `<option value="${k}" ${k===t.cultura?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
+    <div><label>Variedade / material</label><input id="t_var" value="${esc(t.variedade)}"></div>
+    <div><label>Área <span class="un">ha</span></label><input class="mono" id="t_area" value="${esc(t.area)}"></div>
+    <div><label>Produtividade esperada <span class="un" id="t_un">${esc((S.tab.culturas[t.cultura]||{}).un||'')}</span></label>
+      <input class="mono" id="t_prod_esp" value="${esc(t.prodEsperada)}"></div>
+    <div><label>Espaçamento</label><input id="t_esp" value="${esc(t.espacamento)}" placeholder="3,0 × 1,2 m"></div>
+    <div><label>Ano de implantação</label><input class="mono" id="t_ano" value="${esc(t.ano)}"></div>
+    <div style="grid-column:1/-1"><label>Observações</label><textarea id="t_obs">${esc(t.obs)}</textarea></div>
+  </div>`;
+}
+
+function formAnalise(a){
+  return `<div class="grade g2">
+    <div><label>Talhão</label><select id="a_talhao">${S.talhoes.map(t=>
+      `<option value="${t.id}" ${t.id===a.talhaoId?'selected':''}>${esc(t.nome)} — ${esc(nomeProdutor(t.produtorId))}</option>`).join('')}</select></div>
+    <div><label>Data da coleta</label><input id="a_data" type="date" value="${a.data||hoje()}"></div>
+    <div><label>Profundidade <span class="un">cm</span></label><select id="a_prof">
+      ${['0–20','20–40','0–40'].map(p=>`<option ${p===a.prof?'selected':''}>${p}</option>`).join('')}</select></div>
+    <div><label>Laboratório</label><input id="a_lab" value="${esc(a.lab)}"></div>
+  </div>
+
+  <h3 style="margin:18px 0 8px">Complexo sortivo</h3>
+  <div class="grade g4">
+    ${campo('a_argila','Argila','%',a.argila)}
+    ${campo('a_pH','pH','H₂O',a.pH)}
+    ${campo('a_MO','M.O.','dag/kg',a.MO)}
+    ${campo('a_P','P','mg/dm³',a.P)}
+    ${campo('a_K','K','mg/dm³',a.K)}
+    ${campo('a_Ca','Ca','cmolc/dm³',a.Ca)}
+    ${campo('a_Mg','Mg','cmolc/dm³',a.Mg)}
+    ${campo('a_Al','Al','cmolc/dm³',a.Al)}
+    ${campo('a_HAl','H+Al','cmolc/dm³',a.HAl)}
+    ${campo('a_Na','Na','mg/dm³',a.Na)}
+    ${campo('a_S','S','mg/dm³',a.S)}
+  </div>
+
+  <h3 style="margin:18px 0 8px">Micronutrientes</h3>
+  <div class="grade g4">
+    ${campo('a_B','B','mg/dm³',a.B)}
+    ${campo('a_Zn','Zn','mg/dm³',a.Zn)}
+    ${campo('a_Cu','Cu','mg/dm³',a.Cu)}
+    ${campo('a_Mn','Mn','mg/dm³',a.Mn)}
+    ${campo('a_Fe','Fe','mg/dm³',a.Fe)}
+  </div>
+
+  <h3 style="margin:18px 0 8px">Parâmetros do corretivo</h3>
+  <div class="grade g3">
+    ${campo('a_prnt','PRNT do calcário','%',a.prnt||85)}
+    <div><label>Incorporação <span class="un">cm</span></label><select id="a_incorp">
+      ${[20,30,40].map(p=>`<option value="${p}" ${p==(a.incorp||20)?'selected':''}>0–${p} cm</option>`).join('')}</select></div>
+    ${campo('a_prod','Produtividade esperada','sobrescreve o talhão',a.prodEsperada)}
+  </div>`;
+}
+
+/* ============================================================
+   RESULTADO DA ANÁLISE
+   ============================================================ */
+
+function verAnaliseHTML(a){
+  const t = S.talhoes.find(x=>x.id===a.talhaoId) || {};
+  const cult = S.tab.culturas[t.cultura];
+  const r = calcular(a);
+  const prod = n(a.prodEsperada) || n(t.prodEsperada) || (cult?cult.ref:0);
+  const cal = calagem(a, r, cult, n(a.prnt)||85, parseInt(a.incorp||20));
+  const ges = gessagem(a, r);
+  const ad = adubacao(a, r, cult, prod);
+  const dg = diagnostico(a, r, cult);
+  const area = n(t.area)||0;
+  const F = S.tab.faixas;
+
+  const fP = r.faixaP;
+  const linhas = [
+    regua(F.pH.rot, F.pH.un, n(a.pH), F.pH.q, false, F.pH.nomes, F.pH.cores),
+    regua(F.MO.rot, F.MO.un, n(a.MO), F.MO.q),
+    regua('Fósforo (argila '+fP.argila+')','mg/dm³', n(a.P), fP.q),
+    regua(F.K.rot, F.K.un, n(a.K), F.K.q),
+    regua(F.Ca.rot, F.Ca.un, n(a.Ca), F.Ca.q),
+    regua(F.Mg.rot, F.Mg.un, n(a.Mg), F.Mg.q),
+    regua(F.Al.rot, F.Al.un, n(a.Al), F.Al.q, true),
+    regua(F.HAl.rot, F.HAl.un, n(a.HAl), F.HAl.q, true),
+    regua(F.T.rot, F.T.un, r.T, F.T.q),
+    regua(F.V.rot, F.V.un, r.V, F.V.q),
+    regua(F.m.rot, F.m.un, r.m, F.m.q, true)
+  ].join('');
+
+  const micros = ['S','B','Zn','Cu','Mn','Fe'].map(k=>regua(F[k].rot, F[k].un, n(a[k]), F[k].q)).join('');
+
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">${esc(nomeProdutor(t.produtorId))} · ${esc(t.nome||'')}</span>
+      <h1>Interpretação e recomendação</h1>
+      <p>Coleta de ${dataBR(a.data)} · camada ${esc(a.prof||'0–20')} cm · ${esc(cult?cult.nome:'sem cultura')} · ${f(area,1)} ha</p></div>
+    <div class="acoes">
+      <button class="btn sec" onclick="app.editarAnalise('${a.id}')">Editar dados</button>
+      <button class="btn verde" onclick="app.laudo('${a.id}')">Gerar laudo</button>
+      <button class="btn sec" onclick="app.ir('analises')">Voltar</button>
+    </div>
+  </div>
+
+  <div class="grade g4">
+    <div class="metrica"><span>CTC a pH 7</span><b>${f(r.T,2)}</b><em>cmolc/dm³</em></div>
+    <div class="metrica"><span>Saturação por bases</span><b style="color:${r.V>=(cult?cult.V2:60)?'var(--c-mbom)':'var(--c-mb)'}">${f(r.V,0)}%</b><em>meta ${cult?cult.V2:60}%</em></div>
+    <div class="metrica"><span>Saturação por Al</span><b style="color:${r.m<=(cult?cult.m_max:20)?'var(--c-mbom)':'var(--c-mb)'}">${f(r.m,0)}%</b><em>limite ${cult?cult.m_max:20}%</em></div>
+    <div class="metrica"><span>Soma de bases</span><b>${f(r.SB,2)}</b><em>cmolc/dm³</em></div>
+  </div>
+
+  <div class="cartao" style="margin-top:12px">
+    <span class="olho">Ocupação da CTC</span>
+    <h2 style="margin:4px 0 12px">Perfil do complexo sortivo</h2>
+    ${perfilCTC(a,r)}
+    <div class="grade g3" style="margin-top:14px">
+      <div class="metrica"><span>Ca / Mg</span><b>${f(r.CaMg,1)}</b><em>ideal 2 a 5</em></div>
+      <div class="metrica"><span>Ca / K</span><b>${f(r.CaK,1)}</b><em>ideal 9 a 25</em></div>
+      <div class="metrica"><span>Mg / K</span><b>${f(r.MgK,1)}</b><em>ideal 3 a 8</em></div>
+    </div>
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Régua de interpretação</span>
+    <h2 style="margin:4px 0 10px">Macronutrientes e acidez</h2>
+    ${linhas}
+    <h2 style="margin:18px 0 10px">Enxofre e micronutrientes</h2>
+    ${micros}
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Leitura agronômica</span>
+    <h2 style="margin:4px 0 12px">Diagnóstico</h2>
+    <div class="lista">${dg.map(d=>`<div class="item">
+      <span class="tag ${d.g==='crit'?'ruim':d.g==='atencao'?'alerta':''}">${d.g==='crit'?'Crítico':d.g==='atencao'?'Atenção':'Ok'}</span>
+      <div class="cresce"><small style="font-size:13.5px;color:var(--tinta)">${esc(d.txt)}</small></div>
+    </div>`).join('')}</div>
+  </div>
+
+  <div class="cartao">
+    <span class="olho">Correção</span>
+    <h2 style="margin:4px 0 12px">Calagem e gessagem</h2>
+    <div class="rolagem"><table>
+      <tr><th>Método</th><th class="num">Dose (t/ha, PRNT 100%)</th><th>Como foi calculado</th></tr>
+      <tr><td>Saturação por bases</td><td class="num">${f(cal.nc_sb,2)}</td>
+        <td class="nota">(${cal.V2} – ${f(r.V,1)}) × ${f(r.T,2)} ÷ 100</td></tr>
+      <tr><td>Neutralização do Al + elevação de Ca e Mg</td><td class="num">${f(cal.nc_al,2)}</td>
+        <td class="nota">Y=${cal.Y} (argila ${f(n(a.argila),0)}%), m máx. ${cult?cult.m_max:20}%</td></tr>
+      <tr><td><b>Adotado</b></td><td class="num"><b>${f(cal.escolhido,2)}</b></td><td class="nota">o maior entre os dois</td></tr>
+    </table></div>
+    <div class="grade g3" style="margin-top:14px">
+      <div class="metrica"><span>Calcário a aplicar</span><b>${f(cal.corrigido,2)} t/ha</b><em>PRNT ${n(a.prnt)||85}% · incorporação 0–${a.incorp||20} cm</em></div>
+      <div class="metrica"><span>Total no talhão</span><b>${f(cal.corrigido*area,1)} t</b><em>${f(area,1)} ha</em></div>
+      <div class="metrica"><span>Gesso agrícola</span><b>${ges.precisa?f(ges.dose,0)+' kg/ha':'—'}</b><em>${ges.precisa?'50 × % argila':'sem indicação'}</em></div>
+    </div>
+    <p class="nota" style="margin-top:10px">${esc(ges.criterio)} ${(n(a.Mg)<0.9||r.CaMg>4)?'Magnésio baixo (Mg '+f(n(a.Mg),2)+' cmolc, relação Ca/Mg '+f(r.CaMg,1)+':1): use calcário dolomítico.':r.CaMg<2?'Magnésio em excesso relativo (Ca/Mg '+f(r.CaMg,1)+':1): use calcário calcítico.':'Relação Ca/Mg equilibrada ('+f(r.CaMg,1)+':1): calcário magnesiano atende.'} Aplicar com 60 a 90 dias de antecedência da adubação e com umidade no solo.</p>
+  </div>
+
+  ${ad ? `<div class="cartao">
+    <span class="olho">Adubação</span>
+    <h2 style="margin:4px 0 4px">Recomendação para ${esc(cult.nome)}</h2>
+    <p class="nota" style="margin:0 0 12px">Produtividade esperada de ${f(prod,1)} ${esc(cult.un)} – fator ${f(ad.fator,2)}× sobre a dose de referência.</p>
+    <div class="grade g3">
+      <div class="metrica"><span>Nitrogênio</span><b>${ad.N}</b><em>kg/ha de N · ${f(ad.N*area,0)} kg no talhão</em></div>
+      <div class="metrica"><span>Fósforo – solo ${NOMES_CLASSE[r.classeP].toLowerCase()}</span><b>${ad.P2O5}</b><em>kg/ha de P₂O₅ · ${f(ad.P2O5*area,0)} kg no talhão</em></div>
+      <div class="metrica"><span>Potássio – solo ${NOMES_CLASSE[r.classeK].toLowerCase()}</span><b>${ad.K2O}</b><em>kg/ha de K₂O · ${f(ad.K2O*area,0)} kg no talhão</em></div>
+    </div>
+
+    <h3 style="margin:18px 0 8px">Conversão em fertilizante comercial</h3>
+    <div class="rolagem"><table>
+      <tr><th>Fonte</th><th class="num">Dose (kg/ha)</th><th class="num">Total no talhão (kg)</th><th>Observação</th></tr>
+      ${fontesSugeridas(a, ad, area).map(l=>`<tr><td>${esc(l.nome)}</td><td class="num">${f(l.dose,0)}</td>
+        <td class="num">${f(l.dose*area,0)}</td><td class="nota">${esc(l.obs)}</td></tr>`).join('')}
+    </table></div>
+
+    <h3 style="margin:18px 0 8px">Parcelamento</h3>
+    <ol style="margin:0;padding-left:18px;font-size:13.5px">${cult.parc.map(p=>`<li style="margin-bottom:4px">${esc(p)}</li>`).join('')}</ol>
+    <p class="nota" style="margin-top:10px">${esc(cult.obs)}</p>
+  </div>` : ''}
+
+  <div class="aviso nao-imprime" style="margin-top:12px">
+    Recomendação gerada a partir das tabelas cadastradas no app. Confira contra a sua base regional e o histórico do talhão antes de entregar. A responsabilidade técnica é de quem assina.
+  </div>`;
+}
+
+function fontesSugeridas(a, ad, area){
+  const l = [];
+  const S_baixo = n(a.S) <= S.tab.faixas.S.q[1];
+  if(ad.P2O5>0){
+    if(S_baixo) l.push({nome:'Superfosfato simples (18% P₂O₅)', dose:ad.P2O5/0.18, obs:'traz 16% Ca e 10% S – corrige o enxofre baixo'});
+    else l.push({nome:'Superfosfato triplo (41% P₂O₅)', dose:ad.P2O5/0.41, obs:'maior concentração, menor frete'});
+  }
+  if(ad.K2O>0) l.push({nome:'Cloreto de potássio (60% K₂O)', dose:ad.K2O/0.60, obs:'parcelar; evitar mais de 60 kg/ha de K₂O em contato com a semente ou muda'});
+  if(ad.N>0){
+    if(S_baixo) l.push({nome:'Sulfato de amônio (20% N)', dose:ad.N/0.20, obs:'fonte de N e S; acidifica o solo, considerar na calagem'});
+    else l.push({nome:'Ureia (45% N)', dose:ad.N/0.45, obs:'incorporar ou aplicar antes da chuva para reduzir perda por volatilização'});
+  }
+  if(n(a.B) <= S.tab.faixas.B.q[1]) l.push({nome:'Ácido bórico (17% B)', dose:2/0.17, obs:'2 kg/ha de B via solo, ou aplicação foliar parcelada'});
+  if(n(a.Zn) <= S.tab.faixas.Zn.q[1]) l.push({nome:'Sulfato de zinco (20% Zn)', dose:5/0.20, obs:'5 kg/ha de Zn via solo, junto com o fosfatado'});
+  return l;
+}
+
+/* ============================================================
+   VISITA
+   ============================================================ */
+
+function formVisita(v){
+  const t = S.talhoes.find(x=>x.id===v.talhaoId) || S.talhoes[0] || {};
+  const fen = FENOLOGIA[t.cultura] || [];
+  const alvos = S.tab.pragas.filter(p=>p.cultura===t.cultura);
+  return `<div class="grade g2">
+    <div><label>Talhão</label><select id="v_talhao" onchange="app.trocouTalhaoVisita()">${S.talhoes.map(x=>
+      `<option value="${x.id}" ${x.id===(v.talhaoId||t.id)?'selected':''}>${esc(x.nome)} — ${esc(nomeProdutor(x.produtorId))}</option>`).join('')}</select></div>
+    <div><label>Data da visita</label><input id="v_data" type="date" value="${v.data||hoje()}"></div>
+    <div id="v_fen_wrap"><label>Estádio fenológico</label><select id="v_fen">
+      <option value="">—</option>${fen.map(x=>`<option ${x===v.fenologia?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label>Condição geral</label><select id="v_cond">
+      ${['Boa','Regular','Preocupante'].map(x=>`<option ${x===v.condicao?'selected':''}>${x}</option>`).join('')}</select></div>
+  </div>
+
+  <h3 style="margin:18px 0 8px">Amostragem fitossanitária</h3>
+  <div id="v_alvos_wrap">${alvos.length ? `<div class="rolagem"><table id="tab_alvos">
+    <tr><th>Alvo</th><th>Nível de controle</th><th class="num">Incidência aferida</th><th class="num">Acima?</th></tr>
+    ${alvos.map((p,i)=>{
+      const o = (v.ocorrencias||[]).find(x=>x.alvo===p.alvo) || {};
+      return `<tr><td>${esc(p.alvo)}<br><small class="nota">${esc(p.metodo)}</small></td>
+        <td class="nota">${esc(p.nivel)}</td>
+        <td class="num"><input class="mono" style="width:80px" id="o_${i}" value="${o.valor??''}" placeholder="%"></td>
+        <td class="num"><input type="checkbox" id="ok_${i}" ${o.acima?'checked':''} style="width:auto"></td></tr>`;
+    }).join('')}
+  </table></div>` : `<p class="nota">Nenhum alvo cadastrado para esta cultura na aba Tabelas.</p>`}</div>
+
+  <div style="margin-top:16px"><label>O que foi observado</label><textarea id="v_obs">${esc(v.obs)}</textarea></div>
+  <div style="margin-top:12px"><label>Recomendação deixada ao produtor</label><textarea id="v_rec">${esc(v.recomendacao)}</textarea></div>
+  <div style="margin-top:12px"><label>Próxima visita</label><input id="v_prox" type="date" value="${v.proxima||''}"></div>`;
+}
+
+function verVisitaHTML(v){
+  const t = S.talhoes.find(x=>x.id===v.talhaoId)||{};
+  return `<div class="cabecalho-vista">
+    <div><span class="olho">${esc(nomeProdutor(t.produtorId))} · ${esc(t.nome||'')}</span>
+      <h1>Visita de ${dataBR(v.data)}</h1><p>${esc(v.fenologia||'—')} · condição ${esc(v.condicao||'—')}</p></div>
+    <div class="acoes">
+      <button class="btn sec" onclick="app.novaVisita('${v.id}')">Editar</button>
+      <button class="btn sec" onclick="app.ir('monitoramento')">Voltar</button>
+    </div></div>
+  <div class="cartao">
+    <span class="olho">Amostragem</span><h2 style="margin:4px 0 12px">Ocorrências</h2>
+    ${(v.ocorrencias||[]).length ? `<div class="rolagem"><table>
+      <tr><th>Alvo</th><th class="num">Aferido</th><th>Situação</th></tr>
+      ${v.ocorrencias.map(o=>`<tr><td>${esc(o.alvo)}</td><td class="num">${esc(o.valor||'—')}</td>
+        <td><span class="tag ${o.acima?'ruim':''}">${o.acima?'Acima do nível de controle':'Abaixo do nível'}</span></td></tr>`).join('')}
+    </table></div>` : `<p class="nota">Sem ocorrências registradas.</p>`}
+  </div>
+  <div class="cartao"><span class="olho">Campo</span><h2 style="margin:4px 0 8px">Observações</h2>
+    <p style="white-space:pre-wrap;margin:0;font-size:14px">${esc(v.obs||'—')}</p></div>
+  <div class="cartao"><span class="olho">Encaminhamento</span><h2 style="margin:4px 0 8px">Recomendação</h2>
+    <p style="white-space:pre-wrap;margin:0;font-size:14px">${esc(v.recomendacao||'—')}</p>
+    ${v.proxima?`<p class="nota" style="margin-top:10px">Próxima visita prevista para ${dataBR(v.proxima)}.</p>`:''}</div>`;
+}
+
+/* ============================================================
+   LAUDO
+   ============================================================ */
+
+function laudoHTML(a){
+  const t = S.talhoes.find(x=>x.id===a.talhaoId)||{};
+  const p = S.produtores.find(x=>x.id===t.produtorId)||{};
+  const cult = S.tab.culturas[t.cultura];
+  const r = calcular(a);
+  const prod = n(a.prodEsperada)||n(t.prodEsperada)||(cult?cult.ref:0);
+  const cal = calagem(a,r,cult,n(a.prnt)||85,parseInt(a.incorp||20));
+  const ad = adubacao(a,r,cult,prod);
+  const dg = diagnostico(a,r,cult);
+  const area = n(t.area)||0;
+  const c = S.consultor;
+
+  return `<div class="cabecalho-vista nao-imprime">
+    <div><h1>Laudo</h1><p>Confira e imprima ou salve em PDF pela caixa de impressão.</p></div>
+    <div class="acoes"><button class="btn verde" onclick="window.print()">Imprimir / PDF</button>
+      <button class="btn sec" onclick="app.verAnalise('${a.id}')">Voltar</button></div></div>
+  <div class="folha-a4">
+    <div class="cabecalho">
+      <div><h2 style="border:0;padding:0;margin:0;font-size:22px">Laudo de recomendação agronômica</h2>
+        <div class="nota">${esc(c.empresa||'')} · emitido em ${dataBR(hoje())}</div></div>
+      <div style="text-align:right;font-size:12px">
+        <b>${esc(c.nome||'—')}</b><br>${esc(c.crea?'CREA '+c.crea:'')}<br>${esc(c.fone||'')}</div>
+    </div>
+
+    <h2>1. Identificação</h2>
+    <table>
+      <tr><td><b>Produtor</b></td><td>${esc(p.nome||'—')}</td><td><b>Propriedade</b></td><td>${esc(p.propriedade||'—')}</td></tr>
+      <tr><td><b>Município</b></td><td>${esc(p.municipio||'—')}</td><td><b>Talhão</b></td><td>${esc(t.nome||'—')} · ${f(area,1)} ha</td></tr>
+      <tr><td><b>Cultura</b></td><td>${esc(cult?cult.nome:'—')}</td><td><b>Variedade</b></td><td>${esc(t.variedade||'—')}</td></tr>
+      <tr><td><b>Coleta</b></td><td>${dataBR(a.data)} · ${esc(a.prof||'0–20')} cm</td><td><b>Laboratório</b></td><td>${esc(a.lab||'—')}</td></tr>
+    </table>
+
+    <h2>2. Resultado da análise</h2>
+    <table>
+      <tr><th>pH</th><th class="num">M.O.</th><th class="num">P</th><th class="num">K</th><th class="num">Ca</th><th class="num">Mg</th><th class="num">Al</th><th class="num">H+Al</th></tr>
+      <tr><td class="num">${f(n(a.pH),1)}</td><td class="num">${f(n(a.MO),1)}</td><td class="num">${f(n(a.P),1)}</td><td class="num">${f(n(a.K),0)}</td>
+        <td class="num">${f(n(a.Ca),2)}</td><td class="num">${f(n(a.Mg),2)}</td><td class="num">${f(n(a.Al),2)}</td><td class="num">${f(n(a.HAl),2)}</td></tr>
+      <tr><th>SB</th><th class="num">CTC (t)</th><th class="num">CTC (T)</th><th class="num">V%</th><th class="num">m%</th><th class="num">Ca/Mg</th><th class="num">Argila</th><th class="num">S</th></tr>
+      <tr><td class="num">${f(r.SB,2)}</td><td class="num">${f(r.t,2)}</td><td class="num">${f(r.T,2)}</td><td class="num">${f(r.V,1)}</td>
+        <td class="num">${f(r.m,1)}</td><td class="num">${f(r.CaMg,1)}</td><td class="num">${f(n(a.argila),0)}%</td><td class="num">${f(n(a.S),1)}</td></tr>
+      <tr><th>B</th><th class="num">Zn</th><th class="num">Cu</th><th class="num">Mn</th><th class="num">Fe</th><th colspan="3"></th></tr>
+      <tr><td class="num">${f(n(a.B),2)}</td><td class="num">${f(n(a.Zn),1)}</td><td class="num">${f(n(a.Cu),1)}</td>
+        <td class="num">${f(n(a.Mn),1)}</td><td class="num">${f(n(a.Fe),1)}</td><td colspan="3"></td></tr>
+    </table>
+
+    <h2>3. Diagnóstico</h2>
+    <ul style="font-size:13.5px">${dg.map(d=>`<li style="margin-bottom:5px">${esc(d.txt)}</li>`).join('')}</ul>
+
+    <h2>4. Correção do solo</h2>
+    <p style="font-size:13.5px">Elevação da saturação por bases para ${cal.V2}%, com calcário de PRNT ${n(a.prnt)||85}% incorporado a 0–${a.incorp||20} cm:</p>
+    <table>
+      <tr><td><b>Calcário</b></td><td class="num">${f(cal.corrigido,2)} t/ha</td><td class="num">${f(cal.corrigido*area,1)} t no talhão</td></tr>
+      ${gessagem(a,r).precisa?`<tr><td><b>Gesso agrícola</b></td><td class="num">${f(gessagem(a,r).dose,0)} kg/ha</td><td class="num">${f(gessagem(a,r).dose*area/1000,1)} t no talhão</td></tr>`:''}
+    </table>
+
+    ${ad?`<h2>5. Adubação – produtividade esperada de ${f(prod,1)} ${esc(cult.un)}</h2>
+    <table>
+      <tr><th>Nutriente</th><th class="num">kg/ha</th><th class="num">Total (${f(area,1)} ha)</th><th>Fonte sugerida</th></tr>
+      <tr><td>N</td><td class="num">${ad.N}</td><td class="num">${f(ad.N*area,0)} kg</td><td>${esc((fontesSugeridas(a,ad,area).find(x=>/ureia|amônio/i.test(x.nome))||{}).nome||'—')}</td></tr>
+      <tr><td>P₂O₅</td><td class="num">${ad.P2O5}</td><td class="num">${f(ad.P2O5*area,0)} kg</td><td>${esc((fontesSugeridas(a,ad,area).find(x=>/superfosfato/i.test(x.nome))||{}).nome||'—')}</td></tr>
+      <tr><td>K₂O</td><td class="num">${ad.K2O}</td><td class="num">${f(ad.K2O*area,0)} kg</td><td>Cloreto de potássio</td></tr>
+    </table>
+    <h2>6. Parcelamento e manejo</h2>
+    <ol style="font-size:13.5px">${cult.parc.map(x=>`<li style="margin-bottom:4px">${esc(x)}</li>`).join('')}</ol>
+    <p style="font-size:13px">${esc(cult.obs)}</p>`:''}
+
+    <div class="assina"><hr><b>${esc(c.nome||'')}</b><br>Engenheiro(a) Agrônomo(a) – CREA ${esc(c.crea||'')}</div>
+  </div>`;
+}
+
+/* ============================================================
+   AÇÕES
+   ============================================================ */
+
+const app = {
+  ir(k){ atual=k; render(); },
+  fecharModal(){ document.getElementById('modal').innerHTML=''; },
+
+  editarProdutor(pid){
+    const p = S.produtores.find(x=>x.id===pid) || {nome:'',propriedade:'',municipio:'',fone:'',area:'',obs:''};
+    modal(pid?'Editar produtor':'Novo produtor', formProdutor(p),
+      `<button class="btn verde" onclick="app.salvarProdutor('${pid||''}')">Salvar</button>
+       <button class="btn sec" onclick="app.fecharModal()">Cancelar</button>`);
+  },
+  async salvarProdutor(pid){
+    const v = k => document.getElementById(k).value.trim();
+    if(!v('p_nome')) return toast('Informe o nome do produtor');
+    const d = {nome:v('p_nome'),propriedade:v('p_prop'),municipio:v('p_mun'),fone:v('p_fone'),area:v('p_area'),obs:v('p_obs')};
+    if(pid) Object.assign(S.produtores.find(x=>x.id===pid), d);
+    else S.produtores.push({id:id(),...d});
+    await salvar(); this.fecharModal(); render(); toast('Produtor salvo');
+  },
+
+  editarTalhao(tid){
+    if(!S.produtores.length) return toast('Cadastre um produtor primeiro');
+    const t = S.talhoes.find(x=>x.id===tid) ||
+      {produtorId:S.produtores[0].id,nome:'',cultura:'cafe-conilon',variedade:'',area:'',prodEsperada:'',espacamento:'',ano:'',obs:''};
+    modal(tid?'Editar talhão':'Novo talhão', formTalhao(t),
+      `<button class="btn verde" onclick="app.salvarTalhao('${tid||''}')">Salvar</button>
+       <button class="btn sec" onclick="app.fecharModal()">Cancelar</button>`);
+  },
+  trocouCultura(){
+    const k = document.getElementById('t_cult').value;
+    document.getElementById('t_un').textContent = (S.tab.culturas[k]||{}).un||'';
+  },
+  async salvarTalhao(tid){
+    const v = k => document.getElementById(k).value.trim();
+    if(!v('t_nome')) return toast('Dê um nome ao talhão');
+    const d = {produtorId:v('t_prod'),nome:v('t_nome'),cultura:v('t_cult'),variedade:v('t_var'),
+      area:v('t_area'),prodEsperada:v('t_prod_esp'),espacamento:v('t_esp'),ano:v('t_ano'),obs:v('t_obs')};
+    if(tid) Object.assign(S.talhoes.find(x=>x.id===tid), d);
+    else S.talhoes.push({id:id(),...d});
+    await salvar(); this.fecharModal(); render(); toast('Talhão salvo');
+  },
+
+  novaAnalise(){ this.editarAnalise(); },
+  editarAnalise(aid){
+    if(!S.talhoes.length) return toast('Cadastre um talhão primeiro');
+    const a = S.analises.find(x=>x.id===aid) || {talhaoId:S.talhoes[0].id,data:hoje(),prof:'0–20',lab:'',prnt:85,incorp:20};
+    modal(aid?'Editar análise':'Lançar análise de solo', formAnalise(a),
+      `<button class="btn verde" onclick="app.salvarAnalise('${aid||''}')">Interpretar</button>
+       <button class="btn sec" onclick="app.fecharModal()">Cancelar</button>`);
+  },
+  async salvarAnalise(aid){
+    const v = k => document.getElementById(k).value.trim();
+    const d = {talhaoId:v('a_talhao'),data:v('a_data'),prof:v('a_prof'),lab:v('a_lab'),
+      argila:v('a_argila'),pH:v('a_pH'),MO:v('a_MO'),P:v('a_P'),K:v('a_K'),Ca:v('a_Ca'),Mg:v('a_Mg'),
+      Al:v('a_Al'),HAl:v('a_HAl'),Na:v('a_Na'),S:v('a_S'),B:v('a_B'),Zn:v('a_Zn'),Cu:v('a_Cu'),
+      Mn:v('a_Mn'),Fe:v('a_Fe'),prnt:v('a_prnt'),incorp:v('a_incorp'),prodEsperada:v('a_prod')};
+    if(!d.pH || !d.HAl) return toast('pH e H+Al são obrigatórios para calcular a CTC');
+    let novoId = aid;
+    if(aid) Object.assign(S.analises.find(x=>x.id===aid), d);
+    else { novoId = id(); S.analises.push({id:novoId,...d}); }
+    await salvar(); this.fecharModal(); this.verAnalise(novoId);
+  },
+  verAnalise(aid){
+    const a = S.analises.find(x=>x.id===aid); if(!a) return;
+    atual='analises';
+    document.getElementById('abas').innerHTML = ABAS.map(([k,r])=>
+      `<button class="aba" aria-current="${k===atual}" onclick="app.ir('${k}')">${r}</button>`).join('');
+    document.getElementById('vista').innerHTML = verAnaliseHTML(a);
+    window.scrollTo({top:0});
+  },
+  laudo(aid){
+    const a = S.analises.find(x=>x.id===aid); if(!a) return;
+    document.getElementById('vista').innerHTML = laudoHTML(a);
+    window.scrollTo({top:0});
+  },
+
+  novaVisita(vid){
+    if(!S.talhoes.length) return toast('Cadastre um talhão primeiro');
+    const v = S.visitas.find(x=>x.id===vid) || {talhaoId:S.talhoes[0].id,data:hoje(),fenologia:'',condicao:'Boa',obs:'',recomendacao:'',proxima:'',ocorrencias:[]};
+    modal(vid?'Editar visita':'Registrar visita', formVisita(v),
+      `<button class="btn verde" onclick="app.salvarVisita('${vid||''}')">Salvar visita</button>
+       <button class="btn sec" onclick="app.fecharModal()">Cancelar</button>`);
+  },
+  trocouTalhaoVisita(){
+    // troca so os campos que dependem da cultura; o resto do formulario fica intacto
+    const t = S.talhoes.find(x=>x.id===document.getElementById('v_talhao').value) || {};
+    const fen = FENOLOGIA[t.cultura] || [];
+    document.getElementById('v_fen_wrap').innerHTML =
+      `<label>Estádio fenológico</label><select id="v_fen"><option value="">—</option>`+
+      fen.map(x=>`<option>${esc(x)}</option>`).join('')+`</select>`;
+    const alvos = S.tab.pragas.filter(p=>p.cultura===t.cultura);
+    document.getElementById('v_alvos_wrap').innerHTML = alvos.length
+      ? `<div class="rolagem"><table><tr><th>Alvo</th><th>Nível de controle</th><th class="num">Incidência aferida</th><th class="num">Acima?</th></tr>`+
+        alvos.map((p,i)=>`<tr><td>${esc(p.alvo)}<br><small class="nota">${esc(p.metodo)}</small></td>
+          <td class="nota">${esc(p.nivel)}</td>
+          <td class="num"><input class="mono" style="width:80px" id="o_${i}" placeholder="%"></td>
+          <td class="num"><input type="checkbox" id="ok_${i}" style="width:auto"></td></tr>`).join('')+
+        `</table></div>`
+      : `<p class="nota">Nenhum alvo cadastrado para esta cultura na aba Tabelas.</p>`;
+  },
+  async salvarVisita(vid){
+    const v = k => { const e=document.getElementById(k); return e?e.value.trim():''; };
+    const tid = v('v_talhao');
+    const t = S.talhoes.find(x=>x.id===tid)||{};
+    const alvos = S.tab.pragas.filter(p=>p.cultura===t.cultura);
+    const oc = [];
+    alvos.forEach((p,i)=>{
+      const val = v('o_'+i);
+      const chk = document.getElementById('ok_'+i);
+      if(val || (chk&&chk.checked)) oc.push({alvo:p.alvo, valor:val, acima: chk?chk.checked:false});
+    });
+    const d = {talhaoId:tid,data:v('v_data'),fenologia:v('v_fen'),condicao:v('v_cond'),
+      obs:v('v_obs'),recomendacao:v('v_rec'),proxima:v('v_prox'),ocorrencias:oc};
+    let novo = vid;
+    if(vid) Object.assign(S.visitas.find(x=>x.id===vid), d);
+    else { novo = id(); S.visitas.push({id:novo,...d}); }
+    await salvar(); this.fecharModal(); this.verVisita(novo);
+  },
+  verVisita(vid){
+    const v = S.visitas.find(x=>x.id===vid); if(!v) return;
+    atual='monitoramento';
+    document.getElementById('abas').innerHTML = ABAS.map(([k,r])=>
+      `<button class="aba" aria-current="${k===atual}" onclick="app.ir('${k}')">${r}</button>`).join('');
+    document.getElementById('vista').innerHTML = verVisitaHTML(v);
+    window.scrollTo({top:0});
+  },
+
+  async excluir(colecao, cid){
+    const filhos = colecao==='produtores'
+      ? 'Os talhões, análises e visitas ligados a ele também serão apagados.'
+      : colecao==='talhoes' ? 'As análises e visitas deste talhão também serão apagadas.' : '';
+    if(!await perguntar('Excluir este registro? '+filhos+' Não dá para desfazer.')) return;
+    S[colecao] = S[colecao].filter(x=>x.id!==cid);
+    if(colecao==='produtores'){ const ts=S.talhoes.filter(t=>t.produtorId===cid).map(t=>t.id);
+      S.talhoes=S.talhoes.filter(t=>t.produtorId!==cid);
+      S.analises=S.analises.filter(a=>!ts.includes(a.talhaoId));
+      S.visitas=S.visitas.filter(v=>!ts.includes(v.talhaoId)); }
+    if(colecao==='talhoes'){ S.analises=S.analises.filter(a=>a.talhaoId!==cid); S.visitas=S.visitas.filter(v=>v.talhaoId!==cid); }
+    await salvar(); render(); toast('Registro excluído');
+  },
+
+  async salvarConsultor(){
+    const v = k => document.getElementById(k).value.trim();
+    S.consultor = {nome:v('c_nome'),crea:v('c_crea'),fone:v('c_fone'),email:v('c_email'),empresa:v('c_empresa')};
+    await salvar(); render(); toast('Dados do consultor salvos');
+  },
+
+  async setCult(k,campo,val){ S.tab.culturas[k][campo] = n(val); await salvar(); toast('Tabela atualizada'); },
+  async setCultArr(k,campo,val){
+    const arr = val.split(',').map(x=>n(x));
+    if(arr.length!==5) return toast('Informe 5 valores separados por vírgula');
+    S.tab.culturas[k][campo] = arr; await salvar(); toast('Tabela atualizada');
+  },
+  async restaurarTabelas(){
+    if(!await perguntar('Restaurar todas as tabelas de referência para o padrão? Suas calibrações serão perdidas.','Restaurar')) return;
+    S.tab = JSON.parse(JSON.stringify(PADRAO)); await salvar(); render(); toast('Tabelas restauradas');
+  },
+
+  exportar(){
+    const b = new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a');
+    a.href=u; a.download='agrotech-backup-'+hoje()+'.json'; a.click();
+    URL.revokeObjectURL(u); toast('Backup gerado');
+  },
+  importar(){
+    const i = document.createElement('input'); i.type='file'; i.accept='application/json';
+    i.onchange = async e => {
+      const arq = e.target.files[0]; if(!arq) return;
+      try{
+        const d = JSON.parse(await arq.text());
+        if(!d.produtores) throw new Error('formato');
+        S = Object.assign(vazio(), d);
+        await salvar(); render(); toast('Backup importado');
+      }catch(err){ toast('Arquivo inválido – esperava um backup do AgroTech'); }
+    };
+    i.click();
+  }
+};
+window.app = app;
+
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  const c = document.getElementById('confirmar');
+  if(c){ c.remove(); return; }
+  if(document.querySelector('.fundo')) app.fecharModal();
+});
+
+/* ============================================================
+   INÍCIO
+   ============================================================ */
+(async function(){
+  S = await Store.ler() || vazio();
+  if(!S.tab || !S.tab.culturas) S.tab = JSON.parse(JSON.stringify(PADRAO));
+  render();
+})();
+</script>
