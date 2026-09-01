@@ -1,8 +1,14 @@
-/* Tokens herdados do protótipo (agrotech.html). A migração de UI vem por tela;
-   estes são os que a régua e o perfil da CTC precisam. */
+/* =========================================================================
+   AgroTech — sistema visual
+   Linguagem herdada do protótipo (papel / tinta / folha), refinada para o app.
+   Fontes: Archivo (texto) + IBM Plex Mono (números) via next/font -> --fonte/--mono
+   ========================================================================= */
+
 :root {
+  color-scheme: light;
+
   --papel: #eef1ec;
-  --papel-2: #fff;
+  --papel-2: #ffffff;
   --papel-3: #f7f9f5;
   --tinta: #111a14;
   --grafite: #59635c;
@@ -10,18 +16,34 @@
   --linha: #dce1d8;
   --linha-forte: #c4ccbf;
   --folha: #0f5c43;
+  --folha-clara: #e2efe7;
+  --folha-escura: #0b4834;
 
+  /* escala de interpretação (fita de pH) */
   --c-mb: #b4342a;
   --c-b: #d9762a;
   --c-m: #dfa92a;
   --c-bom: #4b963e;
   --c-mbom: #1b7355;
 
+  /* ocupação da CTC */
   --ca: #2e7d5b;
   --mg: #7fa83b;
   --k: #dfa92a;
+  --na: #9aa0a6;
   --al: #b4342a;
   --hal: #6b5b4b;
+
+  --r: 14px;
+  --r-p: 9px;
+  --r-mini: 6px;
+
+  --sombra: 0 1px 2px rgba(17, 26, 20, .04), 0 8px 24px -18px rgba(17, 26, 20, .45);
+  --sombra-alta: 0 2px 4px rgba(17, 26, 20, .05), 0 18px 40px -24px rgba(17, 26, 20, .55);
+
+  /* --fonte-archivo / --fonte-mono vêm do next/font (aplicadas no <html>) */
+  --fonte: var(--fonte-archivo), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: var(--fonte-mono), ui-monospace, 'SFMono-Regular', monospace;
 }
 
 * { box-sizing: border-box; }
@@ -29,28 +51,258 @@ html, body { margin: 0; padding: 0; }
 body {
   background: var(--papel);
   color: var(--tinta);
-  font: 15px/1.5 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--fonte);
+  font-size: 15px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
-a { color: var(--folha); }
 
-.regua-linha { display: grid; grid-template-columns: 150px 70px 1fr; gap: 14px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--linha); }
-.regua-nome { font-size: 13px; font-weight: 600; }
-.regua-nome small { display: block; font-weight: 400; color: var(--grafite-2); font-size: 11px; }
-.regua-valor { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; text-align: right; }
+h1, h2, h3 { margin: 0; font-weight: 800; letter-spacing: -.025em; line-height: 1.12; }
+h1 { font-size: 27px; }
+h2 { font-size: 19px; }
+h3 { font-size: 15px; }
+a { color: var(--folha); text-decoration: none; }
+a:hover { text-decoration: underline; }
+::selection { background: var(--folha); color: #fff; }
+
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.nota { font-size: 12px; color: var(--grafite-2); line-height: 1.45; }
+
+/* ---------- topo + abas ---------- */
+.topo {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 20px;
+  background: linear-gradient(180deg, #152019 0%, #111a14 100%);
+  color: #eaefe9;
+  border-bottom: 1px solid #0a110c;
+}
+.marca { display: flex; align-items: baseline; gap: 9px; font-weight: 800; letter-spacing: -.035em; font-size: 19px; }
+.marca::before {
+  content: ""; width: 9px; height: 9px; border-radius: 2px;
+  background: #4fb286; transform: rotate(45deg);
+}
+.marca span { color: #7fc6a3; font-weight: 500; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; }
+.topo .quem { margin-left: auto; text-align: right; font-size: 11.5px; color: #98a39b; line-height: 1.35; }
+.topo .quem b { display: block; color: #eaefe9; font-size: 13px; font-weight: 600; }
+
+.abas {
+  position: sticky; top: 45px; z-index: 35;
+  display: flex; gap: 4px; padding: 8px 14px; overflow-x: auto;
+  background: rgba(238, 241, 236, .9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--linha);
+  scrollbar-width: none;
+}
+.abas::-webkit-scrollbar { display: none; }
+.aba {
+  padding: 7px 13px; border-radius: 99px;
+  font-size: 13px; font-weight: 600; color: var(--grafite);
+  white-space: nowrap; border: 1px solid transparent;
+  transition: background .15s ease, color .15s ease;
+}
+.aba:hover { color: var(--tinta); background: rgba(17, 26, 20, .05); text-decoration: none; }
+.aba[data-ativa="true"] { color: #fff; background: var(--folha); border-color: var(--folha); }
+
+main.vista { max-width: 1100px; margin: 0 auto; padding: 26px 18px 90px; }
+
+/* ---------- cabeçalho de vista ---------- */
+.cabecalho-vista { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.cabecalho-vista p { margin: 5px 0 0; color: var(--grafite); font-size: 13.5px; max-width: 62ch; }
+.cabecalho-vista .acoes { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.olho {
+  display: block; margin-bottom: 5px;
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--folha); font-weight: 700;
+}
+
+/* ---------- cartão / grade ---------- */
+.cartao {
+  background: var(--papel-2); border: 1px solid var(--linha);
+  border-radius: var(--r); padding: 18px; box-shadow: var(--sombra);
+}
+.cartao + .cartao { margin-top: 14px; }
+.cartao > h2 { margin: 4px 0 12px; }
+.grade { display: grid; gap: 12px; }
+.g2 { grid-template-columns: repeat(2, 1fr); }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 820px) { .g3, .g4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } }
+
+/* ---------- botões ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 15px; border-radius: var(--r-p);
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--tinta); background: var(--tinta); color: #fff;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.btn:hover { background: #000; text-decoration: none; }
+.btn.sec { background: #fff; color: var(--tinta); border-color: var(--linha-forte); }
+.btn.sec:hover { border-color: var(--tinta); background: #fff; }
+.btn.verde { background: var(--folha); border-color: var(--folha); }
+.btn.verde:hover { background: var(--folha-escura); }
+.btn.mini { padding: 5px 10px; font-size: 12px; border-radius: var(--r-mini); }
+.btn:focus-visible, .aba:focus-visible, a:focus-visible { outline: 2px solid var(--folha); outline-offset: 2px; }
+
+/* ---------- listas / itens ---------- */
+.lista { display: flex; flex-direction: column; gap: 8px; }
+.item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--papel-2); border: 1px solid var(--linha);
+  border-radius: var(--r); padding: 13px 15px;
+  transition: border-color .15s ease;
+}
+.item:hover { border-color: var(--linha-forte); }
+.item .cresce { flex: 1; min-width: 0; }
+.item h3 { font-size: 14.5px; }
+.item small { color: var(--grafite); font-size: 12px; }
+
+.vazio {
+  border: 1px dashed var(--linha-forte); border-radius: var(--r);
+  padding: 34px 22px; text-align: center;
+  color: var(--grafite); font-size: 13.5px; background: var(--papel-3);
+}
+.vazio b { display: block; color: var(--tinta); font-size: 15.5px; margin-bottom: 5px; }
+
+/* ---------- tags ---------- */
+.tag {
+  display: inline-block; padding: 3px 9px; border-radius: 99px;
+  font-size: 11px; font-weight: 700; letter-spacing: .01em; white-space: nowrap;
+  background: var(--folha-clara); color: var(--folha);
+}
+.tag.cinza { background: #eaede7; color: var(--grafite); }
+.tag.alerta { background: #fbeedf; color: #8f5410; }
+.tag.ruim { background: #fae6e3; color: #8e2419; }
+
+/* ---------- tabelas ---------- */
+.rolagem { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  text-align: left; padding: 8px;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--grafite); font-weight: 700;
+  border-bottom: 1px solid var(--linha-forte);
+}
+td { padding: 8px; border-bottom: 1px solid var(--linha); }
+tbody tr:hover td, table tr:hover td { background: var(--papel-3); }
+td.num, th.num { text-align: right; font-family: var(--mono); }
+
+/* ---------- métrica ---------- */
+.metrica {
+  position: relative; overflow: hidden;
+  background: var(--papel-2); border: 1px solid var(--linha);
+  border-radius: var(--r); padding: 14px 15px;
+}
+.metrica::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--folha); opacity: .5;
+}
+.metrica span {
+  font-size: 10px; color: var(--grafite); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .11em;
+}
+.metrica b {
+  display: block; margin: 3px 0 1px;
+  font-family: var(--mono); font-size: 25px; font-weight: 600; letter-spacing: -.03em;
+}
+.metrica em { font-style: normal; font-size: 12px; color: var(--grafite-2); }
+
+/* ---------- régua de interpretação ---------- */
+.regua-linha {
+  display: grid; grid-template-columns: 160px 72px 1fr; gap: 14px;
+  align-items: center; padding: 11px 0; border-bottom: 1px solid var(--linha);
+}
+.regua-linha:last-child { border-bottom: 0; }
+.regua-nome { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.regua-nome small { display: block; font-weight: 400; color: var(--grafite-2); font-size: 11px; font-family: var(--mono); }
+.regua-valor { font-family: var(--mono); font-size: 15px; font-weight: 600; text-align: right; }
 .regua { position: relative; height: 30px; }
-.faixas { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin-top: 7px; gap: 2px; }
+.regua-classe { font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.faixas { display: flex; height: 10px; gap: 2px; margin-top: 7px; border-radius: 99px; overflow: hidden; }
 .faixas i { flex: 1; border-radius: 2px; }
-.marca-valor { position: absolute; top: 1px; width: 2px; height: 22px; background: var(--tinta); border-radius: 2px; }
-.regua-classe { font-size: 11px; font-weight: 700; }
+.faixas i:first-child { border-radius: 99px 2px 2px 99px; }
+.faixas i:last-child { border-radius: 2px 99px 99px 2px; }
+.marca-valor {
+  position: absolute; top: 1px; width: 2px; height: 22px;
+  background: var(--tinta); border-radius: 2px; transform: translateX(-1px);
+}
+.marca-valor::after {
+  content: ""; position: absolute; top: -2px; left: -3.5px;
+  width: 9px; height: 9px; border-radius: 99px;
+  background: var(--tinta); border: 2px solid var(--papel-2);
+}
+@media (max-width: 640px) {
+  .regua-linha {
+    grid-template-columns: 1fr 76px;
+    grid-template-areas: "nome valor" "regua regua"; gap: 6px 10px;
+  }
+  .regua-nome { grid-area: nome; } .regua-valor { grid-area: valor; } .regua { grid-area: regua; }
+}
 
-.perfil { display: flex; height: 52px; border-radius: 8px; overflow: hidden; border: 1px solid var(--linha-forte); }
-.perfil div { display: flex; align-items: center; justify-content: center; color: #fff; font: 700 11.5px 'IBM Plex Mono', monospace; text-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+/* ---------- perfil da CTC ---------- */
+.perfil {
+  display: flex; height: 52px; border-radius: var(--r-p);
+  overflow: hidden; border: 1px solid var(--linha-forte);
+}
+.perfil > div {
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font: 700 11.5px var(--mono); text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+}
 .legenda { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 11.5px; color: var(--grafite); }
 .legenda span { display: flex; align-items: center; gap: 6px; }
 .legenda i { width: 11px; height: 11px; border-radius: 3px; flex: none; }
-.nota { font-size: 12px; color: var(--grafite-2); }
+.legenda em { font-style: normal; }
 
-.tela-login { max-width: 380px; margin: 12vh auto; padding: 28px; background: var(--papel-2); border: 1px solid var(--linha); border-radius: 12px; }
-.tela-login h1 { font-size: 22px; margin: 0 0 4px; }
+/* ---------- aviso ---------- */
+.aviso {
+  border: 1px solid #e8d9b0; border-left: 3px solid #c79a28;
+  background: #fcf7ea; padding: 12px 14px;
+  border-radius: 0 var(--r-p) var(--r-p) 0;
+  font-size: 12.5px; color: #5a4614; line-height: 1.5;
+}
+
+/* ---------- formulário ---------- */
+label { display: block; font-size: 11px; font-weight: 700; color: var(--grafite); margin-bottom: 5px; letter-spacing: .02em; }
+label .un { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--grafite-2); }
+input, select, textarea {
+  width: 100%; padding: 9px 11px;
+  border: 1px solid var(--linha-forte); border-radius: var(--r-p);
+  background: #fff; color: var(--tinta); font-family: inherit; font-size: 14px;
+}
+input.mono { font-family: var(--mono); }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--folha); outline-offset: 1px; border-color: var(--folha); }
+input::placeholder { color: var(--grafite-2); }
+textarea { min-height: 82px; resize: vertical; }
+.campo { display: flex; flex-direction: column; }
+
+/* ---------- tela de login ---------- */
+.tela-login {
+  max-width: 390px; margin: 12vh auto; padding: 30px;
+  background: var(--papel-2); border: 1px solid var(--linha);
+  border-radius: var(--r); box-shadow: var(--sombra);
+}
+.tela-login .marca { color: var(--tinta); margin-bottom: 4px; }
+.tela-login .marca::before { background: var(--folha); }
 .tela-login p { color: var(--grafite); font-size: 13px; margin: 0 0 20px; }
+.tela-login label { margin-top: 12px; }
+.tela-login .btn { width: 100%; justify-content: center; margin-top: 18px; }
+
+/* ---------- laudo ---------- */
+.folha-a4 {
+  background: #fff; border: 1px solid var(--linha); border-radius: var(--r);
+  padding: 34px; max-width: 840px; margin: 0 auto;
+}
+.folha-a4 h2 { border-bottom: 2px solid var(--tinta); padding-bottom: 6px; margin: 24px 0 11px; font-size: 16px; }
+.folha-a4 .cabecalho { display: flex; justify-content: space-between; gap: 20px; border-bottom: 3px solid var(--folha); padding-bottom: 13px; }
+.assina { margin-top: 50px; text-align: center; font-size: 12.5px; }
+.assina hr { border: 0; border-top: 1px solid var(--tinta); width: 290px; margin: 0 auto 6px; }
+
+@media print {
+  .topo, .abas, .cabecalho-vista .acoes, .nao-imprime { display: none !important; }
+  body { background: #fff; font-size: 11pt; }
+  main.vista { padding: 0; max-width: none; }
+  .cartao, table, .regua-linha { break-inside: avoid; }
+}

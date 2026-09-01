@@ -1,5 +1,7 @@
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+
+type CookieParaGravar = { name: string; value: string; options?: CookieOptions };
 
 /** Cliente Supabase para Server Components / Route Handlers. RLS aplicada. */
 export async function criarClienteServidor() {
@@ -13,7 +15,7 @@ export async function criarClienteServidor() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieParaGravar[]) {
           try {
             for (const { name, value, options } of cookiesToSet) {
               cookieStore.set(name, value, options);

@@ -42,16 +42,34 @@ agrotech/
 │     └─ test/                45 testes (vitest) — a suíte É a auditoria
 │
 ├─ apps/
-│  └─ web/                    Next.js 15 (App Router) — esqueleto
-│     ├─ middleware.ts        roteamento por perfil (conveniência)
-│     ├─ lib/supabase/        client / server / middleware (@supabase/ssr)
-│     ├─ components/          regua-interpretacao, perfil-ctc (portados)
+│  └─ web/                    Next.js 15 (App Router) — buildando
+│     ├─ middleware.ts        roteamento por perfil; pula /demo e /r/*
+│     ├─ app/globals.css      sistema visual (tokens do protótipo, refinados)
+│     ├─ lib/
+│     │  ├─ supabase/         client / server / middleware / publico (anon)
+│     │  ├─ culturas.ts       label da cultura + linha do banco -> Analise
+│     │  ├─ demo.ts           fixture da vitrine
+│     │  └─ formato.ts        f() / dataBR() pt-BR
+│     ├─ components/
+│     │  ├─ ui.tsx            Cartao, Metrica, Tag, Grade, Vazio, CabecalhoVista
+│     │  ├─ nav-abas.tsx      abas com estado ativo (client)
+│     │  ├─ regua-interpretacao.tsx · perfil-ctc.tsx
+│     │  ├─ interpretacao-view.tsx  tela inteira do motor (reutilizável)
+│     │  ├─ form-analise.tsx  lançamento manual (client + server action)
+│     │  └─ link-compartilhado.tsx  URL + copiar
 │     └─ app/
-│        ├─ (auth)/login/     entrada do consultor
-│        └─ (consultor)/app/  layout com guarda + painel
+│        ├─ (auth)/login · cadastro
+│        ├─ (consultor)/app/           layout com guarda + abas
+│        │  ├─ page.tsx                painel (pendências químicas via motor)
+│        │  ├─ produtores/ + [id]/     análises agrupadas por cultura + links
+│        │  ├─ analises/ + [id]/ + nova/
+│        │  └─ talhoes · laudos · monitoramento · tabelas
+│        ├─ demo/ + demo/tabelas/      vitrine pública (sem auth/banco)
+│        └─ r/[token]/                 link "bruto" de resultados do produtor
 │
 ├─ supabase/
-│  ├─ migrations/0001..0009   schema agro, RLS em todas as tabelas, trigrama
+│  ├─ migrations/0001..0010   schema agro, RLS em todas as tabelas, trigrama,
+│  │                          compartilhamentos + RPC resultados_por_token (anon)
 │  ├─ functions/              processar-laudo, gerar-laudo-pdf, convidar-produtor
 │  ├─ tests/rls.test.sql      pgTAP — isolamento produtor/organização
 │  ├─ config.toml
@@ -88,6 +106,27 @@ lançamento manual OU laudo PDF
 
 Uma recomendação é **reproduzível para sempre**: guarda a versão do motor e a
 cópia das tabelas usadas.
+
+### Link público de resultados (`/r/[token]`)
+
+```
+consultor abre /app/produtores/[id]
+        │  "Gerar link"  (lavoura toda  ou  uma cultura)
+        ▼
+ agro.compartilhamentos { token, produtor_id, cultura|null, ativo }
+        │
+produtor abre  APP_URL/r/{token}   (sem login)
+        ▼
+ anon → RPC agro.resultados_por_token(token)   ← security definer:
+        valida ativo + expira_em, incrementa acessos,
+        devolve JSON só das análises daquele produtor (e cultura, se houver)
+        ▼
+ /r/[token] roda gerarRecomendacao por análise e mostra, agrupado por cultura:
+ V% · m% · pH/CTC · calcário t/ha · N-P-K · alerta crítico   (layout "bruto")
+```
+
+As tabelas continuam fechadas pela RLS; o único caminho anônimo é a função,
+escopada ao token.
 
 ---
 

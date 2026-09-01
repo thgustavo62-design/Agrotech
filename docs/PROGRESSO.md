@@ -19,18 +19,30 @@ Acompanha o roadmap de `AGROTECH.md` §13. Marca o que saiu do protótipo.
   - [x] `supabase/tests/rls.test.sql` (pgTAP) — isolamento produtor/organização
 - [x] `supabase/functions/` — esqueletos de `processar-laudo`, `gerar-laudo-pdf`, `convidar-produtor`
 - [x] `.github/workflows/` — `ci.yml`, `deploy-supabase.yml`, `backup.yml`
-- [x] `apps/web` — esqueleto Next 15: middleware por perfil, clientes Supabase, `login`, layout+painel do consultor, componentes `regua-interpretacao` e `perfil-ctc` portados
-- [ ] `apps/web` — instalar deps e rodar `next build` (precisa de rede + `.env.local`)
+- [x] `apps/web` — Next 15 **buildando** (`next build` verde) e servindo
+  - [x] sistema visual completo em `globals.css` (tokens do protótipo, refinados) + fontes via `next/font`
+  - [x] topo + abas com estado ativo (`nav-abas`), primitivas em `components/ui.tsx`
+  - [x] `login` / `cadastro` (stub) estilizados
+  - [x] painel do consultor com pendências químicas reais (motor sobre as análises)
+  - [x] **tela de interpretação** completa (`interpretacao-view`): métricas, perfil da CTC, réguas macro+micro, diagnóstico, calagem/gessagem, adubação + fontes + parcelamento
+  - [x] `/app/analises` (lista + filtro por cultura), `/app/analises/[id]`, `/app/analises/nova` (form + server action)
+  - [x] `/app/produtores` + `/app/produtores/[id]` — **talhões e análises agrupados por cultura**, resumo V%/m% por talhão
+  - [x] listas de talhões, laudos, monitoramento, tabelas (read-only)
+  - [x] **`/demo`** — vitrine pública da interpretação (sem auth, sem banco, motor real)
+- [x] **Link público de resultados** (`/r/[token]`) — produtor abre sem login e vê V%, m%, calagem e NPK por cultura/talhão, layout "bruto" para o campo
+  - [x] migration `0010_compartilhamentos` + RPC `resultados_por_token` (security definer, `grant … to anon`)
+  - [x] gestão dos links na página do produtor (gerar por cultura ou lavoura toda, ativar/desativar, contador de acessos)
 - [ ] Projeto Supabase real (staging) + `supabase link` + primeira `db push`
-- [ ] CRUD completo de produtores / propriedades / talhões no Next
-- [ ] Rota `/cadastro` que semeia `tabelas_referencia` da org a partir de `clonarPadrao()`
+- [ ] CRUD de escrita de produtores / propriedades / talhões (hoje só leitura)
+- [ ] Rota `/cadastro` real que semeia `tabelas_referencia` da org a partir de `clonarPadrao()`
 
 ## Fase 2 — Análise e recomendação
 
-- [ ] Tela de lançamento manual da análise (form do protótipo → React)
-- [ ] Tela de interpretação (réguas, perfil da CTC, diagnóstico, calagem, adubação)
+- [x] Tela de lançamento manual da análise (form → server action → interpretação)
+- [x] Tela de interpretação (réguas, perfil da CTC, diagnóstico, calagem, adubação)
 - [ ] `gerar-laudo-pdf` de verdade (layout `.folha-a4`)
 - [ ] Editor das tabelas de referência por organização
+- [ ] Tela de conferência do laudo (Fase 3) reaproveitando `interpretacao-view`
 
 ## Fase 3 — Ingestão de PDF
 

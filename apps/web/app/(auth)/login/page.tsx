@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 
 export default function LoginConsultor() {
@@ -27,8 +28,12 @@ export default function LoginConsultor() {
 
   return (
     <div className="tela-login">
-      <h1>AgroTech</h1>
-      <p>Entrada do consultor. Novo escritório? <a href="/cadastro">Criar conta</a>.</p>
+      <div className="marca">AgroTech <span>Assistência técnica</span></div>
+      <p>
+        Entrada do consultor. Novo escritório? <Link href="/cadastro">criar conta</Link>.
+        <br />
+        Só quer ver? <Link href="/demo">abrir a vitrine</Link>.
+      </p>
       <form onSubmit={entrar}>
         <label>
           E-mail
@@ -38,8 +43,8 @@ export default function LoginConsultor() {
           Senha
           <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
         </label>
-        {erro && <p style={{ color: 'var(--c-mb)' }}>{erro}</p>}
-        <button type="submit" disabled={carregando}>
+        {erro ? <p style={{ color: 'var(--c-mb)', fontSize: 13, marginTop: 12 }}>{erro}</p> : null}
+        <button type="submit" className="btn verde" disabled={carregando}>
           {carregando ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
