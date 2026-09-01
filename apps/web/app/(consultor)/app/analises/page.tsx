@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
-import { calcular, PADRAO } from '@agrotech/agro-core';
+import { calcular } from '@agrotech/agro-core';
+import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { f, dataBR } from '@/lib/formato';
-import { nomeCultura, culturaDe, paraAnalise } from '@/lib/culturas';
+import { nomeCultura, paraAnalise } from '@/lib/culturas';
 import { CabecalhoVista, Tag, Vazio } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -21,12 +22,13 @@ export default async function ListaAnalises({
 }) {
   const { cultura: filtro } = await searchParams;
   const sb = await criarClienteServidor();
-  const { data } = await sb
-    .schema('agro')
-    .from('analises')
-    .select('id, data_coleta, argila, ph, mo, p, k, na, ca, mg, al, h_al, talhao:talhao_id(nome, cultura)')
-    .is('arquivado_em', null)
-    .order('data_coleta', { ascending: false });
+  const [{ data }, tabelas] = await Promise.all([
+    sb.schema('agro').from('analises')
+      .select('id, data_coleta, argila, ph, mo, p, k, na, ca, mg, al, h_al, talhao:talhao_id(nome, cultura)')
+      .is('arquivado_em', null)
+      .order('data_coleta', { ascending: false }),
+    tabelasDaOrg(sb),
+  ]);
 
   const todas = (data ?? []) as unknown as Row[];
   const culturasPresentes = [...new Set(todas.map((a) => a.talhao?.cultura ?? '__sem'))]
@@ -61,8 +63,8 @@ export default async function ListaAnalises({
       ) : (
         <div className="lista">
           {analises.map((a) => {
-            const cult = culturaDe(a.talhao?.cultura ?? null);
-            const r = calcular(paraAnalise(a), PADRAO);
+            const cult = a.talhao?.cultura ? tabelas.culturas[a.talhao.cultura] : undefined;
+            const r = calcular(paraAnalise(a), tabelas);
             const okV = r.V >= (cult?.V2 ?? 60);
             return (
               <div className="item" key={a.id}>

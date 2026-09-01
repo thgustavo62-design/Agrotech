@@ -20,11 +20,11 @@ export default async function Produtores() {
         olho="Carteira"
         titulo="Produtores"
         descricao="Quem você atende. O produtor é a raiz — talhões, análises e visitas ficam ligados a ele."
-        acoes={<button className="btn verde" disabled>Novo produtor (Fase 1)</button>}
+        acoes={<Link className="btn verde" href="/app/produtores/nova">Novo produtor</Link>}
       />
       {produtores.length === 0 ? (
         <Vazio titulo="Nenhum produtor cadastrado">
-          O CRUD de produtores entra no próximo passo da Fase 1.
+          Comece por <Link href="/app/produtores/nova">cadastrar um produtor</Link>.
         </Vazio>
       ) : (
         <div className="lista">

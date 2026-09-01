@@ -47,6 +47,8 @@ agrotech/
 │     ├─ app/globals.css      sistema visual (tokens do protótipo, refinados)
 │     ├─ lib/
 │     │  ├─ supabase/         client / server / middleware / publico (anon)
+│     │  ├─ tabelas-org.ts    tabelas calibradas da org (fallback PADRAO por tipo)
+│     │  ├─ onboarding.ts     garantirEscritorio() — cria org + semeia no 1º acesso
 │     │  ├─ culturas.ts       label da cultura + linha do banco -> Analise
 │     │  ├─ demo.ts           fixture da vitrine
 │     │  └─ formato.ts        f() / dataBR() pt-BR
@@ -55,21 +57,25 @@ agrotech/
 │     │  ├─ nav-abas.tsx      abas com estado ativo (client)
 │     │  ├─ regua-interpretacao.tsx · perfil-ctc.tsx
 │     │  ├─ interpretacao-view.tsx  tela inteira do motor (reutilizável)
-│     │  ├─ form-analise.tsx  lançamento manual (client + server action)
+│     │  ├─ laudo-view.tsx · botao-imprimir.tsx   laudo A4 + window.print()
+│     │  ├─ form-analise · form-produtor · form-talhao
 │     │  └─ link-compartilhado.tsx  URL + copiar
 │     └─ app/
-│        ├─ (auth)/login · cadastro
-│        ├─ (consultor)/app/           layout com guarda + abas
+│        ├─ (auth)/login · cadastro (signUp real)
+│        ├─ (consultor)/app/           layout: guarda + garantirEscritorio() + abas
 │        │  ├─ page.tsx                painel (pendências químicas via motor)
-│        │  ├─ produtores/ + [id]/     análises agrupadas por cultura + links
-│        │  ├─ analises/ + [id]/ + nova/
-│        │  └─ talhoes · laudos · monitoramento · tabelas
+│        │  ├─ produtores/ nova/ [id]/ [id]/editar   (CRUD; análises por cultura;
+│        │  │                                         cadastro de propriedade/talhão; links)
+│        │  ├─ analises/ [id]/ [id]/laudo/ nova/
+│        │  ├─ talhoes/ [id]/editar
+│        │  └─ laudos · monitoramento · tabelas
 │        ├─ demo/ + demo/tabelas/      vitrine pública (sem auth/banco)
 │        └─ r/[token]/                 link "bruto" de resultados do produtor
 │
 ├─ supabase/
-│  ├─ migrations/0001..0010   schema agro, RLS em todas as tabelas, trigrama,
-│  │                          compartilhamentos + RPC resultados_por_token (anon)
+│  ├─ migrations/0001..0011   schema agro, RLS em todas as tabelas, trigrama,
+│  │                          compartilhamentos + RPC resultados_por_token (anon),
+│  │                          policy orgs_criar (onboarding do consultor)
 │  ├─ functions/              processar-laudo, gerar-laudo-pdf, convidar-produtor
 │  ├─ tests/rls.test.sql      pgTAP — isolamento produtor/organização
 │  ├─ config.toml

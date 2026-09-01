@@ -32,16 +32,25 @@ Acompanha o roadmap de `AGROTECH.md` §13. Marca o que saiu do protótipo.
 - [x] **Link público de resultados** (`/r/[token]`) — produtor abre sem login e vê V%, m%, calagem e NPK por cultura/talhão, layout "bruto" para o campo
   - [x] migration `0010_compartilhamentos` + RPC `resultados_por_token` (security definer, `grant … to anon`)
   - [x] gestão dos links na página do produtor (gerar por cultura ou lavoura toda, ativar/desativar, contador de acessos)
+- [x] **CRUD de escrita** de produtores (`/produtores/nova`, `/[id]/editar`),
+      propriedades e talhões (`<details>` na página do produtor, `/talhoes/[id]/editar`) — server actions em `produtores/acoes.ts`
+- [x] **`/cadastro` real** (signUp com metadata) + `garantirEscritorio()` no guard:
+      cria a org e semeia as 5 `tabelas_referencia` com `clonarPadrao()` no 1º acesso
+      (migration `0011` — policy `orgs_criar` para consultor sem org)
+- [x] **`tabelasDaOrg(sb)`** — todas as telas usam as tabelas calibradas da organização
+      (fallback para PADRAO por tipo); painel, análises, produtor e laudo já threadados
 - [ ] Projeto Supabase real (staging) + `supabase link` + primeira `db push`
-- [ ] CRUD de escrita de produtores / propriedades / talhões (hoje só leitura)
-- [ ] Rota `/cadastro` real que semeia `tabelas_referencia` da org a partir de `clonarPadrao()`
+- [ ] Editor visual das `tabelas_referencia` por organização (hoje só semeadas)
 
 ## Fase 2 — Análise e recomendação
 
 - [x] Tela de lançamento manual da análise (form → server action → interpretação)
 - [x] Tela de interpretação (réguas, perfil da CTC, diagnóstico, calagem, adubação)
-- [ ] `gerar-laudo-pdf` de verdade (layout `.folha-a4`)
-- [ ] Editor das tabelas de referência por organização
+- [x] **Laudo A4 imprimível** — `/app/analises/[id]/laudo` (`LaudoView` + `window.print()`,
+      `@page` A4 + `.nao-imprime` já no `globals.css`). Conteúdo vem da recomendação
+      (motor_versao), nada recalculado.
+- [ ] `gerar-laudo-pdf` na Edge Function (PDF server-side, hoje é impressão do navegador)
+- [ ] Editor visual das tabelas de referência por organização
 - [ ] Tela de conferência do laudo (Fase 3) reaproveitando `interpretacao-view`
 
 ## Fase 3 — Ingestão de PDF

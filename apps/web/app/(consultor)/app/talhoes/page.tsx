@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { PADRAO } from '@agrotech/agro-core';
 import { f } from '@/lib/formato';
@@ -20,8 +21,7 @@ export default async function Talhoes() {
       <CabecalhoVista
         olho="Unidades de manejo"
         titulo="Talhões"
-        descricao="Cada talhão carrega cultura, área e produtividade esperada — é o que alimenta a recomendação."
-        acoes={<button className="btn verde" disabled>Novo talhão (Fase 1)</button>}
+        descricao="Cada talhão carrega cultura, área e produtividade esperada — é o que alimenta a recomendação. Cadastre pela página do produtor."
       />
       {talhoes.length === 0 ? (
         <Vazio titulo="Nenhum talhão cadastrado">Cadastre um produtor primeiro.</Vazio>
@@ -41,6 +41,7 @@ export default async function Talhoes() {
                   </small>
                 </div>
                 <Tag tom="cinza">{cult?.nome.split(' –')[0] ?? (t.cultura as string) ?? '—'}</Tag>
+                <Link className="btn sec mini" href={`/app/talhoes/${t.id}/editar`}>editar</Link>
               </div>
             );
           })}

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
-import { calcular, PADRAO } from '@agrotech/agro-core';
+import { calcular } from '@agrotech/agro-core';
+import { tabelasDaOrg } from '@/lib/tabelas-org';
+import { paraAnalise } from '@/lib/culturas';
 import { f, dataBR } from '@/lib/formato';
 import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
 
@@ -18,7 +20,7 @@ type LinhaAnalise = {
 export default async function Painel() {
   const sb = await criarClienteServidor();
 
-  const [{ count: nProdutores }, { count: nTalhoes }, { data: analisesRaw }, { data: visitasRaw }] =
+  const [{ count: nProdutores }, { count: nTalhoes }, { data: analisesRaw }, { data: visitasRaw }, tabelas] =
     await Promise.all([
       sb.schema('agro').from('produtores').select('*', { count: 'exact', head: true }),
       sb.schema('agro').from('talhoes').select('*', { count: 'exact', head: true }),
@@ -31,6 +33,7 @@ export default async function Painel() {
         .select('id, data, fenologia, talhao:talhao_id(nome)')
         .order('data', { ascending: false })
         .limit(5),
+      tabelasDaOrg(sb),
     ]);
 
   const analises = (analisesRaw ?? []) as unknown as LinhaAnalise[];
@@ -38,11 +41,8 @@ export default async function Painel() {
   type Pendencia = { id: string; nome: string; data: string; txt: string; tom: 'ruim' | 'alerta' };
 
   const pendencias: Pendencia[] = analises.flatMap((a): Pendencia[] => {
-    const cult = a.talhao?.cultura ? PADRAO.culturas[a.talhao.cultura] : undefined;
-    const r = calcular(
-      { argila: a.argila, pH: a.ph, MO: a.mo, P: a.p, K: a.k, Na: a.na, Ca: a.ca, Mg: a.mg, Al: a.al, HAl: a.h_al, S: a.s },
-      PADRAO,
-    );
+    const cult = a.talhao?.cultura ? tabelas.culturas[a.talhao.cultura] : undefined;
+    const r = calcular(paraAnalise(a), tabelas);
     const V2 = cult?.V2 ?? 60;
     const mMax = cult?.m_max ?? 20;
     const base = { id: a.id, nome: a.talhao?.nome ?? 'Talhão', data: a.data_coleta };
