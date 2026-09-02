@@ -88,9 +88,9 @@ Sem `Escape`, sem foco inicial e sem `aria-modal` nos diálogos de confirmação
 ### A7. Faixas de sanidade ausentes no lançamento
 
 Nada impedia digitar pH 42 ou argila 300%. O motor calculava e devolvia números sem sentido.
-**Corrigido no scaffold:** faixas plausíveis por parâmetro no parser (`SANIDADE`) e constraints no
-banco (`ph_plausivel`, `argila_plausivel`). **Pendente no protótipo HTML** — ele só valida presença de
-pH e H+Al.
+**Corrigido:** faixas plausíveis por parâmetro no parser (`SANIDADE`) e constraints no
+banco (`ph_plausivel`, `argila_plausivel`); e no protótipo HTML (`valoresImplausiveis()`
+em `salvarAnalise`).
 
 ### A8. Sem impressão configurada
 
@@ -111,7 +111,8 @@ roteador do Next no scaffold.
 ### A10. `gessagem()` chamada três vezes na mesma renderização
 
 Recalcula o mesmo resultado por falta de uma variável intermediária. Irrelevante para a performance,
-relevante para a leitura. **Pendente.**
+relevante para a leitura. **Corrigido** no protótipo (`const ges` em `laudoHTML`); no scaffold
+`gerarRecomendacao` já calcula uma vez.
 
 ### A11. Escalonamento do N para pastagem
 
