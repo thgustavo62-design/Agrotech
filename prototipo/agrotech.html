@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AgroTech — módulo do agrônomo</title>
+<title>AgroTech de Campo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -28,10 +28,12 @@
 
   --ca:#2E7D5B; --mg:#7FA83B; --k:#DFA92A; --na:#9AA0A6; --al:#B4342A; --hal:#6B5B4B;
 
-  --r:12px;
-  --r-p:8px;
-  --sombra:0 1px 2px rgba(17,26,20,.04), 0 8px 24px -18px rgba(17,26,20,.45);
-  --sombra-alta:0 2px 4px rgba(17,26,20,.05), 0 18px 40px -24px rgba(17,26,20,.55);
+  --r:14px;
+  --r-p:9px;
+  --r-mini:6px;
+  --folha-escura:#0b4834;
+  --sombra:0 1px 2px rgba(17,26,20,.04), 0 10px 28px -20px rgba(17,26,20,.42);
+  --sombra-alta:0 2px 4px rgba(17,26,20,.05), 0 22px 44px -26px rgba(17,26,20,.52);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -80,6 +82,7 @@ button{font-family:inherit}
 .aba{
   border:1px solid transparent;background:none;padding:7px 13px;cursor:pointer;border-radius:99px;
   font-size:13px;font-weight:600;color:var(--grafite);white-space:nowrap;
+  transition:background .15s ease,color .15s ease;
 }
 .aba:hover{color:var(--tinta);background:rgba(17,26,20,.05)}
 .aba[aria-current="true"]{color:#fff;background:var(--folha);border-color:var(--folha)}
@@ -123,8 +126,8 @@ textarea{min-height:82px;resize:vertical}
 .btn.sec{background:#fff;color:var(--tinta);border-color:var(--linha-forte)}
 .btn.sec:hover{border-color:var(--tinta)}
 .btn.verde{background:var(--folha);border-color:var(--folha)}
-.btn.verde:hover{background:#0b4834}
-.btn.mini{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn.verde:hover{background:var(--folha-escura)}
+.btn.mini{padding:5px 10px;font-size:12px;border-radius:var(--r-mini)}
 .btn.perigo{color:var(--c-mb);border-color:var(--linha-forte);background:#fff}
 .btn.perigo:hover{border-color:var(--c-mb);background:#FDF3F2}
 .btn:focus-visible,.aba:focus-visible{outline:2px solid var(--folha);outline-offset:2px}
@@ -160,7 +163,7 @@ td.num,th.num{text-align:right;font-family:'IBM Plex Mono',monospace}
 .rolagem{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 /* ---------- regua de interpretacao (elemento-assinatura) ---------- */
-.regua-linha{display:grid;grid-template-columns:150px 70px 1fr;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--linha)}
+.regua-linha{display:grid;grid-template-columns:160px 72px 1fr;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--linha)}
 .regua-linha:last-child{border-bottom:0}
 .regua-nome{font-size:13px;font-weight:600;line-height:1.25}
 .regua-nome small{display:block;font-weight:400;color:var(--grafite-2);font-size:11px;font-family:'IBM Plex Mono',monospace}
@@ -221,6 +224,29 @@ td.num,th.num{text-align:right;font-family:'IBM Plex Mono',monospace}
   z-index:80;box-shadow:0 14px 34px -12px rgba(0,0,0,.55)
 }
 
+/* ---------- resultados do produtor (visão "bruta") ---------- */
+.bruto{max-width:680px;margin:0 auto}
+.bruto .cabeca{border-bottom:3px solid var(--tinta);padding-bottom:12px;margin-bottom:6px}
+.bruto .cabeca .selo{font:700 11px/1 'IBM Plex Mono',monospace;letter-spacing:.28em;color:var(--folha)}
+.bruto .cabeca h1{font-size:25px;margin:6px 0 2px}
+.bruto .cabeca .sub{font-size:12.5px;color:var(--grafite);margin:0}
+.bruto h2{font-size:15px;margin:24px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--linha-forte)}
+.bruto .talhao{border:1px solid var(--linha);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.bruto .talhao .top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.bruto .talhao .top b{font-size:15px}
+.bruto .talhao .top span{font-size:12px;color:var(--grafite)}
+.bruto .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.bruto .num{border-left:3px solid var(--linha-forte);padding-left:8px}
+.bruto .num span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--grafite)}
+.bruto .num b{display:block;font:700 24px/1.1 'IBM Plex Mono',monospace;margin:3px 0 1px}
+.bruto .num em{font-style:normal;font-size:11px;color:var(--grafite-2)}
+.bruto .num.bom{border-left-color:var(--c-mbom)} .bruto .num.bom b{color:var(--c-mbom)}
+.bruto .num.ruim{border-left-color:var(--c-mb)} .bruto .num.ruim b{color:var(--c-mb)}
+.bruto ul.acoes{margin:6px 0 0;padding-left:18px;font-size:13.5px;line-height:1.7}
+.bruto ul.acoes .alerta{color:var(--c-mb)}
+.bruto .rodape{margin-top:24px;padding-top:12px;border-top:1px solid var(--linha-forte);font-size:11.5px;color:var(--grafite-2)}
+@media(max-width:520px){.bruto .nums{grid-template-columns:1fr}}
+
 /* ---------- laudo ---------- */
 .folha-a4{background:#fff;border:1px solid var(--linha);border-radius:var(--r);padding:34px;max-width:840px;margin:0 auto}
 .folha-a4 h2{border-bottom:2px solid var(--tinta);padding-bottom:6px;margin:24px 0 11px;font-size:16px}
@@ -279,6 +305,23 @@ const f = (v,c=1) => (isFinite(v)?v:0).toLocaleString('pt-BR',{minimumFractionDi
 const hoje = () => new Date().toISOString().slice(0,10);
 const dataBR = s => s ? s.split('-').reverse().join('/') : '—';
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* faixas fisicamente plausíveis — auditoria A7 (rejeita pH 42, argila 300%, etc.) */
+const SANIDADE = {
+  argila:[0,100], pH:[3,9], MO:[0,100], P:[0,500], K:[0,2000], Na:[0,2000],
+  Ca:[0,30], Mg:[0,30], Al:[0,30], HAl:[0,50], S:[0,500],
+  B:[0,20], Zn:[0,100], Cu:[0,100], Mn:[0,500], Fe:[0,1000], prnt:[1,150]
+};
+function valoresImplausiveis(d){
+  const ruins=[];
+  for(const k in SANIDADE){
+    const raw=d[k];
+    if(raw===''||raw==null) continue;
+    const [lo,hi]=SANIDADE[k], x=n(raw);
+    if(x<lo||x>hi) ruins.push(k);
+  }
+  return ruins;
+}
 
 /* ============================================================
    TABELAS DE REFERÊNCIA (editáveis na aba Tabelas)
@@ -564,6 +607,23 @@ function toast(msg){
   setTimeout(()=>d.remove(),2200);
 }
 
+/* baixar um arquivo gerado — usa a ponte do artifact quando existe,
+   senão o download direto do navegador (arquivo aberto localmente) */
+async function baixarArquivo(nome, conteudo, mime){
+  try{
+    if(window.claude && typeof window.claude.use === 'function'){
+      const dl = await window.claude.use('downloads');
+      if(dl){ await dl.save({filename:nome, data:conteudo}); return true; }
+    }
+  }catch(e){ if(e && e.code==='declined') return false; }
+  const b = new Blob([conteudo],{type:(mime||'application/octet-stream')+';charset=utf-8'});
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a');
+  a.href=u; a.download=nome; a.click();
+  URL.revokeObjectURL(u);
+  return true;
+}
+
 function perguntar(msg, rotuloOk){
   return new Promise(resolve => {
     const alvo = document.getElementById('modal');
@@ -612,8 +672,10 @@ const ABAS = [
   ['config','Consultor']
 ];
 let atual = 'painel';
+let filtroCultura = '';
 
 function render(){
+  filtroCultura = '';
   document.getElementById('quem').innerHTML = S.consultor.nome
     ? `<b>${esc(S.consultor.nome)}</b>${esc(S.consultor.crea?'CREA '+S.consultor.crea:'')}`
     : `<b>Identifique-se</b>Aba Consultor`;
@@ -700,6 +762,7 @@ function vProdutores(){
     return `<div class="item">
       <div class="cresce"><h3>${esc(p.nome)}</h3>
         <small>${esc(p.propriedade||'—')} · ${esc(p.municipio||'—')} · ${ts.length} talhão(ões), ${f(ha,1)} ha</small></div>
+      <button class="btn mini" onclick="app.verProdutor('${p.id}')">Abrir</button>
       <button class="btn sec mini" onclick="app.editarProdutor('${p.id}')">Editar</button>
       <button class="btn perigo mini" onclick="app.excluir('produtores','${p.id}')">Excluir</button>
     </div>`;}).join('')}</div>`
@@ -726,25 +789,37 @@ function vTalhoes(){
   : `<div class="vazio"><b>Nenhum talhão cadastrado</b>Cadastre um produtor primeiro, depois divida a área em talhões.</div>`}`;
 }
 
+const nomeCulturaCurto = k => { const c = S.tab.culturas[k]; return c ? c.nome.split(' –')[0] : (k||'Sem cultura'); };
+
 function vAnalises(){
+  const todas = [...S.analises].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const culturaDe = a => (S.talhoes.find(x=>x.id===a.talhaoId)||{}).cultura || '';
+  const presentes = [...new Set(todas.map(culturaDe))].sort((a,b)=>nomeCulturaCurto(a).localeCompare(nomeCulturaCurto(b)));
+  const lista = filtroCultura ? todas.filter(a=>culturaDe(a)===filtroCultura) : todas;
+
   return `
   <div class="cabecalho-vista">
     <div><span class="olho">Fertilidade</span><h1>Análises de solo</h1>
       <p>Lance o laudo do laboratório e o AgroTech interpreta, calcula calagem e monta a adubação.</p></div>
     <div class="acoes"><button class="btn verde" onclick="app.novaAnalise()">Lançar análise</button></div>
   </div>
-  ${S.analises.length ? `<div class="lista">${[...S.analises].sort((a,b)=>b.data.localeCompare(a.data)).map(a=>{
+  ${presentes.length>1 ? `<div class="abas" style="position:static;background:none;border:0;padding:0 0 14px">
+    <button class="aba" aria-current="${!filtroCultura}" onclick="app.filtrarCultura('')">Todas</button>
+    ${presentes.map(k=>`<button class="aba" aria-current="${filtroCultura===k}" onclick="app.filtrarCultura('${k}')">${esc(nomeCulturaCurto(k))}</button>`).join('')}
+  </div>` : ''}
+  ${lista.length ? `<div class="lista">${lista.map(a=>{
     const t = S.talhoes.find(x=>x.id===a.talhaoId);
     const r = calcular(a);
-    const cls = r.V>=60?'':'ruim';
+    const c = S.tab.culturas[t?t.cultura:''];
+    const cls = r.V>=(c?c.V2:60)?'':'ruim';
     return `<div class="item">
       <div class="cresce"><h3>${esc(t?t.nome:'Talhão removido')} — ${dataBR(a.data)}</h3>
-        <small class="mono">pH ${f(n(a.pH),1)} · V ${f(r.V,0)}% · m ${f(r.m,0)}% · P ${f(n(a.P),1)} · K ${f(n(a.K),0)}</small></div>
+        <small class="mono">${esc(nomeCulturaCurto(t?t.cultura:''))} · pH ${f(n(a.pH),1)} · V ${f(r.V,0)}% · m ${f(r.m,0)}% · CTC ${f(r.T,1)}</small></div>
       <span class="tag ${cls}">V ${f(r.V,0)}%</span>
       <button class="btn mini" onclick="app.verAnalise('${a.id}')">Interpretar</button>
       <button class="btn perigo mini" onclick="app.excluir('analises','${a.id}')">Excluir</button>
     </div>`;}).join('')}</div>`
-  : `<div class="vazio"><b>Nenhuma análise lançada</b>Você precisa de um talhão cadastrado para lançar a primeira.</div>`}`;
+  : `<div class="vazio"><b>${filtroCultura?'Nenhuma análise nesta cultura':'Nenhuma análise lançada'}</b>${filtroCultura?'':'Você precisa de um talhão cadastrado para lançar a primeira.'}</div>`}`;
 }
 
 function vMonitoramento(){
@@ -1151,6 +1226,7 @@ function laudoHTML(a){
   const r = calcular(a);
   const prod = n(a.prodEsperada)||n(t.prodEsperada)||(cult?cult.ref:0);
   const cal = calagem(a,r,cult,n(a.prnt)||85,parseInt(a.incorp||20));
+  const ges = gessagem(a,r);          // auditoria A10 — calcular uma vez só
   const ad = adubacao(a,r,cult,prod);
   const dg = diagnostico(a,r,cult);
   const area = n(t.area)||0;
@@ -1196,7 +1272,7 @@ function laudoHTML(a){
     <p style="font-size:13.5px">Elevação da saturação por bases para ${cal.V2}%, com calcário de PRNT ${n(a.prnt)||85}% incorporado a 0–${a.incorp||20} cm:</p>
     <table>
       <tr><td><b>Calcário</b></td><td class="num">${f(cal.corrigido,2)} t/ha</td><td class="num">${f(cal.corrigido*area,1)} t no talhão</td></tr>
-      ${gessagem(a,r).precisa?`<tr><td><b>Gesso agrícola</b></td><td class="num">${f(gessagem(a,r).dose,0)} kg/ha</td><td class="num">${f(gessagem(a,r).dose*area/1000,1)} t no talhão</td></tr>`:''}
+      ${ges.precisa?`<tr><td><b>Gesso agrícola</b></td><td class="num">${f(ges.dose,0)} kg/ha</td><td class="num">${f(ges.dose*area/1000,1)} t no talhão</td></tr>`:''}
     </table>
 
     ${ad?`<h2>5. Adubação – produtividade esperada de ${f(prod,1)} ${esc(cult.un)}</h2>
@@ -1215,12 +1291,183 @@ function laudoHTML(a){
 }
 
 /* ============================================================
+   PRODUTOR: análises agrupadas por cultura + resultados "brutos"
+   ============================================================ */
+
+function resumoTalhao(t){
+  const as = S.analises.filter(a=>a.talhaoId===t.id).sort((x,y)=>(y.data||'').localeCompare(x.data||''));
+  const cult = S.tab.culturas[t.cultura];
+  const ultima = as[0];
+  if(!ultima) return {talhao:t, cult, ultima:null, situacao:'sem_analise'};
+  const r = calcular(ultima);
+  const V2 = cult?cult.V2:60, mMax = cult?cult.m_max:20;
+  const situacao = (r.V < V2-10 || r.m > mMax) ? 'precisa_correcao'
+                 : (r.classeP<=1 ? 'atencao' : 'em_ordem');
+  return {talhao:t, cult, ultima, r, V2, mMax, situacao};
+}
+
+const SITUACAO = {
+  precisa_correcao:['ruim','precisa de correção'],
+  atencao:['alerta','fósforo baixo'],
+  em_ordem:['','solo em ordem'],
+  sem_analise:['cinza','sem análise ainda']
+};
+
+function vProdutorHTML(pid){
+  const p = S.produtores.find(x=>x.id===pid) || {};
+  const ts = S.talhoes.filter(t=>t.produtorId===pid);
+  const grupos = {};
+  ts.forEach(t=>{ const k=t.cultura||'—'; (grupos[k]=grupos[k]||[]).push(t); });
+  const chaves = Object.keys(grupos).sort((a,b)=>nomeCulturaCurto(a).localeCompare(nomeCulturaCurto(b)));
+  const areaTotal = ts.reduce((s,t)=>s+n(t.area),0);
+  const nAnalises = S.analises.filter(a=>ts.some(t=>t.id===a.talhaoId)).length;
+  const nCrit = ts.map(resumoTalhao).filter(x=>x.situacao==='precisa_correcao').length;
+
+  return `
+  <div class="cabecalho-vista">
+    <div><span class="olho">Produtor</span><h1>${esc(p.nome||'—')}</h1>
+      <p>${esc([p.propriedade,p.municipio,p.fone].filter(Boolean).join(' · ')||'sem contato cadastrado')}</p></div>
+    <div class="acoes">
+      <button class="btn sec" onclick="app.editarProdutor('${pid}')">Editar</button>
+      <button class="btn sec" onclick="app.verComoProdutor('${pid}')">Ver como o produtor vê</button>
+      <button class="btn verde" onclick="app.exportarResultados('${pid}')">Exportar resultados</button>
+      <button class="btn sec" onclick="app.ir('produtores')">Voltar</button>
+    </div>
+  </div>
+
+  <div class="grade g4">
+    <div class="metrica"><span>Culturas</span><b>${chaves.filter(k=>k!=='—').length}</b></div>
+    <div class="metrica"><span>Talhões</span><b>${ts.length}</b><em>${f(areaTotal,1)} ha</em></div>
+    <div class="metrica"><span>Análises</span><b>${nAnalises}</b></div>
+    <div class="metrica"><span>Pedem correção</span><b style="color:${nCrit?'var(--c-mb)':'inherit'}">${nCrit}</b></div>
+  </div>
+
+  ${chaves.length ? chaves.map(k=>{
+    const cult = S.tab.culturas[k];
+    const linhas = grupos[k].map(resumoTalhao);
+    const areaC = grupos[k].reduce((s,t)=>s+n(t.area),0);
+    return `<div class="cartao" style="margin-top:14px">
+      <span class="olho">Cultura · ${f(areaC,1)} ha em ${grupos[k].length} talhão(ões)</span>
+      <h2 style="margin:4px 0 4px">${esc(cult?cult.nome:k)}</h2>
+      <div style="display:flex;gap:8px;margin:6px 0 12px">
+        <button class="btn sec mini" onclick="app.verComoProdutor('${pid}','${k}')">Resultados desta cultura</button>
+        <button class="btn sec mini" onclick="app.exportarResultados('${pid}','${k}')">Exportar só esta cultura</button>
+      </div>
+      <div class="rolagem"><table>
+        <tr><th>Talhão</th><th class="num">Área</th><th class="num">Última coleta</th><th class="num">V%</th><th class="num">m%</th><th></th></tr>
+        ${linhas.map(x=>{
+          const [tom,txt] = SITUACAO[x.situacao];
+          return `<tr>
+            <td>${esc(x.talhao.nome)}<br><span class="tag ${tom}" style="margin-top:4px">${txt}</span></td>
+            <td class="num">${f(n(x.talhao.area),1)} ha</td>
+            <td class="num">${x.ultima?dataBR(x.ultima.data):'—'}</td>
+            <td class="num" style="color:${x.r?(x.r.V>=x.V2?'var(--c-mbom)':'var(--c-mb)'):'inherit'}">${x.r?f(x.r.V,0)+'%':'—'}</td>
+            <td class="num" style="color:${x.r?(x.r.m<=x.mMax?'var(--c-mbom)':'var(--c-mb)'):'inherit'}">${x.r?f(x.r.m,0)+'%':'—'}</td>
+            <td class="num">${x.ultima
+              ? `<button class="btn sec mini" onclick="app.verAnalise('${x.ultima.id}')">abrir</button>`
+              : `<button class="btn sec mini" onclick="app.novaAnalise()">análise</button>`}</td>
+          </tr>`;
+        }).join('')}
+      </table></div>
+    </div>`;
+  }).join('') : `<div class="vazio" style="margin-top:14px"><b>Nenhum talhão para este produtor</b>Cadastre na aba Talhões.</div>`}`;
+}
+
+/* markup "bruto" — o que o produtor recebe no link de resultados */
+function resultadosBrutosHTML(pid, culturaFiltro){
+  const p = S.produtores.find(x=>x.id===pid) || {};
+  let ts = S.talhoes.filter(t=>t.produtorId===pid);
+  if(culturaFiltro) ts = ts.filter(t=>t.cultura===culturaFiltro);
+  const grupos = {};
+  ts.forEach(t=>{ const k=t.cultura||'—'; (grupos[k]=grupos[k]||[]).push(t); });
+  const hora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  const blocos = Object.keys(grupos).map(k=>{
+    const cult = S.tab.culturas[k];
+    const cards = grupos[k].map(t=>{
+      const x = resumoTalhao(t);
+      if(!x.ultima) return `<div class="talhao"><div class="top"><b>${esc(t.nome)}</b><span>sem análise lançada</span></div></div>`;
+      const a = x.ultima, r = x.r, area = n(t.area)||0;
+      const cal = calagem(a,r,cult,n(a.prnt)||85,parseInt(a.incorp||20));
+      const ges = gessagem(a,r);
+      const ad = adubacao(a,r,cult, n(a.prodEsperada)||n(t.prodEsperada)||(cult?cult.ref:0));
+      const dg = diagnostico(a,r,cult).find(d=>d.g==='crit');
+      const corr = (n(a.Mg)<0.9||r.CaMg>4)?'dolomítico':r.CaMg<2?'calcítico':'magnesiano';
+      return `<div class="talhao">
+        <div class="top"><b>${esc(t.nome)}</b><span>${dataBR(a.data)} · ${esc(a.prof||'0–20')} cm · ${f(area,1)} ha</span></div>
+        <div class="nums">
+          <div class="num ${r.V>=x.V2?'bom':'ruim'}"><span>Saturação de bases (V)</span><b>${f(r.V,0)}%</b><em>meta ${x.V2}%</em></div>
+          <div class="num ${r.m<=x.mMax?'bom':'ruim'}"><span>Saturação de alumínio (m)</span><b>${f(r.m,0)}%</b><em>limite ${x.mMax}%</em></div>
+          <div class="num"><span>pH em água</span><b>${f(n(a.pH),1)}</b><em>CTC ${f(r.T,1)}</em></div>
+        </div>
+        <ul class="acoes">
+          <li><b>Calcário:</b> ${f(cal.corrigido,1)} t/ha${area>0?` — ${f(cal.corrigido*area,1)} t no talhão`:''} (${corr})</li>
+          ${ges.precisa?`<li><b>Gesso:</b> investigar com análise de 20–40 cm</li>`:''}
+          ${ad?`<li><b>Adubação:</b> N ${ad.N} · P₂O₅ ${ad.P2O5} · K₂O ${ad.K2O} kg/ha</li>`:''}
+          ${dg?`<li class="alerta"><b>Atenção:</b> ${esc(dg.txt)}</li>`:''}
+        </ul>
+      </div>`;
+    }).join('');
+    return `<h2>${esc(cult?cult.nome:k)}</h2>${cards}`;
+  }).join('');
+
+  return `<div class="bruto">
+    <div class="cabeca">
+      <div class="selo">AGROTECH</div>
+      <h1>${esc(p.nome||'Produtor')}</h1>
+      <p class="sub">${culturaFiltro?esc(nomeCulturaCurto(culturaFiltro)):'lavoura toda'} · atualizado ${hora} de ${dataBR(hoje())}</p>
+    </div>
+    ${blocos || '<p class="nota">Ainda não há análises lançadas.</p>'}
+    <div class="rodape">Gerado pelo AgroTech a partir das análises lançadas pelo seu técnico.
+      Recomendação de partida — confirme dose, fonte e época com o responsável técnico antes de aplicar.
+      ${esc(S.consultor.nome||'')}${S.consultor.crea?' · CREA '+esc(S.consultor.crea):''}</div>
+  </div>`;
+}
+
+/* ============================================================
    AÇÕES
    ============================================================ */
 
 const app = {
   ir(k){ atual=k; render(); },
   fecharModal(){ document.getElementById('modal').innerHTML=''; },
+
+  filtrarCultura(k){
+    filtroCultura = k;
+    document.getElementById('vista').innerHTML = vAnalises();
+    window.scrollTo({top:0});
+  },
+
+  verProdutor(pid){
+    atual='produtores';
+    document.getElementById('abas').innerHTML = ABAS.map(([k,r])=>
+      `<button class="aba" aria-current="${k===atual}" onclick="app.ir('${k}')">${r}</button>`).join('');
+    document.getElementById('vista').innerHTML = vProdutorHTML(pid);
+    window.scrollTo({top:0});
+  },
+  verComoProdutor(pid, cultura){
+    const c = cultura||'';
+    document.getElementById('vista').innerHTML =
+      `<div class="cabecalho-vista nao-imprime"><div><span class="olho">Prévia</span>
+         <h1>Como o produtor vê</h1><p>É isto que o produtor recebe no link/arquivo de resultados.</p></div>
+       <div class="acoes">
+         <button class="btn verde" onclick="app.exportarResultados('${pid}'${c?",'"+c+"'":''})">Exportar como HTML</button>
+         <button class="btn sec" onclick="app.verProdutor('${pid}')">Voltar</button></div></div>`
+      + resultadosBrutosHTML(pid, c);
+    window.scrollTo({top:0});
+  },
+  async exportarResultados(pid, cultura){
+    const p = S.produtores.find(x=>x.id===pid) || {};
+    const corpo = resultadosBrutosHTML(pid, cultura||'');
+    const estilo = document.querySelector('style').textContent;
+    const doc = `<!doctype html><meta charset="utf-8">`
+      + `<meta name="viewport" content="width=device-width,initial-scale=1">`
+      + `<title>Resultados — ${esc(p.nome||'produtor')}</title><style>${estilo}</style>`
+      + `<body style="padding:20px 16px 60px">${corpo}</body>`;
+    const nome = (p.nome||'produtor').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    await baixarArquivo('resultados-'+nome+'-'+hoje()+'.html', doc, 'text/html');
+    toast('Arquivo de resultados gerado — envie ao produtor');
+  },
 
   editarProdutor(pid){
     const p = S.produtores.find(x=>x.id===pid) || {nome:'',propriedade:'',municipio:'',fone:'',area:'',obs:''};
@@ -1274,6 +1521,8 @@ const app = {
       Al:v('a_Al'),HAl:v('a_HAl'),Na:v('a_Na'),S:v('a_S'),B:v('a_B'),Zn:v('a_Zn'),Cu:v('a_Cu'),
       Mn:v('a_Mn'),Fe:v('a_Fe'),prnt:v('a_prnt'),incorp:v('a_incorp'),prodEsperada:v('a_prod')};
     if(!d.pH || !d.HAl) return toast('pH e H+Al são obrigatórios para calcular a CTC');
+    const ruins = valoresImplausiveis(d);
+    if(ruins.length) return toast('Valor implausível em: '+ruins.join(', ')+' — confira o laudo.');
     let novoId = aid;
     if(aid) Object.assign(S.analises.find(x=>x.id===aid), d);
     else { novoId = id(); S.analises.push({id:novoId,...d}); }
@@ -1375,12 +1624,9 @@ const app = {
     S.tab = JSON.parse(JSON.stringify(PADRAO)); await salvar(); render(); toast('Tabelas restauradas');
   },
 
-  exportar(){
-    const b = new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a');
-    a.href=u; a.download='agrotech-backup-'+hoje()+'.json'; a.click();
-    URL.revokeObjectURL(u); toast('Backup gerado');
+  async exportar(){
+    await baixarArquivo('agrotech-backup-'+hoje()+'.json', JSON.stringify(S,null,2), 'application/json');
+    toast('Backup gerado');
   },
   importar(){
     const i = document.createElement('input'); i.type='file'; i.accept='application/json';
