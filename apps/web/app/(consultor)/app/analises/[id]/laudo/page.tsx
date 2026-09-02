@@ -1,80 +1,81 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
-import { registrar } from '@/lib/audit';
-import { tabelasDaOrg } from '@/lib/tabelas-org';
+import type { Analise, Recomendacao } from '@agrotech/agro-core';
+import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
-import { paraAnalise } from '@/lib/culturas';
-import { LaudoView } from '@/components/laudo-view';
+import { LaudoView, type ContextoLaudo } from '@/components/laudo-view';
 import { BotaoImprimir } from '@/components/botao-imprimir';
+import { emitirRecomendacao } from '../../acoes';
 
 export const dynamic = 'force-dynamic';
+
+type Resultado = Recomendacao & {
+  contexto: ContextoLaudo;
+  analise_valores: Record<string, unknown>;
+};
 
 export default async function LaudoAnalise({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sb = await criarClienteServidor();
 
-  const [{ data, error }, perfil, tabelas] = await Promise.all([
-    sb.schema('agro').from('analises').select(
-      `id, data_coleta, profundidade, laboratorio, prnt, incorporacao, prod_esperada,
-       argila, ph, mo, p, k, na, ca, mg, al, h_al, s, b, zn, cu, mn, fe,
-       talhao:talhao_id (
-         nome, cultura, variedade, area_ha, prod_esperada,
-         propriedade:propriedade_id ( nome, municipio, produtor:produtor_id ( nome ) )
-       )`,
-    ).eq('id', id).single(),
-    perfilAtual(),
-    tabelasDaOrg(sb),
-  ]);
+  const { data: rec, error } = await sb
+    .schema('agro')
+    .from('recomendacoes')
+    .select('id, emitida_em, resultado')
+    .eq('analise_id', id)
+    .order('emitida_em', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  if (error || !data) notFound();
-  // deno-lint-ignore no-explicit-any
-  const t = (data as any).talhao;
-  const cultura = t?.cultura ? tabelas.culturas[t.cultura as string] : undefined;
+  if (error) notFound();
 
-  await registrar(sb, {
-    acao: 'laudo.emitido',
-    entidade: 'analises',
-    entidade_id: id,
-    org_id: perfil?.org_id ?? null,
-  });
+  if (!rec) {
+    return (
+      <>
+        <div className="cabecalho-vista">
+          <div><h1>Laudo</h1><p>Ainda não há laudo emitido para esta análise.</p></div>
+          <div className="acoes"><Link className="btn sec" href={`/app/analises/${id}`}>Voltar</Link></div>
+        </div>
+        <div className="aviso" style={{ marginBottom: 14 }}>
+          Emitir grava a recomendação com a versão do motor e o snapshot das tabelas. É essa versão
+          que o produtor passa a ver e que dá defensabilidade técnica ao laudo.
+        </div>
+        <form action={emitirRecomendacao}>
+          <input type="hidden" name="analise_id" value={id} />
+          <button className="btn verde" type="submit">Emitir laudo</button>
+        </form>
+      </>
+    );
+  }
+
+  const resultado = rec.resultado as Resultado;
+  const ctx: ContextoLaudo = {
+    ...resultado.contexto,
+    dataColeta: dataBR(resultado.contexto.dataColeta),
+    emitidaEm: dataBR(String(rec.emitida_em).slice(0, 10)),
+  };
 
   return (
     <>
       <div className="cabecalho-vista nao-imprime">
         <div>
           <h1>Laudo</h1>
-          <p>Confira e imprima ou salve em PDF pela caixa de impressão.</p>
+          <p>Emitido em {ctx.emitidaEm} · motor {resultado.motor_versao}. Imprima ou salve em PDF.</p>
         </div>
         <div className="acoes">
           <BotaoImprimir />
+          <form action={emitirRecomendacao}>
+            <input type="hidden" name="analise_id" value={id} />
+            <button className="btn sec" type="submit">Reemitir</button>
+          </form>
           <Link className="btn sec" href={`/app/analises/${id}`}>Voltar</Link>
         </div>
       </div>
 
       <LaudoView
-        analise={{
-          ...paraAnalise(data),
-          prnt: data.prnt, incorp: data.incorporacao,
-        }}
-        cultura={cultura}
-        tabelas={tabelas}
-        produtor={t?.propriedade?.produtor?.nome ?? ''}
-        propriedade={t?.propriedade?.nome ?? ''}
-        municipio={t?.propriedade?.municipio ?? ''}
-        talhao={t?.nome ?? ''}
-        variedade={t?.variedade ?? ''}
-        areaHa={Number(t?.area_ha ?? 0)}
-        dataColeta={dataBR(data.data_coleta)}
-        profundidade={data.profundidade ?? '0-20'}
-        laboratorio={data.laboratorio ?? ''}
-        prodEsperadaTalhao={Number(data.prod_esperada ?? t?.prod_esperada ?? 0) || undefined}
-        consultor={{
-          nome: perfil?.nome ?? '',
-          crea: perfil?.crea ?? '',
-          fone: '',
-          empresa: 'Campo Forte Soluções Agrícolas',
-        }}
+        rec={resultado}
+        analise={resultado.analise_valores as unknown as Analise}
+        ctx={ctx}
       />
     </>
   );

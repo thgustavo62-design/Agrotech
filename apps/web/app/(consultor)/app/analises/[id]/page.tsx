@@ -5,6 +5,7 @@ import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { paraAnalise } from '@/lib/culturas';
 import { dataBR } from '@/lib/formato';
 import { InterpretacaoView } from '@/components/interpretacao-view';
+import { emitirRecomendacao } from '../acoes';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,9 +33,13 @@ export default async function PaginaAnalise({ params }: { params: Promise<{ id: 
 
   return (
     <>
-      <div style={{ marginBottom: 12, display: 'flex', gap: 8 }}>
+      <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
         <Link className="btn sec mini" href="/app/analises">← Análises</Link>
-        <Link className="btn verde mini" href={`/app/analises/${id}/laudo`}>Gerar laudo</Link>
+        <form action={emitirRecomendacao}>
+          <input type="hidden" name="analise_id" value={id} />
+          <button className="btn verde mini" type="submit">Emitir laudo</button>
+        </form>
+        <Link className="btn sec mini" href={`/app/analises/${id}/laudo`}>Ver laudo</Link>
       </div>
       <InterpretacaoView
         analise={{ ...paraAnalise(data), prnt: data.prnt, incorp: data.incorporacao }}

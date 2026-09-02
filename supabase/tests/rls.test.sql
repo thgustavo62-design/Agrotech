@@ -39,12 +39,23 @@ insert into agro.talhoes (id, propriedade_id, nome, cultura) values
   ('a2000000-0000-0000-0000-000000000000', 'a1000000-0000-0000-0000-000000000000', 'Talhão A', 'cafe-conilon'),
   ('b2000000-0000-0000-0000-000000000000', 'b1000000-0000-0000-0000-000000000000', 'Talhão B', 'cafe-conilon');
 
--- helper para "logar" como um usuário
+-- helper para "logar" como um usuário. Inclui os claims org_id / user_role que
+-- o custom_access_token_hook injeta em produção (0012_tenancy.sql); as políticas
+-- ainda funcionam sem eles pelo fallback ao profiles.
 create or replace function tests.autenticar(uid uuid) returns void
 language plpgsql as $$
+declare
+  v_org  uuid;
+  v_role text;
+  v_prod uuid;
 begin
+  select org_id, role into v_org, v_role from agro.profiles where id = uid;
+  select id into v_prod from agro.produtores where user_id = uid;
   perform set_config('role', 'authenticated', true);
-  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object(
+    'sub', uid, 'role', 'authenticated',
+    'org_id', v_org, 'user_role', v_role, 'produtor_id', v_prod
+  )::text, true);
 end $$;
 
 -- ---------------------------------------------------------------------------

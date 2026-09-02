@@ -71,6 +71,10 @@ agrotech/
 │        │  ├─ talhoes/ [id]/editar
 │        │  ├─ produtores/[id]/exportar/route.ts   (JSON, LGPD)
 │        │  └─ laudos · monitoramento · tabelas · assinatura
+│        ├─ (auth)/produtor/login · aceitar · sair   (fora da guarda)
+│        ├─ (produtor)/produtor/       layout guarda role='produtor'
+│        │  ├─ page.tsx                painel em linguagem do produtor
+│        │  └─ laudos/[id]/            laudo completo (LaudoView)
 │        ├─ demo/ + demo/tabelas/      vitrine pública (sem auth/banco)
 │        └─ r/[token]/                 link "bruto" de resultados do produtor
 │
@@ -81,7 +85,7 @@ agrotech/
 │  │        + políticas coluna=literal + índices)
 │  │   0013 billing (planos/assinaturas/cobrancas + checar_limite)
 │  │   0014 painel (vw_talhao_situacao + painel_consultor)
-│  │   0015 audit_log insert
+│  │   0015 audit_log insert · 0016 aceitar_convite/convite_resumo · 0017 grants agro
 │  ├─ functions/              processar-laudo, gerar-laudo-pdf, convidar-produtor, webhook-asaas
 │  ├─ tests/rls.test.sql      pgTAP — isolamento produtor/organização
 │  ├─ config.toml

@@ -1,36 +1,35 @@
-import {
-  gerarRecomendacao, nomeCorretivo,
-  type Analise, type Cultura, type TabelasReferencia,
-} from '@agrotech/agro-core';
-import { f, dataBR } from '@/lib/formato';
+import { nomeCorretivo, type Analise, type Recomendacao } from '@agrotech/agro-core';
+import { f } from '@/lib/formato';
 
-export interface DadosLaudo {
-  analise: Analise;
-  cultura?: Cultura;
-  tabelas: TabelasReferencia;
+export interface ContextoLaudo {
   produtor: string;
   propriedade: string;
   municipio: string;
   talhao: string;
   variedade: string;
-  areaHa: number;
+  culturaNome: string;
+  culturaUn: string;
+  culturaParc: string[];
+  culturaObs: string;
   dataColeta: string;
   profundidade: string;
   laboratorio: string;
-  prodEsperadaTalhao?: number;
   consultor: { nome: string; crea: string; fone: string; empresa: string };
+  emitidaEm: string;
 }
 
-/** Laudo A4 — conteúdo 100% da recomendação (motor_versao + snapshot), nada recalculado. */
-export function LaudoView(d: DadosLaudo) {
-  const rec = gerarRecomendacao({
-    analise: d.analise,
-    ...(d.cultura ? { cultura: d.cultura } : {}),
-    ...(d.prodEsperadaTalhao != null ? { prodEsperadaTalhao: d.prodEsperadaTalhao } : {}),
-    areaHa: d.areaHa,
-    tabelas: d.tabelas,
-  });
-  const a = d.analise;
+/**
+ * Laudo A4. Renderiza a partir de uma Recomendação JÁ CALCULADA (persistida em
+ * agro.recomendacoes com motor_versao + snapshot). Nada é recalculado aqui, para
+ * o laudo do produtor bater sempre com o que o consultor emitiu.
+ */
+export function LaudoView({
+  rec, analise: a, ctx,
+}: {
+  rec: Recomendacao;
+  analise: Analise;
+  ctx: ContextoLaudo;
+}) {
   const r = rec.calculo;
   const cal = rec.calagem;
   const ad = rec.adubacao;
@@ -41,22 +40,22 @@ export function LaudoView(d: DadosLaudo) {
       <div className="cabecalho">
         <div>
           <h2 style={{ border: 0, padding: 0, margin: 0, fontSize: 22 }}>Laudo de recomendação agronômica</h2>
-          <div className="nota">{d.consultor.empresa} · emitido em {dataBR(new Date().toISOString().slice(0, 10))} · motor {rec.motor_versao}</div>
+          <div className="nota">{ctx.consultor.empresa} · emitido em {ctx.emitidaEm} · motor {rec.motor_versao}</div>
         </div>
         <div style={{ textAlign: 'right', fontSize: 12 }}>
-          <b>{d.consultor.nome || '—'}</b><br />
-          {d.consultor.crea ? `CREA ${d.consultor.crea}` : ''}<br />
-          {d.consultor.fone}
+          <b>{ctx.consultor.nome || '—'}</b><br />
+          {ctx.consultor.crea ? `CREA ${ctx.consultor.crea}` : ''}<br />
+          {ctx.consultor.fone}
         </div>
       </div>
 
       <h2>1. Identificação</h2>
       <table>
         <tbody>
-          <tr><td><b>Produtor</b></td><td>{d.produtor || '—'}</td><td><b>Propriedade</b></td><td>{d.propriedade || '—'}</td></tr>
-          <tr><td><b>Município</b></td><td>{d.municipio || '—'}</td><td><b>Talhão</b></td><td>{d.talhao || '—'} · {f(d.areaHa, 1)} ha</td></tr>
-          <tr><td><b>Cultura</b></td><td>{d.cultura?.nome ?? '—'}</td><td><b>Variedade</b></td><td>{d.variedade || '—'}</td></tr>
-          <tr><td><b>Coleta</b></td><td>{d.dataColeta} · {d.profundidade} cm</td><td><b>Laboratório</b></td><td>{d.laboratorio || '—'}</td></tr>
+          <tr><td><b>Produtor</b></td><td>{ctx.produtor || '—'}</td><td><b>Propriedade</b></td><td>{ctx.propriedade || '—'}</td></tr>
+          <tr><td><b>Município</b></td><td>{ctx.municipio || '—'}</td><td><b>Talhão</b></td><td>{ctx.talhao || '—'} · {f(rec.areaHa, 1)} ha</td></tr>
+          <tr><td><b>Cultura</b></td><td>{ctx.culturaNome || '—'}</td><td><b>Variedade</b></td><td>{ctx.variedade || '—'}</td></tr>
+          <tr><td><b>Coleta</b></td><td>{ctx.dataColeta} · {ctx.profundidade} cm</td><td><b>Laboratório</b></td><td>{ctx.laboratorio || '—'}</td></tr>
         </tbody>
       </table>
 
@@ -103,12 +102,12 @@ export function LaudoView(d: DadosLaudo) {
         </tbody>
       </table>
 
-      {ad && d.cultura && (
+      {ad && (
         <>
-          <h2>5. Adubação — produtividade esperada de {f(rec.produtividade, 1)} {d.cultura.un}</h2>
+          <h2>5. Adubação — produtividade esperada de {f(rec.produtividade, 1)} {ctx.culturaUn}</h2>
           <table>
             <tbody>
-              <tr><th>Nutriente</th><th className="num">kg/ha</th><th className="num">Total ({f(d.areaHa, 1)} ha)</th></tr>
+              <tr><th>Nutriente</th><th className="num">kg/ha</th><th className="num">Total ({f(rec.areaHa, 1)} ha)</th></tr>
               <tr><td>N</td><td className="num">{ad.N}</td><td className="num">{f(rec.totais.N_kg, 0)} kg</td></tr>
               <tr><td>P₂O₅</td><td className="num">{ad.P2O5}</td><td className="num">{f(rec.totais.P2O5_kg, 0)} kg</td></tr>
               <tr><td>K₂O</td><td className="num">{ad.K2O}</td><td className="num">{f(rec.totais.K2O_kg, 0)} kg</td></tr>
@@ -116,22 +115,24 @@ export function LaudoView(d: DadosLaudo) {
           </table>
           <h3 style={{ marginTop: 14 }}>Fontes sugeridas</h3>
           <ul style={{ fontSize: 13 }}>
-            {rec.fontes.map((ft, i) => (
-              <li key={i}>{ft.nome} — {f(ft.dose, 0)} kg/ha ({ft.obs})</li>
-            ))}
+            {rec.fontes.map((ft, i) => <li key={i}>{ft.nome} — {f(ft.dose, 0)} kg/ha ({ft.obs})</li>)}
           </ul>
-          <h2>6. Parcelamento e manejo</h2>
-          <ol style={{ fontSize: 13.5 }}>
-            {d.cultura.parc.map((p, i) => <li key={i} style={{ marginBottom: 4 }}>{p}</li>)}
-          </ol>
-          <p style={{ fontSize: 13 }}>{d.cultura.obs}</p>
+          {ctx.culturaParc.length > 0 && (
+            <>
+              <h2>6. Parcelamento e manejo</h2>
+              <ol style={{ fontSize: 13.5 }}>
+                {ctx.culturaParc.map((p, i) => <li key={i} style={{ marginBottom: 4 }}>{p}</li>)}
+              </ol>
+              <p style={{ fontSize: 13 }}>{ctx.culturaObs}</p>
+            </>
+          )}
         </>
       )}
 
       <div className="assina">
         <hr />
-        <b>{d.consultor.nome}</b><br />
-        Engenheiro(a) Agrônomo(a) — CREA {d.consultor.crea}
+        <b>{ctx.consultor.nome}</b><br />
+        Engenheiro(a) Agrônomo(a) — CREA {ctx.consultor.crea}
       </div>
     </div>
   );

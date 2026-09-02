@@ -7,7 +7,7 @@ import { nomeCultura, CULTURAS, paraAnalise } from '@/lib/culturas';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
 import { LinkCompartilhado } from '@/components/link-compartilhado';
-import { criarCompartilhamento, alternarCompartilhamento } from './acoes';
+import { criarCompartilhamento, alternarCompartilhamento, convidarProdutor, excluirProdutor } from './acoes';
 import { salvarPropriedade, salvarTalhao } from '../acoes';
 
 export const dynamic = 'force-dynamic';
@@ -26,9 +26,9 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
   const { id } = await params;
   const sb = await criarClienteServidor();
 
-  const [{ data: prod, error }, { data: talhoesRaw }, { data: propriedades }, { data: comps }, tabelas] =
+  const [{ data: prod, error }, { data: talhoesRaw }, { data: propriedades }, { data: comps }, { data: convites }, tabelas] =
     await Promise.all([
-      sb.schema('agro').from('produtores').select('id, nome, email, fone, cpf_cnpj').eq('id', id).single(),
+      sb.schema('agro').from('produtores').select('id, nome, email, fone, cpf_cnpj, user_id').eq('id', id).single(),
       sb.schema('agro').from('talhoes')
         .select(`id, nome, cultura, area_ha, prod_esperada,
                  propriedade:propriedade_id(nome),
@@ -38,6 +38,8 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
       sb.schema('agro').from('compartilhamentos')
         .select('id, cultura, rotulo, token, ativo, acessos')
         .eq('produtor_id', id).order('criado_em', { ascending: false }),
+      sb.schema('agro').from('convites')
+        .select('email, expira_em, usado_em').eq('produtor_id', id).order('criado_em', { ascending: false }).limit(3),
       tabelasDaOrg(sb),
     ]);
 
@@ -235,6 +237,53 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
             <input id="rotulo" name="rotulo" placeholder="ex.: Safra 2026" autoComplete="off" />
           </div>
           <button className="btn verde" type="submit">Gerar link</button>
+        </form>
+
+        <hr style={{ border: 0, borderTop: '1px solid var(--linha)', margin: '18px 0 14px' }} />
+
+        <h3 style={{ margin: '0 0 6px' }}>Portal com login próprio</h3>
+        {prod.user_id ? (
+          <p className="nota">
+            <Tag tom="ok">acesso ativo</Tag> Este produtor já tem login e vê os talhões e laudos dele.
+          </p>
+        ) : (
+          <>
+            <p className="nota" style={{ margin: '0 0 10px' }}>
+              Diferente do link acima: o produtor cria uma senha e entra em <code>/produtor</code>.
+              Convite válido por 7 dias.
+            </p>
+            {(convites ?? []).some((cv) => !cv.usado_em) && (
+              <p className="nota">
+                Convite pendente para {(convites ?? []).find((cv) => !cv.usado_em)?.email}.
+              </p>
+            )}
+            <form action={convidarProdutor} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <input type="hidden" name="produtor_id" value={id} />
+              <div className="campo" style={{ minWidth: 240 }}>
+                <label htmlFor="conv_email">E-mail do produtor</label>
+                <input id="conv_email" name="email" type="email" defaultValue={(prod.email as string) ?? ''} required autoComplete="off" />
+              </div>
+              <button className="btn verde" type="submit">Enviar convite</button>
+            </form>
+          </>
+        )}
+      </Cartao>
+
+      <Cartao olho="Zona de risco" titulo="Excluir produtor (LGPD)" style={{ marginTop: 14 }}>
+        <p className="nota" style={{ margin: '0 0 10px' }}>
+          Atende ao pedido de eliminação do titular. Apaga <b>em definitivo</b> o produtor e tudo abaixo:
+          propriedades, talhões, análises, recomendações e visitas. Não dá para desfazer.
+          A ação fica registrada na trilha de auditoria.
+        </p>
+        <form action={excluirProdutor} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <input type="hidden" name="id" value={id} />
+          <div className="campo" style={{ minWidth: 200 }}>
+            <label htmlFor="confirmar">Digite <code>EXCLUIR</code> para confirmar</label>
+            <input id="confirmar" name="confirmar" autoComplete="off" placeholder="EXCLUIR" />
+          </div>
+          <button className="btn" style={{ background: 'var(--c-mb)', borderColor: 'var(--c-mb)' }} type="submit">
+            Excluir definitivamente
+          </button>
         </form>
       </Cartao>
     </>

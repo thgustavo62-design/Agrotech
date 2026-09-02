@@ -19,9 +19,10 @@ Decisões de virar produto vendável: `PRODUTO-VENDAVEL.md`.
       Tela `/app/assinatura` (plano, uso vs limite, cobranças).
 - [x] **Painel agregado no banco** (`0014_painel.sql`) — `vw_talhao_situacao` (LATERAL) +
       `painel_consultor()` (JSON, SECURITY INVOKER); painel do consultor rewireado, virou fila de trabalho.
-- [x] **LGPD** — `lib/audit.ts` gravando em `audit_log` (produtor/talhão/laudo/link);
+- [x] **LGPD** — `lib/audit.ts` gravando em `audit_log` (produtor/talhão/laudo/link/convite);
       `0015` libera o insert do consultor. Export dos dados do produtor em JSON:
-      `/app/produtores/[id]/exportar`.
+      `/app/produtores/[id]/exportar`. **Exclusão sob solicitação**: `excluirProdutor`
+      (confirmação por texto, cascata, audit) na "Zona de risco" da página do produtor.
 - [ ] Ligar hook, senha vazada, CAPTCHA e rate limit no painel do projeto real
 - [ ] Conta sandbox Asaas + ciclo completo de webhook
 - [ ] Contrato + política de privacidade com cláusula de operador
@@ -89,8 +90,20 @@ Decisões de virar produto vendável: `PRODUTO-VENDAVEL.md`.
 
 ## Fase 4 — Portal do produtor
 
-- [ ] `convidar-produtor` + e-mail (Resend) + `/produtor/aceitar`
-- [ ] `/produtor/login`, painel com talhões e histórico, download de laudos
+- [x] **Convite** — server action `convidarProdutor` grava em `agro.convites` +
+      e-mail (Resend, se configurado) ou link direto. Botão "Enviar convite" na página do produtor.
+- [x] **`/produtor/aceitar?token=`** — RPC `convite_resumo` (anon) mostra "de qual
+      organização"; cria senha (signUp) → RPC `aceitar_convite` (SECURITY DEFINER)
+      liga `produtores.user_id` + `profiles.org_id`/`role` → `refreshSession()` (`0016`)
+- [x] **`/produtor/login`** + `/produtor/sair`; layout `(produtor)` com guarda `role='produtor'`
+- [x] **`/produtor`** — painel em linguagem do produtor ("precisa de correção" /
+      "solo em ordem" via `vw_talhao_situacao`), última recomendação em destaque
+- [x] **`/produtor/laudos/[id]`** — laudo completo (mesmo `LaudoView`), imprimível
+- [x] **Emissão persistida** — `emitirRecomendacao` grava `agro.recomendacoes`
+      (`motor_versao` + `tabelas_snapshot` + `resultado` com contexto). `LaudoView`
+      renderiza da recomendação persistida, não recalcula. `0017` — GRANTs do schema `agro`.
+- [ ] Notificação ao produtor quando sai recomendação nova
+- [ ] Exclusão da conta de auth do produtor no fluxo LGPD (hoje remove só os dados de negócio)
 
 ## Fase 5 — Campo
 
