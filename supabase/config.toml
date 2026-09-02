@@ -36,10 +36,36 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/produtor/aceitar"]
 jwt_expiry = 3600
 enable_signup = true
+# senha forte (padrão do Supabase é 6 / nenhuma exigência) — ver PRODUTO-VENDAVEL §2
+minimum_password_length = 10
+password_requirements = "lower_upper_letters_digits_symbols"
 
 [auth.email]
 enable_signup = true
 enable_confirmations = true
+
+[auth.mfa]
+max_enrolled_factors = 3
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+# aperta o brute force no endpoint de token (login)
+[auth.rate_limit]
+token_refresh = 30
+sign_in_sign_ups = 10
+token_verifications = 30
+
+# CAPTCHA (Turnstile): habilitar no painel + secret; local fica desligado
+[auth.captcha]
+enabled = false
+provider = "turnstile"
+# secret = "env(TURNSTILE_SECRET)"
+
+# claims org_id / user_role / produtor_id no access token
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/agro/custom_access_token_hook"
 
 [edge_runtime]
 enabled = true

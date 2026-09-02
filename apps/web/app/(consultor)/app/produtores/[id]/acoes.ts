@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { registrar } from '@/lib/audit';
 
 /** Cria um link público de resultados para o produtor (cultura opcional). */
 export async function criarCompartilhamento(fd: FormData) {
@@ -15,13 +16,20 @@ export async function criarCompartilhamento(fd: FormData) {
   if (!perfil?.org_id) throw new Error('sessão inválida');
 
   const sb = await criarClienteServidor();
-  const { error } = await sb.schema('agro').from('compartilhamentos').insert({
+  const { data, error } = await sb.schema('agro').from('compartilhamentos').insert({
     org_id: perfil.org_id,
     produtor_id,
     cultura,
     rotulo,
-  });
+  }).select('id, token').single();
   if (error) throw new Error(error.message);
+  await registrar(sb, {
+    acao: 'compartilhamento.criado',
+    entidade: 'compartilhamentos',
+    entidade_id: data?.id ?? null,
+    org_id: perfil.org_id,
+    dados: { produtor_id, cultura, rotulo },
+  });
   revalidatePath(`/app/produtores/${produtor_id}`);
 }
 

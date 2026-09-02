@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { registrar } from '@/lib/audit';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { dataBR } from '@/lib/formato';
 import { paraAnalise } from '@/lib/culturas';
@@ -30,6 +31,13 @@ export default async function LaudoAnalise({ params }: { params: Promise<{ id: s
   // deno-lint-ignore no-explicit-any
   const t = (data as any).talhao;
   const cultura = t?.cultura ? tabelas.culturas[t.cultura as string] : undefined;
+
+  await registrar(sb, {
+    acao: 'laudo.emitido',
+    entidade: 'analises',
+    entidade_id: id,
+    org_id: perfil?.org_id ?? null,
+  });
 
   return (
     <>

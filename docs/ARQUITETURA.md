@@ -48,7 +48,8 @@ agrotech/
 │     ├─ lib/
 │     │  ├─ supabase/         client / server / middleware / publico (anon)
 │     │  ├─ tabelas-org.ts    tabelas calibradas da org (fallback PADRAO por tipo)
-│     │  ├─ onboarding.ts     garantirEscritorio() — cria org + semeia no 1º acesso
+│     │  ├─ onboarding.ts     garantirEscritorio() — org + tabelas + assinatura trial
+│     │  ├─ audit.ts          registrar() -> agro.audit_log (LGPD)
 │     │  ├─ culturas.ts       label da cultura + linha do banco -> Analise
 │     │  ├─ demo.ts           fixture da vitrine
 │     │  └─ formato.ts        f() / dataBR() pt-BR
@@ -68,15 +69,20 @@ agrotech/
 │        │  │                                         cadastro de propriedade/talhão; links)
 │        │  ├─ analises/ [id]/ [id]/laudo/ nova/
 │        │  ├─ talhoes/ [id]/editar
-│        │  └─ laudos · monitoramento · tabelas
+│        │  ├─ produtores/[id]/exportar/route.ts   (JSON, LGPD)
+│        │  └─ laudos · monitoramento · tabelas · assinatura
 │        ├─ demo/ + demo/tabelas/      vitrine pública (sem auth/banco)
 │        └─ r/[token]/                 link "bruto" de resultados do produtor
 │
 ├─ supabase/
-│  ├─ migrations/0001..0011   schema agro, RLS em todas as tabelas, trigrama,
-│  │                          compartilhamentos + RPC resultados_por_token (anon),
-│  │                          policy orgs_criar (onboarding do consultor)
-│  ├─ functions/              processar-laudo, gerar-laudo-pdf, convidar-produtor
+│  ├─ migrations/0001..0015   schema agro; RLS em todas as tabelas;
+│  │   0009 trigrama · 0010 compartilhamentos+RPC (anon) · 0011 orgs_criar
+│  │   0012 tenancy (colunas denormalizadas + hook de claims + guarda RESTRICTIVE
+│  │        + políticas coluna=literal + índices)
+│  │   0013 billing (planos/assinaturas/cobrancas + checar_limite)
+│  │   0014 painel (vw_talhao_situacao + painel_consultor)
+│  │   0015 audit_log insert
+│  ├─ functions/              processar-laudo, gerar-laudo-pdf, convidar-produtor, webhook-asaas
 │  ├─ tests/rls.test.sql      pgTAP — isolamento produtor/organização
 │  ├─ config.toml
 │  └─ seed.sql

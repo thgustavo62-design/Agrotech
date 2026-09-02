@@ -29,4 +29,4 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
       - name: Deploy das Edge Functions
-        run: supabase functions deploy processar-laudo gerar-laudo-pdf convidar-produtor
+        run: supabase functions deploy processar-laudo gerar-laudo-pdf convidar-produtor webhook-asaas

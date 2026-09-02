@@ -62,9 +62,11 @@ decide.
 
 ### 5. RLS em todas as tabelas
 
-14 tabelas, todas com `enable row level security` e políticas (par consultor /
-produtor subindo a cadeia de FKs). `supabase/tests/rls.test.sql` (pgTAP, 7
-asserts) cobre o caso obrigatório: produtor A lê talhão de B → 0 linhas.
+Todas as tabelas com `enable row level security`. **Nota (`0012_tenancy.sql`):** as
+políticas em cadeia (EXISTS + joins) foram trocadas por `coluna = literal` com o
+tenant vindo do JWT, mais uma guarda `RESTRICTIVE` de tenant em cada tabela — ver
+`PRODUTO-VENDAVEL.md §1`. `supabase/tests/rls.test.sql` (pgTAP, 7 asserts) cobre o
+caso obrigatório: produtor A lê talhão de B → 0 linhas.
 
 ---
 

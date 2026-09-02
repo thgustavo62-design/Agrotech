@@ -68,7 +68,12 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
         olho="Produtor"
         titulo={prod.nome as string}
         descricao={[prod.email, prod.fone, prod.cpf_cnpj].filter(Boolean).join(' · ') || 'sem contato cadastrado'}
-        acoes={<Link className="btn sec" href={`/app/produtores/${id}/editar`}>Editar</Link>}
+        acoes={
+          <>
+            <Link className="btn sec" href={`/app/produtores/${id}/editar`}>Editar</Link>
+            <Link className="btn sec" prefetch={false} href={`/app/produtores/${id}/exportar`}>Exportar dados</Link>
+          </>
+        }
       />
 
       <Grade cols={4}>

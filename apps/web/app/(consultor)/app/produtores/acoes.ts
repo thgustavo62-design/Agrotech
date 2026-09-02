@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { registrar } from '@/lib/audit';
 
 const txt = (fd: FormData, k: string) => {
   const v = String(fd.get(k) ?? '').trim();
@@ -32,6 +33,7 @@ export async function salvarProdutor(fd: FormData) {
   if (id) {
     const { error } = await sb.schema('agro').from('produtores').update(dados).eq('id', id);
     if (error) throw new Error(error.message);
+    await registrar(sb, { acao: 'produtor.editado', entidade: 'produtores', entidade_id: id, dados });
     revalidatePath(`/app/produtores/${id}`);
     redirect(`/app/produtores/${id}`);
   }
@@ -43,6 +45,7 @@ export async function salvarProdutor(fd: FormData) {
     .insert({ ...dados, org_id: perfil.org_id, origem: 'manual' })
     .select('id').single();
   if (error) throw new Error(error.message);
+  await registrar(sb, { acao: 'produtor.criado', entidade: 'produtores', entidade_id: data.id, org_id: perfil.org_id, dados });
   redirect(`/app/produtores/${data.id}`);
 }
 
@@ -88,10 +91,13 @@ export async function salvarTalhao(fd: FormData) {
   if (id) {
     const { error } = await sb.schema('agro').from('talhoes').update(dados).eq('id', id);
     if (error) throw new Error(error.message);
+    await registrar(sb, { acao: 'talhao.editado', entidade: 'talhoes', entidade_id: id, dados });
   } else {
     if (!propriedade_id) throw new Error('Selecione a propriedade.');
-    const { error } = await sb.schema('agro').from('talhoes').insert({ ...dados, propriedade_id });
+    const { data: novo, error } = await sb.schema('agro').from('talhoes')
+      .insert({ ...dados, propriedade_id }).select('id').single();
     if (error) throw new Error(error.message);
+    await registrar(sb, { acao: 'talhao.criado', entidade: 'talhoes', entidade_id: novo?.id ?? null, dados });
   }
   if (produtor_id) {
     revalidatePath(`/app/produtores/${produtor_id}`);

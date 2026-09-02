@@ -40,4 +40,13 @@ export async function garantirEscritorio(): Promise<void> {
     { org_id: org.id, tipo: 'fertilizantes', conteudo: padrao.fertilizantes },
     { org_id: org.id, tipo: 'pragas', conteudo: padrao.pragas },
   ]);
+
+  // assinatura de teste (14 dias) — o webhook do Asaas muda o status depois
+  await sb.schema('agro').from('assinaturas')
+    .insert({ org_id: org.id, plano: 'teste', status: 'trial' });
+
+  // o claim org_id só entra no token no próximo refresh; até lá jwt_org() usa o
+  // fallback ao profiles. refreshSession() aqui é best-effort (Server Component
+  // não grava cookie) — o login seguinte já traz o token com o claim.
+  await sb.auth.refreshSession().catch(() => {});
 }

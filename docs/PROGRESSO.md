@@ -1,6 +1,31 @@
 # Progresso — passo a passo
 
 Acompanha o roadmap de `AGROTECH.md` §13. Marca o que saiu do protótipo.
+Decisões de virar produto vendável: `PRODUTO-VENDAVEL.md`.
+
+---
+
+## Produto vendável (multi-tenant + billing)
+
+- [x] **Tenancy à prova de descuido** (`0012_tenancy.sql`) — `org_id`/`produtor_id`
+      desnormalizados por trigger, `custom_access_token_hook` (claims no JWT),
+      helpers `jwt_org/jwt_role/jwt_produtor` com fallback, políticas `coluna = literal`,
+      **guarda `RESTRICTIVE` de tenant em toda tabela**, índices. `config.toml` liga o hook.
+- [x] **Auth endurecido** (`config.toml`) — senha mínima 10 + variedade, MFA TOTP,
+      rate limits no token. CAPTCHA/leaked-password ficam no painel + secret.
+- [x] **Billing Asaas** (`0013_billing.sql`) — `planos` (teste/técnico/escritório),
+      `assinaturas`, `cobrancas` (`unique(gateway_id)`), trigger `checar_limite()`.
+      Edge Function `webhook-asaas` (confere token, upsert idempotente, 200 após gravar).
+      Tela `/app/assinatura` (plano, uso vs limite, cobranças).
+- [x] **Painel agregado no banco** (`0014_painel.sql`) — `vw_talhao_situacao` (LATERAL) +
+      `painel_consultor()` (JSON, SECURITY INVOKER); painel do consultor rewireado, virou fila de trabalho.
+- [x] **LGPD** — `lib/audit.ts` gravando em `audit_log` (produtor/talhão/laudo/link);
+      `0015` libera o insert do consultor. Export dos dados do produtor em JSON:
+      `/app/produtores/[id]/exportar`.
+- [ ] Ligar hook, senha vazada, CAPTCHA e rate limit no painel do projeto real
+- [ ] Conta sandbox Asaas + ciclo completo de webhook
+- [ ] Contrato + política de privacidade com cláusula de operador
+- [ ] Exclusão de dados sob solicitação (hoje só exportação)
 
 ---
 
@@ -14,7 +39,7 @@ Acompanha o roadmap de `AGROTECH.md` §13. Marca o que saiu do protótipo.
   - [x] `parsers/` — `numero`, `sanidade`, `perfis`, `extrair`, `normalizar`
   - [x] **45 testes (vitest) passando** · typecheck strict limpo
   - [x] **Auditoria A1 corrigida no código** (escolha do corretivo) + 5 testes
-- [x] `supabase/migrations/0001–0009` — schema `agro`, RLS em 14 tabelas, trigrama
+- [x] `supabase/migrations/0001–0009` — schema `agro`, RLS em todas as tabelas, trigrama
   - [x] constraints de sanidade no banco (A7)
   - [x] `supabase/tests/rls.test.sql` (pgTAP) — isolamento produtor/organização
 - [x] `supabase/functions/` — esqueletos de `processar-laudo`, `gerar-laudo-pdf`, `convidar-produtor`

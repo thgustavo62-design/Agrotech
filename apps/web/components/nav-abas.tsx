@@ -11,6 +11,7 @@ const ABAS: Array<[string, string]> = [
   ['/app/analises', 'Análises'],
   ['/app/monitoramento', 'Monitoramento'],
   ['/app/tabelas', 'Tabelas'],
+  ['/app/assinatura', 'Assinatura'],
 ];
 
 export function NavAbas() {
