@@ -33,7 +33,28 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 - [ ] Pré-requisito transversal: validar as 17 migrations existentes contra
       um Supabase real + `supabase test db` (sem Docker/CLI neste ambiente —
       precisa rodar num ambiente com Docker ou contra um projeto hospedado)
-- [ ] Fase 1 do pedido — navegação agrupada (sidebar) para o agrônomo
+- [x] **Fase 1 do pedido — navegação agrupada** — sidebar (desktop, ≥960px) com
+      4 grupos (Visão geral / Gestão técnica / Inteligência / Gestão), colapsável
+      (`lateral-consultor.tsx`, estado em `localStorage`); barra inferior no
+      mobile com os 5 itens mais usados + "Mais" abrindo gaveta com o resto
+      (`barra-mobile.tsx`); breadcrumbs estruturais que pulam segmentos de uuid
+      (`breadcrumbs.tsx`); paleta de comandos `Ctrl/Cmd+K` buscando produtores/
+      propriedades/talhões por `ilike` (`paleta-comandos.tsx`, sem full-text
+      search — ver `UX_ARCHITECTURE.md §8.3`). `nav-abas.tsx` removido (as abas
+      horizontais viravam a sidebar). Ícones próprios em `components/icones.tsx`
+      (SVG de linha, sem lib nova). Fonte única do menu: `lib/navegacao.ts`.
+      Todo item do menu é um link de verdade, mesmo os "em breve" — a página de
+      destino explica o que falta, em vez de item de menu morto.
+    - Três telas novas viraram reais no processo (dado já existente, sem
+      schema novo): `/app/pendencias` (recorte do painel), `/app/propriedades`
+      (lista com link pro produtor), `/app/recomendacoes` (lista com link pro laudo)
+    - Seis telas novas são placeholder "em breve" com explicação e link pra
+      fase certa: `/app/agenda`, `/app/inteligencia`, `/app/relatorios`,
+      `/app/financeiro-escritorio`, `/app/equipe`, `/app/config`
+    - **Exceção:** `/app/config` ganhou uma função real além do placeholder —
+      editar nome/CREA/ART/telefone do próprio consultor (`profiles_atualiza_proprio`
+      já cobria isso por RLS, só faltava a tela). Renomear o escritório
+      (`orgs.nome`) continua sem UI — não há política de UPDATE em `orgs` hoje.
 - [ ] Fase 2 — dashboard do agrônomo expandido (cards de atenção, timeline)
 - [ ] Fase 3 — Visão 360º do produtor (abas sobre a página já rica que existe)
 - [ ] Fases 5–11 — ver `PRODUCT_V2.md §3` para o roadmap completo

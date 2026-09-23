@@ -10,9 +10,10 @@ export interface Painel {
 }
 
 /**
- * Abas de conteúdo dentro de uma página (não confundir com `nav-abas.tsx`,
- * que navega entre rotas). Usado pelas páginas "360º" — todo o conteúdo já
- * vem carregado do servidor; a troca de aba é só estado local, sem requisição.
+ * Abas de conteúdo dentro de uma página (não confundir com a navegação
+ * lateral/inferior do app, que navega entre rotas). Usado pelas páginas
+ * "360º" — todo o conteúdo já vem carregado do servidor; a troca de aba é
+ * só estado local, sem requisição.
  */
 export function AbasPaineis({ paineis, inicial }: { paineis: Painel[]; inicial?: string }) {
   const [ativa, setAtiva] = useState(inicial ?? paineis[0]?.id ?? '');

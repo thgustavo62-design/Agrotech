@@ -178,6 +178,7 @@ Não há gráficos (nenhuma lib de chart instalada) e não há tabela de dados g
 11. **Sem CI rodando de fato.** `.github/workflows/ci.yml` existe e está correto, mas não há evidência de execução (não há Actions history neste ambiente local).
 12. **Design sem dark mode.** `globals.css` define só um tema (`color-scheme: light`, sem bloco `prefers-color-scheme: dark`). Decisão consciente documentada em sessões anteriores (metáfora de "papel"), mas vale confirmar se ainda é a decisão certa para um produto B2B que vai concorrer com Linear/Stripe/Vercel (que têm dark mode).
 13. **Sem biblioteca de gráficos.** Qualquer coisa em §6 (radar de fertilidade, evolução histórica, comparador) e em §7/§12 (inteligência da carteira, financeiro) precisa de uma decisão de lib (Recharts é o que o pedido do usuário já assume).
+14. **`agro.orgs` não tem política de `update`.** Achado ao construir `/app/config` (Fase 1 da UX): o consultor pode ler (`orgs_consultor`) e criar a própria org uma vez (`orgs_criar`, `0011`), mas não existe policy para renomear o escritório depois. Não bloqueia nada hoje (a tela mostra o nome como leitura), mas é o tipo de lacuna de RLS que só aparece usando a tela de verdade — reforça o item 1 desta lista.
 
 ---
 
