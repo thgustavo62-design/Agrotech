@@ -2,6 +2,41 @@
 
 Acompanha o roadmap de `AGROTECH.md` §13. Marca o que saiu do protótipo.
 Decisões de virar produto vendável: `PRODUTO-VENDAVEL.md`.
+Transformação em dois produtos (agrônomo + produtor): `PRODUCT_AUDIT.md` /
+`PRODUCT_V2.md` / `UX_ARCHITECTURE.md` / `DATABASE_CHANGES.md` — as "fases"
+dessa leva têm numeração própria (1–11 do pedido), diferente das fases
+abaixo (que seguem o roadmap original de `AGROTECH.md`).
+
+---
+
+## AgroTech v2 — dois produtos, uma infra
+
+- [x] **Auditoria + plano** (`PRODUCT_AUDIT.md`, `PRODUCT_V2.md`,
+      `UX_ARCHITECTURE.md`, `DATABASE_CHANGES.md`) — inventário verificado do
+      código real, decisões de arquitetura, roadmap nas 11 fases pedidas,
+      migrations `0018–0022` propostas (não escritas).
+- [x] **Fase 4 do pedido — Visão 360º do talhão** (`/app/talhoes/[id]`) —
+      maior lacuna estrutural identificada na auditoria, agora existe.
+      Header com situação/status; abas: **Visão geral** (métricas + dados de
+      cadastro), **Solo & Nutrição** (fundido de propósito — reaproveita
+      `InterpretacaoView` inteira, que já cobre as duas coisas juntas),
+      **Histórico** (linha do tempo mesclando análises + recomendações +
+      visitas, ordenada por data), **Recomendações** (persistidas, com link
+      pro laudo), **Monitoramento** (visitas e ocorrências), **Fotos**
+      (signed URLs do bucket `visitas`), e **Custos**/**Produção** como
+      estado vazio explícito apontando para as migrations `0018`/`0019`
+      propostas (ainda não existem). Componente novo reutilizável:
+      `components/abas-paineis.tsx` (abas de conteúdo dentro da página,
+      client-side, state local — diferente de `nav-abas.tsx`, que navega
+      entre rotas). Linkado a partir de `/app/talhoes` e da tabela de
+      talhões em `/app/produtores/[id]`.
+- [ ] Pré-requisito transversal: validar as 17 migrations existentes contra
+      um Supabase real + `supabase test db` (sem Docker/CLI neste ambiente —
+      precisa rodar num ambiente com Docker ou contra um projeto hospedado)
+- [ ] Fase 1 do pedido — navegação agrupada (sidebar) para o agrônomo
+- [ ] Fase 2 — dashboard do agrônomo expandido (cards de atenção, timeline)
+- [ ] Fase 3 — Visão 360º do produtor (abas sobre a página já rica que existe)
+- [ ] Fases 5–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---
 

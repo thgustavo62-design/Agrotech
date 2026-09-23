@@ -34,7 +34,7 @@ export default async function Talhoes() {
             return (
               <div className="item" key={t.id as string}>
                 <div className="cresce">
-                  <h3>{t.nome as string}</h3>
+                  <h3><Link href={`/app/talhoes/${t.id}`}>{t.nome as string}</Link></h3>
                   <small>
                     {prop?.produtor?.nome ?? '—'} · {prop?.nome ?? '—'} · {f(Number(t.area_ha ?? 0), 1)} ha
                     {t.variedade ? ` · ${t.variedade}` : ''}

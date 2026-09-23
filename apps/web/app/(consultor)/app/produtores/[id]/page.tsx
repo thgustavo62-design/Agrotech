@@ -116,7 +116,7 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
                       return (
                         <tr key={t.id}>
                           <td>
-                            {t.nome}<br />
+                            <Link href={`/app/talhoes/${t.id}`}>{t.nome}</Link><br />
                             <small className="nota">{t.propriedade?.nome ?? '—'}</small>
                           </td>
                           <td className="num">{f(Number(t.area_ha ?? 0), 1)} ha</td>

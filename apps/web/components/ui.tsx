@@ -81,9 +81,15 @@ export function Tag({
   return <span className={`tag ${cls}`}>{children}</span>;
 }
 
-export function Vazio({ titulo, children }: { titulo: string; children?: ReactNode }) {
+export function Vazio({
+  titulo, children, style,
+}: {
+  titulo: string;
+  children?: ReactNode;
+  style?: React.CSSProperties;
+}) {
   return (
-    <div className="vazio">
+    <div className="vazio" style={style}>
       <b>{titulo}</b>
       {children}
     </div>
