@@ -177,7 +177,34 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       mudando o status gravado — e `resumoFinanceiro()`, reaproveitado pelo
       card do dashboard) e `moeda()` em `formato.ts`. `produtorAtual()` novo
       em `lib/supabase/server.ts` (id de `agro.produtores` do usuário logado).
-- [ ] Fases 5, 7–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
+- [x] **Fase 5 do pedido — Dashboard do produtor** (2026-09-24). Menu simples
+      de 8 itens (`components/nav-produtor.tsx`, "sem grupos" por decisão de
+      `UX_ARCHITECTURE.md §1.2` — público predominante no celular, menos
+      hierarquia): Início, Minha fazenda, Talhões, Recomendações, Atividades,
+      Financeiro, Produção, Documentos — substitui o nav mínimo de 2 itens
+      que a Fase 6 tinha deixado provisório. Quatro telas novas reais:
+      `/produtor/fazenda` (propriedades com talhões aninhados),
+      `/produtor/talhoes` (situação de todos, via `vw_talhao_situacao`),
+      `/produtor/recomendacoes` (histórico completo, link pro laudo),
+      `/produtor/documentos` (laudos em PDF com link assinado direto pro
+      Storage). Duas em "em breve" (`atividades`, `producao` — Fases 9 e 7).
+      `/produtor` (painel) ganhou saudação por hora do dia (calculada em
+      `America/Sao_Paulo` explicitamente — servidor roda em UTC),
+      "Precisa da sua atenção" mesclando talhão crítico + recomendação nova
+      (≤14 dias) + laudo novo (≤14 dias), e as fileiras "Últimas
+      recomendações"/"Documentos recentes" do mockup de `UX_ARCHITECTURE.md
+      §7` — mantém o resumo financeiro (Fase 6) e a lista de situação
+      (recortada a 6 + link pra `/produtor/talhoes`).
+    - **Achado de RLS construindo esta fase**: `agro.documentos` nunca teve
+      política de leitura pro produtor (só `documentos_consultor`) — o
+      `GRANT` de tabela já cobria (`0017`, blanket), só faltava a policy.
+      Sem isso, `/produtor/documentos` sempre voltaria vazio mesmo com dado
+      no banco — corrigido com `0021_documentos_produtor.sql`, aplicada no
+      Supabase real. As migrations propostas que restavam em
+      `DATABASE_CHANGES.md` (Agenda/Notificações/Planos) foram renumeradas
+      de `0021`–`0023` pra `0022`–`0024`, mesma disciplina da vez que `0018`
+      virou real.
+- [ ] Fases 7–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---
 

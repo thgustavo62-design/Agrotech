@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { criarClienteServidor, produtorAtual } from '@/lib/supabase/server';
+import { criarClienteServidor, produtorAtual, perfilAtual } from '@/lib/supabase/server';
 import { f, dataBR, moeda } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { resumoFinanceiro } from '@/lib/financeiro';
-import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
+import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
+import { CabecalhoVista, Cartao, Grade, Tag, Vazio } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,11 +14,20 @@ const ESTADO: Record<string, { txt: string; tom: 'ok' | 'alerta' | 'ruim' | 'cin
   sem_analise: { txt: 'sem análise ainda', tom: 'cinza' },
 };
 
+function saudacao(): string {
+  const hora = Number(
+    new Intl.DateTimeFormat('pt-BR', { hour: 'numeric', hour12: false, timeZone: 'America/Sao_Paulo' }).format(new Date()),
+  );
+  if (hora < 12) return 'Bom dia';
+  if (hora < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
 export default async function PainelProdutor() {
   const sb = await criarClienteServidor();
-  const produtor = await produtorAtual();
+  const [perfil, produtor] = await Promise.all([perfilAtual(), produtorAtual()]);
 
-  const [{ data: talhoes }, { data: recs }, resumoFin] = await Promise.all([
+  const [{ data: talhoes }, { data: recs }, { data: docsRaw }, resumoFin] = await Promise.all([
     sb.schema('agro').from('vw_talhao_situacao')
       .select('talhao_id, nome, cultura, area_ha, data_coleta, situacao')
       .order('nome'),
@@ -25,7 +35,11 @@ export default async function PainelProdutor() {
       .select('id, emitida_em, analise:analise_id(talhao:talhao_id(nome, cultura))')
       .is('arquivada_em', null)
       .order('emitida_em', { ascending: false })
-      .limit(1),
+      .limit(3),
+    sb.schema('agro').from('documentos')
+      .select('id, nome_arquivo, laboratorio, status, criado_em')
+      .order('criado_em', { ascending: false })
+      .limit(3),
     produtor ? resumoFinanceiro(sb, produtor.id) : Promise.resolve(null),
   ]);
 
@@ -33,32 +47,111 @@ export default async function PainelProdutor() {
     talhao_id: string; nome: string; cultura: string | null;
     area_ha: number | null; data_coleta: string | null; situacao: string;
   }>;
-  // deno-lint-ignore no-explicit-any
-  const ultima = (recs ?? [])[0] as any;
-  const precisam = lista.filter((t) => t.situacao === 'precisa_correcao').length;
+  const recomendacoes = (recs ?? []) as unknown as Array<{
+    id: string; emitida_em: string; analise: { talhao: { nome: string; cultura: string | null } | null } | null;
+  }>;
+  const documentos = (docsRaw ?? []) as Array<{
+    id: string; nome_arquivo: string | null; laboratorio: string | null; status: string; criado_em: string;
+  }>;
+
+  const areaTotal = lista.reduce((s, t) => s + Number(t.area_ha ?? 0), 0);
+  const culturas = [...new Set(lista.map((t) => t.cultura).filter((c): c is string => Boolean(c)))];
+  const precisamCorrecao = lista.filter((t) => t.situacao === 'precisa_correcao');
+
+  const hojeMenos14 = new Date(Date.now() - 14 * 86400000).toISOString();
+  const recomendacaoRecente = recomendacoes.find((r) => r.emitida_em >= hojeMenos14);
+  const documentoRecente = documentos.find((d) => d.status === 'confirmado' && d.criado_em >= hojeMenos14);
+
+  type Atencao = { chave: string; texto: string; href?: string };
+  const atencao: Atencao[] = [
+    ...precisamCorrecao.map((t): Atencao => ({
+      chave: `talhao-${t.talhao_id}`,
+      texto: `${t.nome} precisa de correção — fale com o seu técnico.`,
+      href: '/produtor/talhoes',
+    })),
+    ...(recomendacaoRecente ? [{
+      chave: `rec-${recomendacaoRecente.id}`,
+      texto: `Seu agrônomo publicou uma nova recomendação para ${recomendacaoRecente.analise?.talhao?.nome ?? 'um talhão'}.`,
+      href: `/produtor/laudos/${recomendacaoRecente.id}`,
+    }] : []),
+    ...(documentoRecente ? [{
+      chave: `doc-${documentoRecente.id}`,
+      texto: 'Há uma análise de solo nova disponível.',
+      href: '/produtor/documentos',
+    }] : []),
+  ];
 
   return (
     <>
       <CabecalhoVista
         olho="Sua lavoura"
-        titulo="Meus talhões"
-        descricao="O estado de cada área conforme a análise de solo mais recente que o seu técnico lançou."
+        titulo={`${saudacao()}, ${perfil?.nome ?? 'produtor'}.`}
+        descricao={
+          <>
+            {f(areaTotal, 1)} ha assistidos
+            {culturas.length > 0 ? ` · ${culturas.map((c) => nomeCultura(c)).join(', ')}` : ''}
+          </>
+        }
       />
 
-      {ultima && (
-        <Cartao olho="Novidade" titulo="Última recomendação recebida">
-          <p style={{ margin: 0 }}>
-            {nomeCultura(ultima.analise?.talhao?.cultura ?? null)} — {ultima.analise?.talhao?.nome ?? 'talhão'}
-            {' · '}<span className="nota">{dataBR(String(ultima.emitida_em).slice(0, 10))}</span>
-          </p>
-          <Link className="btn verde mini" href={`/produtor/laudos/${ultima.id}`} style={{ marginTop: 10 }}>
-            Abrir o laudo completo
-          </Link>
+      <Cartao olho="Fique de olho" titulo="Precisa da sua atenção">
+        {atencao.length === 0 ? (
+          <Vazio titulo="Nada pedindo atenção agora" />
+        ) : (
+          <div className="lista">
+            {atencao.map((it) => (
+              <div className="item" key={it.chave}>
+                <div className="cresce"><p style={{ margin: 0 }}>{it.texto}</p></div>
+                {it.href ? <Link className="btn sec mini" href={it.href}>ver</Link> : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </Cartao>
+
+      <Grade cols={2} style={{ marginTop: 14, alignItems: 'start' }}>
+        <Cartao olho="Histórico" titulo="Últimas recomendações">
+          {recomendacoes.length === 0 ? (
+            <Vazio titulo="Nenhuma recomendação ainda" />
+          ) : (
+            <div className="lista">
+              {recomendacoes.map((r) => (
+                <div className="item" key={r.id}>
+                  <div className="cresce">
+                    <h3>{r.analise?.talhao?.nome ?? 'Talhão'}</h3>
+                    <small>{nomeCultura(r.analise?.talhao?.cultura ?? null)} · {dataBR(r.emitida_em.slice(0, 10))}</small>
+                  </div>
+                  <Link className="btn sec mini" href={`/produtor/laudos/${r.id}`}>abrir</Link>
+                </div>
+              ))}
+            </div>
+          )}
         </Cartao>
-      )}
+
+        <Cartao olho="Recebidos" titulo="Documentos recentes">
+          {documentos.length === 0 ? (
+            <Vazio titulo="Nenhum documento ainda" />
+          ) : (
+            <div className="lista">
+              {documentos.map((d) => {
+                const s = ROTULO_STATUS_DOCUMENTO[d.status] ?? { txt: d.status, tom: 'cinza' as const };
+                return (
+                  <div className="item" key={d.id}>
+                    <div className="cresce">
+                      <h3>{d.nome_arquivo ?? 'laudo.pdf'}</h3>
+                      <small>{d.laboratorio ?? 'laboratório não identificado'} · {dataBR(d.criado_em.slice(0, 10))}</small>
+                    </div>
+                    <Tag tom={s.tom}>{s.txt}</Tag>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Cartao>
+      </Grade>
 
       {resumoFin && (
-        <Cartao olho="Resumo financeiro" titulo={moeda(resumoFin.saldo)}>
+        <Cartao olho="Resumo financeiro" titulo={moeda(resumoFin.saldo)} style={{ marginTop: 14 }}>
           <p className="nota" style={{ margin: 0 }}>
             {resumoFin.pendencias > 0
               ? `${resumoFin.pendencias} lançamento(s) a vencer ou atrasado(s).`
@@ -72,13 +165,14 @@ export default async function PainelProdutor() {
 
       <Cartao
         olho="Situação"
-        titulo={precisam > 0 ? `${precisam} talhão(ões) pedem atenção` : 'Nenhum talhão pedindo correção'}
+        titulo={precisamCorrecao.length > 0 ? `${precisamCorrecao.length} talhão(ões) pedem atenção` : 'Nenhum talhão pedindo correção'}
+        style={{ marginTop: 14 }}
       >
         {lista.length === 0 ? (
           <Vazio titulo="Nenhum talhão cadastrado">Fale com o seu técnico.</Vazio>
         ) : (
           <div className="lista">
-            {lista.map((t) => {
+            {lista.slice(0, 6).map((t) => {
               const e = ESTADO[t.situacao] ?? ESTADO.sem_analise!;
               return (
                 <div className="item" key={t.talhao_id}>
@@ -94,6 +188,9 @@ export default async function PainelProdutor() {
               );
             })}
           </div>
+        )}
+        {lista.length > 6 && (
+          <Link className="btn sec mini" href="/produtor/talhoes" style={{ marginTop: 10 }}>Ver todos os talhões</Link>
         )}
         <p className="nota" style={{ marginTop: 12 }}>
           &ldquo;Precisa de correção&rdquo; significa que a saturação por bases está baixa ou o alumínio

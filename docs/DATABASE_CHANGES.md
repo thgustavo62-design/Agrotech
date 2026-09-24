@@ -4,7 +4,13 @@ Continuação de `supabase/migrations/0001`–`0018` (ver inventário em
 `PRODUCT_AUDIT.md §4`). Este documento nasceu como a **proposta** de
 migrations `0019`–`0023`; `0019` e `0020` já foram escritas e aplicadas junto
 da Fase 6 (financeiro do produtor, 2026-09-23) — ver nota de divergência em
-cada seção. `0021`–`0023` continuam só propostas, escritas quando as fases
+cada seção. `0021` também já foi escrita, mas **fora da proposta original**:
+`0021_documentos_produtor.sql` fecha um buraco de RLS achado construindo a
+Fase 5 (produtor não conseguia ler os próprios `agro.documentos` — faltava
+política, o `GRANT` já cobria). Por isso as propostas que restam
+(Agenda/Notificações/Planos) foram renumeradas de `0021`–`0023` pra
+`0022`–`0024` — mesma disciplina usada quando `0018` virou real na Fase 2.
+`0022`–`0024` continuam só propostas, escritas quando as fases
 correspondentes (9 e 11) forem de fato implementadas.
 
 Convenção mantida do schema existente (não a do pedido original, que sugeria
@@ -145,7 +151,7 @@ drop table if exists agro.safras;
 um bucket de Storage (`financeiro`) com 3 políticas (leitura/envio/exclusão,
 pasta = `produtor_id`) para o campo `comprovante_path` ter algo de verdade
 por trás — a proposta original não incluía Storage. Sem gate de plano: o
-feature flag `planos.features.financeiro` citado em `0023` (Fase 11) ainda
+feature flag `planos.features.financeiro` citado em `0024` (Fase 11) ainda
 não existe no banco, então por ora todo produtor autenticado vê o financeiro,
 independente do plano do escritório dele.
 
@@ -270,10 +276,10 @@ drop table if exists agro.financeiro_categorias;
 
 ---
 
-## 0021 — Agenda do agrônomo
+## 0022 — Agenda do agrônomo
 
 ```sql
--- 0021_agenda.sql
+-- 0022_agenda.sql
 
 create table agro.agenda_eventos (
   id            uuid primary key default gen_random_uuid(),
@@ -321,10 +327,10 @@ drop table if exists agro.agenda_eventos;
 
 ---
 
-## 0022 — Notificações
+## 0023 — Notificações
 
 ```sql
--- 0022_notificacoes.sql
+-- 0023_notificacoes.sql
 
 create table agro.notificacoes (
   id                    uuid primary key default gen_random_uuid(),
@@ -389,10 +395,10 @@ drop table if exists agro.notificacoes;
 
 ---
 
-## 0023 — Planos com feature flags e papéis novos
+## 0024 — Planos com feature flags e papéis novos
 
 ```sql
--- 0023_planos_features_e_papeis.sql
+-- 0024_planos_features_e_papeis.sql
 
 alter table agro.planos add column if not exists features jsonb not null default '{}'::jsonb;
 alter table agro.planos add column if not exists usuarios_max int not null default 1;
@@ -446,11 +452,13 @@ alter table agro.planos drop column if exists features;
 
 ## Antes de aplicar qualquer migration desta lista
 
-1. Confirmar que `0001`–`0018` aplicam limpo num projeto novo
-   (`supabase db reset` local, ou `supabase db push` num projeto de
-   staging).
-2. Rodar `supabase test db` com o `rls.test.sql` existente passando.
-3. Aplicar `0019`–`0023` uma de cada vez, cada uma com seu próprio teste
+1. ~~Confirmar que `0001`–`0018` aplicam limpo num projeto novo~~ **feito em
+   2026-09-23** — `0001`–`0021` rodaram do zero contra um Supabase real
+   (`npx supabase db push --db-url`), 2 bugs achados e corrigidos (ver
+   `PRODUCT_V2.md §7`).
+2. `supabase test db` (pgTAP, `rls.test.sql`) ainda não rodou — depende do
+   runner local via Docker, que nenhum ambiente usado até agora tem.
+3. Aplicar `0022`–`0024` uma de cada vez, cada uma com seu próprio teste
    pgTAP cobrindo pelo menos: dono acessa, terceiro não acessa, consultor
    acessa (ou não, conforme a tabela).
 4. Só então começar a Fase correspondente em `PRODUCT_V2.md`.
