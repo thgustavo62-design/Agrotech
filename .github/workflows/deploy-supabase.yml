@@ -1,32 +1,35 @@
-name: Migrações e Edge Functions (Supabase)
+name: Migrações (Supabase)
+# Toda migration nova em supabase/migrations/ que chega no main é aplicada
+# automaticamente no projeto real — dispensa rodar `supabase db push` à mão
+# (ver docs/ARQUITETURA.md "Como rodar"). Usa --db-url direto: não precisa
+# de `supabase link` nem de SUPABASE_ACCESS_TOKEN, só da connection string
+# (mesmo secret SUPABASE_DB_URL que o backup.yml já usa).
 
 on:
   push:
     branches: [main]
     paths:
-      - 'supabase/**'
+      - 'supabase/migrations/**'
   workflow_dispatch:
 
 jobs:
   migrar:
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
           version: latest
 
-      - name: Link do projeto
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
-        env:
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-
       - name: Aplicar migrações
-        run: supabase db push
+        run: supabase db push --db-url "$DB_URL" --yes
         env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
-      - name: Deploy das Edge Functions
-        run: supabase functions deploy processar-laudo gerar-laudo-pdf convidar-produtor webhook-asaas
+  # Edge Functions (processar-laudo, gerar-laudo-pdf, convidar-produtor,
+  # webhook-asaas) continuam esqueletos, nunca deployados nem testados —
+  # ver PRODUCT_AUDIT.md. Deploy automático fica fora de propósito até
+  # existir alguma delas de verdade; deploy manual quando chegar a hora:
+  #   supabase link --project-ref <ref>
+  #   supabase functions deploy <nome-da-function>
+  # (precisa de SUPABASE_ACCESS_TOKEN, gerado em supabase.com/dashboard/account/tokens)
