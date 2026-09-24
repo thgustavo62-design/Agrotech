@@ -30,9 +30,22 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       client-side, state local — diferente de `nav-abas.tsx`, que navega
       entre rotas). Linkado a partir de `/app/talhoes` e da tabela de
       talhões em `/app/produtores/[id]`.
-- [ ] Pré-requisito transversal: validar as 17 migrations existentes contra
-      um Supabase real + `supabase test db` (sem Docker/CLI neste ambiente —
-      precisa rodar num ambiente com Docker ou contra um projeto hospedado)
+- [x] **Pré-requisito transversal — validado contra Supabase real (2026-09-23).**
+      Gustavo passou a connection string de um projeto Supabase real
+      (vazio) e o repositório GitHub `thgustavo62-design/Agrotech`. `npx
+      supabase db push --db-url` (não precisa de Docker — só `supabase
+      start`/dev local precisa) rodou as 20 migrations e achou 2 bugs reais,
+      **nunca antes executados com sucesso em lugar nenhum**, corrigidos nos
+      próprios arquivos: `unaccent()` é `STABLE` não `IMMUTABLE`
+      (`nome_norm` em `0002` não compilava — corrigido com o envelope
+      `agro.unaccent_imutavel()`), e `0012_tenancy.sql` tentava `drop
+      function talhao_na_minha_org` antes de derrubar as políticas que
+      ainda dependiam dela (`2BP01` — reordenado). As 20 migrations agora
+      rodam limpo do zero. `supabase test db` (pgTAP) ainda não rodou —
+      depende do runner local via Docker, que este ambiente não tem.
+      Repositório conectado como `origin` (estava vazio, sem risco de
+      sobrescrever nada). Credenciais só em `supabase/.env`/`.env.local`
+      (gitignored), nunca commitadas.
 - [x] **Fase 1 do pedido — navegação agrupada** — sidebar (desktop, ≥960px) com
       4 grupos (Visão geral / Gestão técnica / Inteligência / Gestão), colapsável
       (`lateral-consultor.tsx`, estado em `localStorage`); barra inferior no

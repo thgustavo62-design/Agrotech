@@ -10,7 +10,7 @@ as $$
   select regexp_replace(
     trim(both ' ' from
       regexp_replace(
-        upper(unaccent(coalesce(p, ''))),
+        upper(agro.unaccent_imutavel(coalesce(p, ''))),
         '\m(FAZENDA|SITIO|CHACARA|PROP\.?|SR\.?|SRA\.?|AGROPECUARIA|GRANJA)\M',
         '', 'g'
       )

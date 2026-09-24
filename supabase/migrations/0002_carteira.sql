@@ -1,12 +1,27 @@
 -- 0002 — carteira: produtores, propriedades, talhões
 -- Hierarquia: org -> produtor -> propriedade -> talhão. Tudo cascateia para baixo.
 
+-- unaccent() vem da extensão (0001) declarada STABLE, não IMMUTABLE —
+-- Postgres recusa usá-la direto numa coluna gerada ("generation expression
+-- is not immutable", SQLSTATE 42P17; só apareceu ao rodar contra Postgres de
+-- verdade pela 1ª vez, 2026-09-23). Envelope IMMUTABLE de propósito — nome
+-- próprio de cadastro não depende de config de sessão na prática; é o
+-- contorno documentado para esse problema conhecido do unaccent.
+create or replace function agro.unaccent_imutavel(text)
+returns text
+language sql
+immutable
+parallel safe
+as $$
+  select unaccent($1)
+$$;
+
 create table agro.produtores (
   id         uuid primary key default gen_random_uuid(),
   org_id     uuid not null references agro.orgs(id) on delete cascade,
   user_id    uuid references auth.users(id) on delete set null,  -- preenchido no convite
   nome       text not null,
-  nome_norm  text generated always as (upper(unaccent(nome))) stored,
+  nome_norm  text generated always as (upper(agro.unaccent_imutavel(nome))) stored,
   cpf_cnpj   text,
   fone       text,
   email      text,
@@ -21,7 +36,7 @@ create table agro.propriedades (
   id           uuid primary key default gen_random_uuid(),
   produtor_id  uuid not null references agro.produtores(id) on delete cascade,
   nome         text not null,
-  nome_norm    text generated always as (upper(unaccent(nome))) stored,
+  nome_norm    text generated always as (upper(agro.unaccent_imutavel(nome))) stored,
   municipio    text,
   uf           text default 'ES',
   car          text,
@@ -37,7 +52,7 @@ create table agro.talhoes (
   id              uuid primary key default gen_random_uuid(),
   propriedade_id  uuid not null references agro.propriedades(id) on delete cascade,
   nome            text not null,
-  nome_norm       text generated always as (upper(unaccent(nome))) stored,
+  nome_norm       text generated always as (upper(agro.unaccent_imutavel(nome))) stored,
   cultura         text not null,
   variedade       text,
   area_ha         numeric(10,2),

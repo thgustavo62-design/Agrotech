@@ -205,8 +205,11 @@ create index if not exists documentos_prod_idx     on agro.documentos(produtor_i
 -- ===========================================================================
 -- 5. políticas: derruba as em cadeia, cria coluna = literal + guarda restritiva
 -- ===========================================================================
-drop function if exists agro.talhao_na_minha_org(uuid);
-drop function if exists agro.talhao_do_meu_produtor(uuid);
+-- (os `drop function` de talhao_na_minha_org/talhao_do_meu_produtor ficam lá
+-- embaixo, depois de derrubar toda policy que ainda os referencia — na
+-- ordem original ficavam aqui em cima e o Postgres recusava com "cannot
+-- drop function... because other objects depend on it" [2BP01]; só apareceu
+-- ao rodar contra Postgres de verdade pela 1ª vez, 2026-09-23)
 
 -- macro conceitual (escrita à mão por tabela abaixo):
 --   RESTRICTIVE tenant_guard:  org_id = (select agro.jwt_org())
@@ -297,6 +300,10 @@ create policy visita_fotos_consultor on agro.visita_fotos for all to authenticat
   with check ((select agro.jwt_role()) in ('consultor','admin'));
 create policy visita_fotos_produtor on agro.visita_fotos for select to authenticated
   using (produtor_id = (select agro.jwt_produtor()));
+
+-- nenhuma policy acima depende mais das funções antigas — agora sim dá pra derrubá-las
+drop function if exists agro.talhao_na_minha_org(uuid);
+drop function if exists agro.talhao_do_meu_produtor(uuid);
 
 -- ---- documentos (só consultor) ---------------------------------
 drop policy if exists documentos_consultor on agro.documentos;

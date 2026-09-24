@@ -195,7 +195,7 @@ Para não deixar escopo implícito:
 
 | Risco | Mitigação |
 |---|---|
-| RLS nunca validada em runtime (ver audit §4) | Rodar migrations + `supabase test db` antes/durante a Fase 1 |
+| ~~RLS nunca validada em runtime (ver audit §4)~~ **Resolvido em 2026-09-23** | As 20 migrations (`0001`–`0020`) rodaram contra um projeto Supabase real (`npx supabase db push --db-url`, sem precisar de Docker — só `supabase start`/dev local precisa) e 2 bugs reais apareceram, corrigidos nos próprios arquivos de migration (nunca tinham rodado com sucesso em lugar nenhum): (1) `unaccent()` é `STABLE`, não `IMMUTABLE` — Postgres recusava as colunas geradas `nome_norm`; corrigido com um envelope `agro.unaccent_imutavel()` (truque documentado para esse problema conhecido da extensão). (2) `0012_tenancy.sql` tentava `drop function agro.talhao_na_minha_org(uuid)` antes de derrubar as políticas que ainda dependiam dela (`2BP01`); corrigido movendo os `drop function` pra depois de todos os `drop policy`. `supabase test db` (pgTAP, `supabase/tests/rls.test.sql`) ainda não rodou — depende do runner local via Docker, que este ambiente não tem; validar isso é o próximo passo desse risco, não mais "rodar as migrations".
 | Financeiro mal isolado do consultor por erro de RLS | Nenhuma política `consultor` nas tabelas `financeiro_*`, por decisão de design (§2.2) — mais fácil de auditar que "leitura sim, escrita não" |
 | `cultura` como texto livre quebrando agregações da Fase 8 | Normalização na consulta (§2.4); não é bloqueante, é aceitável para o volume de dados atual |
 | Escopo do pedido é maior que uma sessão de trabalho | Este documento fasea; cada fase é entregável e revisável isoladamente — não faz sentido tentar tudo de uma vez, e o próprio pedido pede isso na seção 30 |
