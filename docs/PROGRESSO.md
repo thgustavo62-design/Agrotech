@@ -92,6 +92,21 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       configuração não é gerenciável por migration/CLI neste ambiente —
       **é um passo manual que precisa ser lembrado em qualquer novo projeto
       Supabase** (staging, ou se o projeto for recriado).
+- [x] **Pipeline "autoalimentável" ponta a ponta confirmado (2026-09-24).**
+      Gustavo pediu explicitamente a automação GitHub↔Vercel↔Supabase.
+      `deploy-supabase.yml` (commit `4e8c555`) rodou com sucesso no
+      GitHub Actions do repositório certo (run #5, "Success", 14s) depois de
+      cadastrar o secret `SUPABASE_DB_URL`. No caminho, a senha do Postgres
+      foi resetada pelo painel do Supabase (Project Settings → Database →
+      Reset database password — o popup de "salvar senha" que apareceu por
+      cima era do **navegador**, não do Supabase, e gerou confusão com
+      senhas erradas por um tempo). Senha nova só existe em
+      `supabase/.env` (gitignored) e no secret do GitHub — nunca commitada.
+      Fluxo confirmado: push no GitHub → Vercel builda/publica sozinho
+      (Git integration nativa) **e** GitHub Actions aplica migration nova
+      sozinho no Supabase (`supabase/migrations/**` como trigger). Resetar
+      a senha do Postgres não quebra o app em produção — ele fala com o
+      Supabase pela API (anon key), não por conexão direta ao banco.
 - [x] **Fase 1 do pedido — navegação agrupada** — sidebar (desktop, ≥960px) com
       4 grupos (Visão geral / Gestão técnica / Inteligência / Gestão), colapsável
       (`lateral-consultor.tsx`, estado em `localStorage`); barra inferior no
