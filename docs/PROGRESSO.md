@@ -22,6 +22,22 @@ rodado (falta de Docker neste ambiente). Site em produção, banco real
 migrado, deploy e migrations automáticos a cada push — ver entradas
 "Deploy em produção" e "autoalimentável" abaixo.
 
+**Achado ao validar o deploy da Fase 11 em produção (2026-09-24):** os
+smoke tests de `curl` desde a Fase 6 vinham batendo numa URL de
+**deployment antiga e congelada** do Vercel (`agrotech-f206ibkos-...`) —
+cada deploy novo no Vercel ganha uma URL própria; só a alias
+`agrotech-git-main-thgustavo62-designs-projects.vercel.app` (ou um
+domínio de produção configurado) sempre aponta pro deploy mais recente.
+Confirmando contra a URL certa, achei um bug real de verdade: o
+middleware usava `caminho.startsWith('/app')`, que também batia em
+`/apple-icon` (o ícone do iOS, criado na Fase 10) — o navegador pedia
+`/apple-icon`, o middleware achava que era rota do consultor, e
+redirecionava pro login mesmo sem precisar de sessão. Corrigido
+conferindo limite de segmento (`== '/app'` ou `startsWith('/app/')`),
+commit `cb4845b`. **Lição pro resto do projeto: sempre testar contra a
+URL alias/produção, nunca contra uma URL de deployment específico** — ela
+para de refletir a realidade assim que o próximo deploy sai.
+
 - [x] **Auditoria + plano** (`PRODUCT_AUDIT.md`, `PRODUCT_V2.md`,
       `UX_ARCHITECTURE.md`, `DATABASE_CHANGES.md`) — inventário verificado do
       código real, decisões de arquitetura, roadmap nas 11 fases pedidas,
