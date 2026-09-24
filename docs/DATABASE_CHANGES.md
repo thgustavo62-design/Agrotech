@@ -1,8 +1,8 @@
 # DATABASE_CHANGES.md — schema novo proposto
 
-Continuação de `supabase/migrations/0001`–`0017` (ver inventário em
+Continuação de `supabase/migrations/0001`–`0018` (ver inventário em
 `PRODUCT_AUDIT.md §4`). Este documento é a **proposta** de migrations
-`0018`–`0022`; nenhuma delas foi escrita ou aplicada ainda — isso só acontece
+`0019`–`0023`; nenhuma delas foi escrita ou aplicada ainda — isso só acontece
 quando uma fase de `PRODUCT_V2.md` for de fato implementada. Antes de
 escrever a primeira, confirmar o pré-requisito de `PRODUCT_V2.md §4`
 (migrations existentes validadas contra um Postgres real).
@@ -44,10 +44,10 @@ existentes pesa mais do que a convenção sugerida no pedido.
 
 ---
 
-## 0018 — Safras e produção
+## 0019 — Safras e produção
 
 ```sql
--- 0018_safras_producao.sql
+-- 0019_safras_producao.sql
 
 create table agro.safras (
   id          uuid primary key default gen_random_uuid(),
@@ -129,10 +129,10 @@ drop table if exists agro.safras;
 
 ---
 
-## 0019 — Financeiro do produtor
+## 0020 — Financeiro do produtor
 
 ```sql
--- 0019_financeiro.sql
+-- 0020_financeiro.sql
 
 create table agro.financeiro_categorias (
   id          uuid primary key default gen_random_uuid(),
@@ -251,10 +251,10 @@ drop table if exists agro.financeiro_categorias;
 
 ---
 
-## 0020 — Agenda do agrônomo
+## 0021 — Agenda do agrônomo
 
 ```sql
--- 0020_agenda.sql
+-- 0021_agenda.sql
 
 create table agro.agenda_eventos (
   id            uuid primary key default gen_random_uuid(),
@@ -302,10 +302,10 @@ drop table if exists agro.agenda_eventos;
 
 ---
 
-## 0021 — Notificações
+## 0022 — Notificações
 
 ```sql
--- 0021_notificacoes.sql
+-- 0022_notificacoes.sql
 
 create table agro.notificacoes (
   id                    uuid primary key default gen_random_uuid(),
@@ -370,10 +370,10 @@ drop table if exists agro.notificacoes;
 
 ---
 
-## 0022 — Planos com feature flags e papéis novos
+## 0023 — Planos com feature flags e papéis novos
 
 ```sql
--- 0022_planos_features_e_papeis.sql
+-- 0023_planos_features_e_papeis.sql
 
 alter table agro.planos add column if not exists features jsonb not null default '{}'::jsonb;
 alter table agro.planos add column if not exists usuarios_max int not null default 1;
@@ -427,11 +427,11 @@ alter table agro.planos drop column if exists features;
 
 ## Antes de aplicar qualquer migration desta lista
 
-1. Confirmar que `0001`–`0017` aplicam limpo num projeto novo
+1. Confirmar que `0001`–`0018` aplicam limpo num projeto novo
    (`supabase db reset` local, ou `supabase db push` num projeto de
    staging).
 2. Rodar `supabase test db` com o `rls.test.sql` existente passando.
-3. Aplicar `0018`–`0022` uma de cada vez, cada uma com seu próprio teste
+3. Aplicar `0019`–`0023` uma de cada vez, cada uma com seu próprio teste
    pgTAP cobrindo pelo menos: dono acessa, terceiro não acessa, consultor
    acessa (ou não, conforme a tabela).
 4. Só então começar a Fase correspondente em `PRODUCT_V2.md`.

@@ -6,24 +6,70 @@ import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components
 
 export const dynamic = 'force-dynamic';
 
+interface ItemLista {
+  talhao_id: string; nome: string; data?: string | null;
+  analise_id?: string | null; cultura?: string | null; v?: number | null; m?: number | null; data_coleta?: string | null;
+}
+interface AtividadeBruta {
+  acao: string; entidade: string | null; entidade_id: string | null;
+  dados: Record<string, unknown> | null; criado_em: string;
+}
 interface Painel {
   produtores: number;
   talhoes: number;
   area_total: number;
   analises: number;
   laudos_fila: number;
-  pendencias: Array<{
-    talhao_id: string; analise_id: string | null; nome: string;
-    cultura: string | null; data_coleta: string | null; v: number | null; m: number | null;
-  }>;
+  pendencias: ItemLista[];
   area_por_cultura: Record<string, number>;
-  ultimas_visitas: Array<{ id: string; data: string; fenologia: string | null }>;
+  visitas_atrasadas_total: number;
+  visitas_atrasadas: ItemLista[];
+  proximas_visitas: ItemLista[];
+  recomendacoes_pendentes_total: number;
+  recomendacoes_pendentes: ItemLista[];
+  recomendacoes_emitidas_mes: number;
+  produtores_sem_visita_recente: number;
+  talhoes_sem_analise_atualizada: number;
+  atividade_recente: AtividadeBruta[];
 }
 
 const VAZIO: Painel = {
   produtores: 0, talhoes: 0, area_total: 0, analises: 0, laudos_fila: 0,
-  pendencias: [], area_por_cultura: {}, ultimas_visitas: [],
+  pendencias: [], area_por_cultura: {},
+  visitas_atrasadas_total: 0, visitas_atrasadas: [], proximas_visitas: [],
+  recomendacoes_pendentes_total: 0, recomendacoes_pendentes: [], recomendacoes_emitidas_mes: 0,
+  produtores_sem_visita_recente: 0, talhoes_sem_analise_atualizada: 0, atividade_recente: [],
 };
+
+const ROTULO_ATIVIDADE: Record<string, (d: Record<string, unknown>) => string> = {
+  'analise.criada': () => 'Análise de solo lançada manualmente',
+  'laudo.enviado': (d) => `Laudo em PDF enviado${d.nome_arquivo ? ` — ${d.nome_arquivo}` : ''}`,
+  'laudo.confirmado': () => 'Laudo conferido e confirmado — virou análise',
+  'laudo.descartado': () => 'Laudo descartado na conferência',
+  'recomendacao.emitida': () => 'Recomendação emitida',
+  'produtor.criado': () => 'Produtor cadastrado',
+  'produtor.editado': () => 'Cadastro de produtor atualizado',
+  'produtor.convidado': (d) => `Convite de acesso enviado ao produtor${d.email ? ` (${d.email})` : ''}`,
+  'produtor.dados_exportados': () => 'Dados do produtor exportados (LGPD)',
+  'produtor.excluido_lgpd': () => 'Produtor excluído a pedido (LGPD)',
+  'talhao.criado': () => 'Talhão cadastrado',
+  'talhao.editado': () => 'Talhão atualizado',
+  'compartilhamento.criado': () => 'Link de resultados gerado para o produtor',
+  'perfil.editado': () => 'Perfil do consultor atualizado',
+};
+
+function linkAtividade(a: AtividadeBruta): string | undefined {
+  const dados = a.dados ?? {};
+  if (a.acao === 'recomendacao.emitida' && typeof dados.analise_id === 'string') {
+    return `/app/analises/${dados.analise_id}/laudo`;
+  }
+  if (!a.entidade_id) return undefined;
+  if (a.entidade === 'produtores') return `/app/produtores/${a.entidade_id}`;
+  if (a.entidade === 'talhoes') return `/app/talhoes/${a.entidade_id}`;
+  if (a.entidade === 'analises') return `/app/analises/${a.entidade_id}`;
+  if (a.entidade === 'documentos') return `/app/laudos/${a.entidade_id}`;
+  return undefined;
+}
 
 export default async function PaginaPainel() {
   const sb = await criarClienteServidor();
@@ -32,90 +78,129 @@ export default async function PaginaPainel() {
 
   const culturas = Object.entries(p.area_por_cultura).sort((a, b) => b[1] - a[1]);
 
+  type Atencao = { chave: string; nome: string; texto: string; tom: 'ruim' | 'alerta' | 'cinza'; href?: string };
+  const atencao: Atencao[] = [
+    ...p.pendencias.map((x): Atencao => ({
+      chave: `crit-${x.talhao_id}`, nome: x.nome, tom: 'ruim',
+      texto: `precisa de correção — V ${x.v != null ? f(x.v, 0) : '—'}% · m ${x.m != null ? f(x.m, 0) : '—'}%`,
+      href: x.analise_id ? `/app/analises/${x.analise_id}` : `/app/talhoes/${x.talhao_id}`,
+    })),
+    ...p.visitas_atrasadas.map((x): Atencao => ({
+      chave: `atraso-${x.talhao_id}`, nome: x.nome, tom: 'ruim',
+      texto: `retorno previsto para ${dataBR(x.data ?? '')} — ainda sem novo registro`,
+      href: `/app/talhoes/${x.talhao_id}`,
+    })),
+    ...p.recomendacoes_pendentes.map((x): Atencao => ({
+      chave: `rec-${x.analise_id}`, nome: x.nome, tom: 'alerta',
+      texto: `análise de ${x.data_coleta ? dataBR(x.data_coleta) : '—'} sem recomendação emitida`,
+      href: `/app/analises/${x.analise_id}`,
+    })),
+    ...p.proximas_visitas.map((x): Atencao => ({
+      chave: `prox-${x.talhao_id}`, nome: x.nome, tom: 'cinza',
+      texto: `visita prevista para ${dataBR(x.data ?? '')}`,
+      href: `/app/talhoes/${x.talhao_id}`,
+    })),
+  ];
+
   return (
     <>
       <CabecalhoVista
-        olho="Fila de trabalho"
-        titulo="Painel"
+        olho="Central do agrônomo"
+        titulo="Início"
         descricao="O que pede a sua atenção hoje na assistência técnica."
         acoes={
           <>
             <Link className="btn verde" href="/app/analises/nova">Lançar análise</Link>
-            <Link className="btn sec" href="/app/laudos">Enviar laudo (PDF)</Link>
+            <Link className="btn sec" href="/app/laudos/novo">Enviar laudo (PDF)</Link>
           </>
         }
       />
 
-      <Cartao olho="Pendências químicas" titulo="Talhões que pedem intervenção">
-        {p.pendencias.length === 0 ? (
-          <Vazio titulo="Nada crítico em aberto">
-            Nenhum talhão com saturação por bases abaixo de 45% ou alumínio acima de 20% na última análise.
+      <Grade cols={4}>
+        <Metrica rotulo="Pendências químicas" valor={p.pendencias.length} cor={p.pendencias.length ? 'var(--c-mb)' : undefined} />
+        <Metrica rotulo="Laudos na fila" valor={p.laudos_fila} cor={p.laudos_fila ? 'var(--c-b)' : undefined} />
+        <Metrica rotulo="Recomendações pendentes" valor={p.recomendacoes_pendentes_total} cor={p.recomendacoes_pendentes_total ? 'var(--c-b)' : undefined} />
+        <Metrica rotulo="Visitas atrasadas" valor={p.visitas_atrasadas_total} cor={p.visitas_atrasadas_total ? 'var(--c-mb)' : undefined} />
+      </Grade>
+      <Grade cols={4} style={{ marginTop: 12 }}>
+        <Metrica rotulo="Produtores" valor={p.produtores} />
+        <Metrica rotulo="Talhões" valor={p.talhoes} detalhe={`${f(p.area_total, 1)} ha`} />
+        <Metrica rotulo="Análises" valor={p.analises} />
+        <Metrica rotulo="Recomendações no mês" valor={p.recomendacoes_emitidas_mes} />
+      </Grade>
+
+      <Cartao olho="Fila de trabalho" titulo="Precisa da sua atenção" style={{ marginTop: 14 }}>
+        {(p.talhoes_sem_analise_atualizada > 0 || p.produtores_sem_visita_recente > 0) && (
+          <p className="nota" style={{ margin: '0 0 12px' }}>
+            {p.talhoes_sem_analise_atualizada > 0 ? `${p.talhoes_sem_analise_atualizada} talhão(ões) sem análise há mais de 6 meses` : ''}
+            {p.talhoes_sem_analise_atualizada > 0 && p.produtores_sem_visita_recente > 0 ? ' · ' : ''}
+            {p.produtores_sem_visita_recente > 0 ? `${p.produtores_sem_visita_recente} produtor(es) sem visita há mais de 60 dias` : ''}
+          </p>
+        )}
+        {atencao.length === 0 ? (
+          <Vazio titulo="Nada pedindo atenção agora">
+            Sem correção pendente, sem laudo represado, sem visita atrasada.
           </Vazio>
         ) : (
           <div className="lista">
-            {p.pendencias.map((pd) => (
-              <div className="item" key={pd.talhao_id}>
+            {atencao.map((it) => (
+              <div className="item" key={it.chave}>
                 <div className="cresce">
-                  <h3>{pd.nome}</h3>
-                  <small className="mono">
-                    {nomeCultura(pd.cultura)} · V {pd.v != null ? `${f(pd.v, 0)}%` : '—'} · m {pd.m != null ? `${f(pd.m, 0)}%` : '—'}
-                    {pd.data_coleta ? ` · coleta de ${dataBR(pd.data_coleta)}` : ''}
-                  </small>
+                  <h3>{it.nome}</h3>
+                  <small>{it.texto}</small>
                 </div>
-                <Tag tom="ruim">precisa correção</Tag>
-                {pd.analise_id ? (
-                  <Link className="btn sec mini" href={`/app/analises/${pd.analise_id}`}>Abrir</Link>
-                ) : null}
+                <Tag tom={it.tom}>{it.tom === 'ruim' ? 'crítico' : it.tom === 'alerta' ? 'atenção' : 'programado'}</Tag>
+                {it.href ? <Link className="btn sec mini" href={it.href}>abrir</Link> : null}
               </div>
             ))}
           </div>
         )}
       </Cartao>
 
-      <Grade cols={4}>
-        <Metrica rotulo="Laudos na fila" valor={p.laudos_fila} cor={p.laudos_fila ? 'var(--c-b)' : undefined} />
-        <Metrica rotulo="Talhões" valor={p.talhoes} detalhe={`${f(p.area_total, 1)} ha`} />
-        <Metrica rotulo="Análises" valor={p.analises} />
-        <Metrica rotulo="Produtores" valor={p.produtores} />
-      </Grade>
-
-      {culturas.length > 0 && (
-        <Cartao olho="Composição" titulo="Área por cultura">
-          <div className="lista">
-            {culturas.map(([c, area]) => {
-              const pct = p.area_total > 0 ? (100 * area) / p.area_total : 0;
-              return (
-                <div className="item" key={c}>
-                  <div className="cresce">
-                    <h3>{nomeCultura(c)}</h3>
-                    <div style={{ height: 6, background: 'var(--linha)', borderRadius: 99, marginTop: 6 }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--folha)', borderRadius: 99 }} />
+      <Grade cols={2} style={{ marginTop: 14, alignItems: 'start' }}>
+        {culturas.length > 0 && (
+          <Cartao olho="Composição" titulo="Área por cultura">
+            <div className="lista">
+              {culturas.map(([c, area]) => {
+                const pct = p.area_total > 0 ? (100 * area) / p.area_total : 0;
+                return (
+                  <div className="item" key={c}>
+                    <div className="cresce">
+                      <h3>{nomeCultura(c)}</h3>
+                      <div style={{ height: 6, background: 'var(--linha)', borderRadius: 99, marginTop: 6 }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: 'var(--folha)', borderRadius: 99 }} />
+                      </div>
                     </div>
+                    <span className="mono nota">{f(area, 1)} ha · {f(pct, 0)}%</span>
                   </div>
-                  <span className="mono nota">{f(area, 1)} ha · {f(pct, 0)}%</span>
-                </div>
-              );
-            })}
-          </div>
-        </Cartao>
-      )}
-
-      <Cartao olho="Caderno de campo" titulo="Últimas visitas">
-        {p.ultimas_visitas.length === 0 ? (
-          <Vazio titulo="Nenhuma visita registrada">Comece pela aba Monitoramento.</Vazio>
-        ) : (
-          <div className="lista">
-            {p.ultimas_visitas.map((v) => (
-              <div className="item" key={v.id}>
-                <div className="cresce">
-                  <h3>{dataBR(v.data)}</h3>
-                  <small>{v.fenologia ?? '—'}</small>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          </Cartao>
         )}
-      </Cartao>
+
+        <Cartao olho="Prontuário do escritório" titulo="Atividade recente">
+          {p.atividade_recente.length === 0 ? (
+            <Vazio titulo="Nada registrado ainda" />
+          ) : (
+            <div className="lista">
+              {p.atividade_recente.map((a, i) => {
+                const rotulo = ROTULO_ATIVIDADE[a.acao]?.(a.dados ?? {}) ?? a.acao;
+                const href = linkAtividade(a);
+                return (
+                  <div className="item" key={i}>
+                    <div className="cresce">
+                      <h3 style={{ fontSize: 13.5 }}>{rotulo}</h3>
+                      <small>{dataBR(a.criado_em.slice(0, 10))} às {a.criado_em.slice(11, 16)}</small>
+                    </div>
+                    {href ? <Link className="btn sec mini" href={href}>abrir</Link> : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Cartao>
+      </Grade>
     </>
   );
 }

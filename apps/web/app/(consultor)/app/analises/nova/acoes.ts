@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { criarClienteServidor } from '@/lib/supabase/server';
+import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { registrar } from '@/lib/audit';
 
 const NUM = (fd: FormData, k: string): number | null => {
   const v = String(fd.get(k) ?? '').trim().replace(',', '.');
@@ -39,5 +40,12 @@ export async function criarAnalise(fd: FormData) {
     .single();
 
   if (error) throw new Error(error.message);
+
+  const perfil = await perfilAtual();
+  await registrar(sb, {
+    acao: 'analise.criada', entidade: 'analises', entidade_id: data.id,
+    org_id: perfil?.org_id ?? null, dados: { talhao_id, origem: 'manual' },
+  });
+
   redirect(`/app/analises/${data.id}`);
 }

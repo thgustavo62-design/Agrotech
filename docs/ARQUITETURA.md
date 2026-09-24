@@ -86,6 +86,7 @@ agrotech/
 │  │   0013 billing (planos/assinaturas/cobrancas + checar_limite)
 │  │   0014 painel (vw_talhao_situacao + painel_consultor)
 │  │   0015 audit_log insert · 0016 aceitar_convite/convite_resumo · 0017 grants agro
+│  │   0018 painel_consultor v2 (central operacional — Fase 2 de PRODUCT_V2.md)
 │  ├─ functions/              processar-laudo, gerar-laudo-pdf, convidar-produtor, webhook-asaas
 │  ├─ tests/rls.test.sql      pgTAP — isolamento produtor/organização
 │  ├─ config.toml

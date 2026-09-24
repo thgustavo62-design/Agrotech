@@ -14,7 +14,7 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 - [x] **Auditoria + plano** (`PRODUCT_AUDIT.md`, `PRODUCT_V2.md`,
       `UX_ARCHITECTURE.md`, `DATABASE_CHANGES.md`) — inventário verificado do
       código real, decisões de arquitetura, roadmap nas 11 fases pedidas,
-      migrations `0018–0022` propostas (não escritas).
+      migrations `0019–0023` propostas (não escritas).
 - [x] **Fase 4 do pedido — Visão 360º do talhão** (`/app/talhoes/[id]`) —
       maior lacuna estrutural identificada na auditoria, agora existe.
       Header com situação/status; abas: **Visão geral** (métricas + dados de
@@ -24,7 +24,7 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       visitas, ordenada por data), **Recomendações** (persistidas, com link
       pro laudo), **Monitoramento** (visitas e ocorrências), **Fotos**
       (signed URLs do bucket `visitas`), e **Custos**/**Produção** como
-      estado vazio explícito apontando para as migrations `0018`/`0019`
+      estado vazio explícito apontando para as migrations `0019`/`0020`
       propostas (ainda não existem). Componente novo reutilizável:
       `components/abas-paineis.tsx` (abas de conteúdo dentro da página,
       client-side, state local — diferente de `nav-abas.tsx`, que navega
@@ -55,7 +55,23 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       editar nome/CREA/ART/telefone do próprio consultor (`profiles_atualiza_proprio`
       já cobria isso por RLS, só faltava a tela). Renomear o escritório
       (`orgs.nome`) continua sem UI — não há política de UPDATE em `orgs` hoje.
-- [ ] Fase 2 — dashboard do agrônomo expandido (cards de atenção, timeline)
+- [x] **Fase 2 do pedido — Central Operacional** (`0018_painel_v2.sql` + `/app`
+      reescrito). `painel_consultor()` ganhou, sem quebrar contrato com quem já
+      a chamava (`create or replace`, mesma assinatura): `visitas_atrasadas`
+      (lista + total, a partir de `visitas.proxima_visita` — não há
+      `agenda_eventos` ainda), `proximas_visitas`, `recomendacoes_pendentes`
+      (análises sem recomendação emitida, lista + total),
+      `recomendacoes_emitidas_mes`, `produtores_sem_visita_recente` (60 dias),
+      `talhoes_sem_analise_atualizada` (180 dias), e **`atividade_recente`**
+      lendo `audit_log` — que finalmente ganhou um consumidor de UI (dívida
+      técnica #2 de `PRODUCT_AUDIT.md`). A tela virou: 2 fileiras de métricas
+      (o que pede atenção / visão geral), **"Precisa da sua atenção"**
+      mesclando os 4 tipos de pendência em prioridade (crítico > atrasado >
+      recomendação pendente > próxima visita), Área por cultura (mantido) e
+      Atividade recente (novo, timeline com rótulos em português + link pra
+      cada evento). `analises/nova/acoes.ts` (`criarAnalise`) ganhou uma
+      chamada a `registrar()` que faltava — sem isso a timeline não veria
+      análises lançadas manualmente.
 - [ ] Fase 3 — Visão 360º do produtor (abas sobre a página já rica que existe)
 - [ ] Fases 5–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
