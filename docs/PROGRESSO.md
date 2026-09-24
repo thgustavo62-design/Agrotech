@@ -73,6 +73,25 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       reais do produto, não só de mim testando. Smoke test em produção
       (`curl`) confirma o mesmo padrão de redirecionamento 307/200 validado
       localmente o resto da sessão.
+- [x] **Achado crítico — schema `agro` nunca esteve exposto na Data API
+      (2026-09-24).** O smoke test de `curl` acima só confere status HTTP de
+      página (redirect/200) — não prova que uma página com dado real
+      funciona. A pedido do Gustavo ("confira se está tudo interligado"),
+      testei direto o REST endpoint (`Accept-Profile: agro`) e voltou
+      `PGRST106 — Invalid schema: agro. Only the following schemas are
+      exposed: public, graphql_public`. **Isso significa que, apesar do
+      banco, das migrations e do deploy estarem todos certos, nenhuma tela
+      do site conseguia buscar dado nenhum desde o primeiro deploy** — é uma
+      configuração do painel (Project Settings → Data API → Exposed
+      schemas), separada de tudo que git/migration cobre, e por isso nunca
+      apareceria em nenhum dos testes rodados até aqui (build, tsc, smoke
+      test de redirect). Gustavo habilitou `agro` na lista pelo painel;
+      reconfirmei com uma chamada real à RPC pública
+      `resultados_por_token` (schema `agro`, via `Content-Profile: agro`) —
+      voltou `200 OK` com o corpo esperado (`null` pro token de teste). Essa
+      configuração não é gerenciável por migration/CLI neste ambiente —
+      **é um passo manual que precisa ser lembrado em qualquer novo projeto
+      Supabase** (staging, ou se o projeto for recriado).
 - [x] **Fase 1 do pedido — navegação agrupada** — sidebar (desktop, ≥960px) com
       4 grupos (Visão geral / Gestão técnica / Inteligência / Gestão), colapsável
       (`lateral-consultor.tsx`, estado em `localStorage`); barra inferior no

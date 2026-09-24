@@ -176,4 +176,20 @@ npm run dev
 # banco local (precisa do Supabase CLI + Docker)
 supabase start
 supabase test db         # políticas RLS
+
+# num projeto Supabase novo/real (não precisa de Docker, só do CLI):
+npx supabase db push --db-url "postgresql://..."
+```
+
+**Passo manual obrigatório, fora de git/migration, em todo projeto Supabase
+novo**: Project Settings → Data API → Exposed schemas → adicionar `agro`
+(vem só com `public`/`graphql_public` por padrão). Sem isso a API responde
+`PGRST106 — Invalid schema: agro` pra toda chamada do app, mesmo com banco e
+RLS perfeitos — foi exatamente o que aconteceu no primeiro deploy em
+produção (2026-09-24, ver `PROGRESSO.md`). Confirmar com:
+```bash
+curl -H "apikey: $ANON_KEY" -H "Accept-Profile: agro" \
+  "$SUPABASE_URL/rest/v1/<qualquer_tabela>?limit=1"
+# 406 PGRST106 = schema não exposto ainda
+# 401 "permission denied" = schema exposto, RLS bloqueando anon (esperado)
 ```
