@@ -48,8 +48,8 @@ export const NAVEGACAO_CONSULTOR: GrupoNav[] = [
   {
     titulo: 'Inteligência',
     itens: [
-      { href: '/app/inteligencia', rotulo: 'Indicadores', icone: IconeInteligencia, embreve: true },
-      { href: '/app/relatorios', rotulo: 'Relatórios', icone: IconeRelatorios, embreve: true },
+      { href: '/app/inteligencia', rotulo: 'Indicadores', icone: IconeInteligencia },
+      { href: '/app/relatorios', rotulo: 'Relatórios', icone: IconeRelatorios },
     ],
   },
   {

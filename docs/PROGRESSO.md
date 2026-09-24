@@ -263,7 +263,33 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       6), e sim "não é visível pra você, por padrão": isolamento total do
       financeiro do produtor é decisão de design (`PRODUCT_V2.md §2.2`),
       não uma lacuna de implementação a preencher depois.
-- [ ] Fases 8–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
+- [x] **Fase 8 do pedido — Inteligência e relatórios** (2026-09-24). Sem
+      schema novo, como `UX_ARCHITECTURE.md §6` já previa — tudo consulta
+      sobre `talhoes`/`analises`/`recomendacoes` existentes.
+    - `/app/inteligencia` (deixa de ser placeholder): talhões fora da meta
+      (V/m fora do alvo da cultura, fósforo baixo, **potássio baixo** — item
+      que nem o painel nem a visão 360º cobriam ainda), deficiências mais
+      comuns (conta `resultado.diagnostico[].g = 'crit'` de toda recomendação
+      da org, sem coluna nova), produtores sem análise recente (>180 dias,
+      mesmo limiar de `painel_consultor()`, mas aqui com a lista, não só a
+      contagem), e área/calcário/fertilizante estimado por cultura (soma de
+      `resultado.totais`, já calculado em cada laudo — não é reestimativa).
+      Reaproveita o padrão "busca tudo, computa no JS" da Fase 3 (produtor
+      360) em vez de nova function no banco — mesmo raciocínio de manter o
+      motor (classificação) só em `agro-core`, nunca duplicado em SQL.
+      Filtro por cultura (abas, mesmo padrão de `/app/analises`); filtro por
+      safra/período fica pra quando fizer sentido — carteira inteira não tem
+      uma "safra" comum entre produtores diferentes.
+    - `/app/relatorios` (deixa de ser placeholder): relatório A4 imprimível
+      (reaproveita `.folha-a4` + `BotaoImprimir`, mesmo padrão do laudo) com
+      visão geral + área por cultura, e exportação **CSV** da carteira
+      inteira (`/app/relatorios/carteira.csv`, route handler no mesmo
+      padrão de `/app/produtores/[id]/exportar`) — um talhão por linha,
+      pronto pra abrir em planilha.
+    - `lib/navegacao.ts`: tirei `embreve: true` de Indicadores/Relatórios
+      (não tirei de `/app/config`, que já estava assim antes desta fase e é
+      inconsistência pré-existente, fora de escopo).
+- [ ] Fases 9–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---
 
