@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { rotaAtiva } from '@/lib/navegacao';
 
 const ITENS = [
   { href: '/produtor', rotulo: 'Início' },
@@ -21,7 +22,7 @@ export function NavProdutor() {
   return (
     <nav style={{ display: 'flex', gap: 16, overflowX: 'auto', fontSize: 13.5, scrollbarWidth: 'none' }}>
       {ITENS.map((it) => {
-        const ativo = it.href === '/produtor' ? path === '/produtor' : path?.startsWith(it.href);
+        const ativo = path ? rotaAtiva(path, it.href) : false;
         return (
           <Link
             key={it.href}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { NAVEGACAO_CONSULTOR } from '@/lib/navegacao';
+import { NAVEGACAO_CONSULTOR, rotaAtiva } from '@/lib/navegacao';
 
 const CHAVE_COLAPSADA = 'agrotech.lateral.colapsada';
 
@@ -39,7 +39,7 @@ export function LateralConsultor() {
         <div className="lateral-grupo" key={grupo.titulo}>
           <div className="lateral-grupo-titulo">{grupo.titulo}</div>
           {grupo.itens.map((item) => {
-            const ativa = item.href === '/app' ? path === '/app' : path.startsWith(item.href);
+            const ativa = rotaAtiva(path, item.href);
             const Icone = item.icone;
             return (
               <Link

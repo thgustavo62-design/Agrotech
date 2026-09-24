@@ -38,6 +38,43 @@ commit `cb4845b`. **Lição pro resto do projeto: sempre testar contra a
 URL alias/produção, nunca contra uma URL de deployment específico** — ela
 para de refletir a realidade assim que o próximo deploy sai.
 
+**Auditoria pedida pelo Gustavo — "erros nas criações dos produtores"
+(2026-09-24).**
+Rodei um agente de investigação (só leitura) sobre o fluxo de criar
+produtor inteiro — form, server action, RLS, trigger — e sobre padrões
+parecidos com o bug do `/apple-icon`. Achou duas causas reais, ligadas:
+1. **O app não tinha nenhum `error.tsx`.** Toda `server action` deste
+   projeto lança `Error` puro em validação (ex.: "Informe o nome do
+   produtor.") — sem um error boundary, qualquer erro (validação, RLS,
+   trigger do banco) virava a tela de erro genérica e ilegível do Next,
+   em vez de mostrar a mensagem de verdade perto do formulário. Corrigido
+   com `components/erro-view.tsx` + `app/error.tsx` +
+   `app/global-error.tsx` + `app/(consultor)/app/error.tsx` +
+   `app/(produtor)/produtor/error.tsx` (cada um com o botão "Tentar de
+   novo" e o `voltarHref` certo pro contexto).
+2. **O trial de 14 dias da organização provavelmente já tinha vencido.**
+   `checar_limite()` (0013) bloqueia insert em produtores/talhões/
+   documentos quando `trial_expira_em < now()` — mas nada muda a coluna
+   `status` sozinho (não existe cron nenhum pra isso), então
+   `/app/assinatura` continuava mostrando a tag "período de teste" pra
+   sempre, sem sinalizar que o cadastro já estava travado. Com o achado
+   #1, esse erro aparecia como tela quebrada, não como aviso claro.
+   `0026_mensagem_limite_e_trial.sql`: reescreve a mensagem do trigger
+   pra diferenciar trial vencido de assinatura suspensa/cancelada, e
+   **estende 30 dias o trial de qualquer org já vencida** (ação
+   operacional pontual, não um cron — suspender quem ainda nem validou o
+   checkout do Asaas seria pior que não suspender). `/app/assinatura`
+   ganhou a tag "teste vencido" e o aviso de bloqueio também pro caso de
+   trial expirado, que antes só cobria `suspensa`/`cancelada`.
+
+Achados secundários do mesmo agente, também corrigidos por precaução (sem
+bug confirmado, mesmo padrão de risco do `/apple-icon`): `path.startsWith(href)`
+pra destacar item de menu ativo em `barra-mobile.tsx`, `lateral-consultor.tsx`
+e `nav-produtor.tsx` — unificado num helper só, `rotaAtiva()` em
+`lib/navegacao.ts` (limite de segmento, mesmo raciocínio do middleware).
+E o bypass de auth pra `/demo` no middleware ganhou o mesmo cuidado
+(`/r/` já era seguro, já tinha barra no fim).
+
 - [x] **Auditoria + plano** (`PRODUCT_AUDIT.md`, `PRODUCT_V2.md`,
       `UX_ARCHITECTURE.md`, `DATABASE_CHANGES.md`) — inventário verificado do
       código real, decisões de arquitetura, roadmap nas 11 fases pedidas,

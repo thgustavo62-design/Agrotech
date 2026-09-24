@@ -31,7 +31,13 @@ export default async function Assinatura() {
   ]);
 
   const planoAtual = (planos ?? []).find((p) => p.id === ass?.plano);
-  const st = ass ? ROTULO_STATUS[ass.status as string] ?? { txt: ass.status as string, tom: 'cinza' as const } : null;
+  // trial_expira_em passado bloqueia inserts no banco (checar_limite(), 0013)
+  // mas nada muda a coluna status sozinho — sem isto, a tela mostrava
+  // "período de teste" pra sempre, mesmo com o cadastro já travado.
+  const trialExpirado = ass?.status === 'trial' && ass.trial_expira_em ? new Date(ass.trial_expira_em) < new Date() : false;
+  const st = !ass ? null
+    : trialExpirado ? { txt: 'teste vencido', tom: 'ruim' as const }
+    : ROTULO_STATUS[ass.status as string] ?? { txt: ass.status as string, tom: 'cinza' as const };
   const checkoutConfigurado = Boolean(process.env.ASAAS_API_KEY);
 
   const Uso = ({ rot, usado, limite }: { rot: string; usado: number; limite?: number }) => {
@@ -71,10 +77,11 @@ export default async function Assinatura() {
             <Uso rot="Talhões" usado={nTalhoes ?? 0} limite={planoAtual?.lim_talhoes} />
             <Uso rot="Laudos neste mês" usado={nLaudosMes ?? 0} limite={planoAtual?.lim_laudos_mes} />
           </Grade>
-          {(ass.status === 'suspensa' || ass.status === 'cancelada') && (
+          {(ass.status === 'suspensa' || ass.status === 'cancelada' || trialExpirado) && (
             <div className="aviso" style={{ marginTop: 12 }}>
-              Cadastro de novos registros está bloqueado. Os dados existentes continuam acessíveis e podem
-              ser exportados a qualquer momento.
+              {trialExpirado
+                ? 'Seu período de teste venceu. Cadastro de novos produtores, talhões e laudos está bloqueado até fazer upgrade — os dados existentes continuam acessíveis e podem ser exportados a qualquer momento.'
+                : 'Cadastro de novos registros está bloqueado. Os dados existentes continuam acessíveis e podem ser exportados a qualquer momento.'}
             </div>
           )}
         </Cartao>

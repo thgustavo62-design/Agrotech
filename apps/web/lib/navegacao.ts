@@ -6,6 +6,17 @@ import {
   IconeAssinatura, IconeConfig,
 } from '@/components/icones';
 
+/**
+ * Rota `path` está "dentro" de `href` pra fins de destacar item de menu.
+ * `startsWith` puro colide com rotas irmãs que só compartilham o prefixo de
+ * texto (achado real: "/apple-icon" batendo em "/app" no middleware) — aqui
+ * o efeito seria só cosmético (item errado destacado), mas o mesmo cuidado
+ * de limite de segmento vale.
+ */
+export function rotaAtiva(path: string, href: string): boolean {
+  return path === href || path.startsWith(`${href}/`);
+}
+
 export interface ItemNav {
   href: string;
   rotulo: string;

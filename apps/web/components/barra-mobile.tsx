@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { NAVEGACAO_CONSULTOR, NAVEGACAO_MOBILE_PRINCIPAL } from '@/lib/navegacao';
+import { NAVEGACAO_CONSULTOR, NAVEGACAO_MOBILE_PRINCIPAL, rotaAtiva } from '@/lib/navegacao';
 import { IconeMais, IconeFechar } from './icones';
 
 /** Barra inferior (mobile, <960px): os 5 itens mais usados + "Mais" abre a gaveta com o resto. */
@@ -15,13 +15,13 @@ export function BarraMobile() {
   const principais = NAVEGACAO_MOBILE_PRINCIPAL
     .map((href) => todosItens.find((i) => i.href === href))
     .filter((i): i is NonNullable<typeof i> => Boolean(i));
-  const ativaEmAlgumPrincipal = principais.some((i) => (i.href === '/app' ? path === '/app' : path.startsWith(i.href)));
+  const ativaEmAlgumPrincipal = principais.some((i) => rotaAtiva(path, i.href));
 
   return (
     <>
       <nav className="barra-mobile nao-imprime" aria-label="Navegação principal">
         {principais.map((item) => {
-          const ativa = item.href === '/app' ? path === '/app' : path.startsWith(item.href);
+          const ativa = rotaAtiva(path, item.href);
           const Icone = item.icone;
           return (
             <Link key={item.href} href={item.href} className="barra-mobile-item" data-ativa={ativa}>
@@ -54,7 +54,7 @@ export function BarraMobile() {
               <div className="lateral-grupo" key={grupo.titulo}>
                 <div className="lateral-grupo-titulo">{grupo.titulo}</div>
                 {grupo.itens.map((item) => {
-                  const ativa = item.href === '/app' ? path === '/app' : path.startsWith(item.href);
+                  const ativa = rotaAtiva(path, item.href);
                   const Icone = item.icone;
                   return (
                     <Link

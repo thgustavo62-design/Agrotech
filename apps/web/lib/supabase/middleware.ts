@@ -20,7 +20,7 @@ export async function atualizarSessao(req: NextRequest) {
 
   // rotas públicas: vitrine e link de resultados do produtor
   const caminho = req.nextUrl.pathname;
-  if (caminho.startsWith('/demo') || caminho.startsWith('/r/')) return res;
+  if (caminho === '/demo' || caminho.startsWith('/demo/') || caminho.startsWith('/r/')) return res;
 
   const sb = createServerClient(
     supaUrl,
