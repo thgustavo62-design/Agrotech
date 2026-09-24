@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation';
-import { perfilAtual } from '@/lib/supabase/server';
+import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { garantirEscritorio } from '@/lib/onboarding';
+import { contarNaoLidas } from '@/lib/notificacoes';
 import { LateralConsultor } from '@/components/lateral-consultor';
 import { BarraMobile } from '@/components/barra-mobile';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { PaletaComandos } from '@/components/paleta-comandos';
+import { SinoNotificacoes } from '@/components/sino-notificacoes';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,11 +22,15 @@ export default async function LayoutConsultor({ children }: { children: React.Re
     perfil = (await perfilAtual()) ?? perfil;
   }
 
+  const sb = await criarClienteServidor();
+  const naoLidas = await contarNaoLidas(sb);
+
   return (
     <div>
       <header className="topo">
         <div className="marca">AgroTech <span>Assistência técnica</span></div>
         <PaletaComandos />
+        <SinoNotificacoes href="/app/notificacoes" contagem={naoLidas} />
         <div className="quem">
           <b>{perfil.nome ?? 'Consultor'}</b>
           {perfil.crea ? `CREA ${perfil.crea}` : 'defina seu CREA em Config.'}

@@ -27,7 +27,8 @@ export default async function PainelProdutor() {
   const sb = await criarClienteServidor();
   const [perfil, produtor] = await Promise.all([perfilAtual(), produtorAtual()]);
 
-  const [{ data: talhoes }, { data: recs }, { data: docsRaw }, resumoFin] = await Promise.all([
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const [{ data: talhoes }, { data: recs }, { data: docsRaw }, { data: eventosRaw }, resumoFin] = await Promise.all([
     sb.schema('agro').from('vw_talhao_situacao')
       .select('talhao_id, nome, cultura, area_ha, data_coleta, situacao')
       .order('nome'),
@@ -40,6 +41,10 @@ export default async function PainelProdutor() {
       .select('id, nome_arquivo, laboratorio, status, criado_em')
       .order('criado_em', { ascending: false })
       .limit(3),
+    sb.schema('agro').from('agenda_eventos')
+      .select('id, titulo, data, tipo')
+      .eq('status', 'planejado').gte('data', hojeISO)
+      .order('data', { ascending: true }).limit(1),
     produtor ? resumoFinanceiro(sb, produtor.id) : Promise.resolve(null),
   ]);
 
@@ -53,6 +58,7 @@ export default async function PainelProdutor() {
   const documentos = (docsRaw ?? []) as Array<{
     id: string; nome_arquivo: string | null; laboratorio: string | null; status: string; criado_em: string;
   }>;
+  const proximoEvento = ((eventosRaw ?? []) as Array<{ id: string; titulo: string; data: string; tipo: string }>)[0];
 
   const areaTotal = lista.reduce((s, t) => s + Number(t.area_ha ?? 0), 0);
   const culturas = [...new Set(lista.map((t) => t.cultura).filter((c): c is string => Boolean(c)))];
@@ -78,6 +84,10 @@ export default async function PainelProdutor() {
       chave: `doc-${documentoRecente.id}`,
       texto: 'Há uma análise de solo nova disponível.',
       href: '/produtor/documentos',
+    }] : []),
+    ...(proximoEvento ? [{
+      chave: `evento-${proximoEvento.id}`,
+      texto: `${proximoEvento.tipo === 'visita' ? 'Visita técnica' : proximoEvento.titulo} marcada para ${dataBR(proximoEvento.data)}.`,
     }] : []),
   ];
 

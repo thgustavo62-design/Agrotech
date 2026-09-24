@@ -30,7 +30,7 @@ export const NAVEGACAO_CONSULTOR: GrupoNav[] = [
     itens: [
       { href: '/app', rotulo: 'Início', icone: IconeInicio },
       { href: '/app/pendencias', rotulo: 'Pendências', icone: IconePendencia },
-      { href: '/app/agenda', rotulo: 'Agenda', icone: IconeAgenda, embreve: true },
+      { href: '/app/agenda', rotulo: 'Agenda', icone: IconeAgenda },
     ],
   },
   {

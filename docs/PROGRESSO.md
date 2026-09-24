@@ -289,7 +289,40 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
     - `lib/navegacao.ts`: tirei `embreve: true` de Indicadores/Relatórios
       (não tirei de `/app/config`, que já estava assim antes desta fase e é
       inconsistência pré-existente, fora de escopo).
-- [ ] Fases 9–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
+- [x] **Fase 9 do pedido — Agenda e notificações** (`0023_agenda.sql` +
+      `0024_notificacoes.sql`, 2026-09-24). Carrega também o **débito
+      técnico #4 do audit**, como `PRODUCT_V2.md §3` já avisava que essa
+      fase precisaria: o formulário de registrar visita, que nunca existiu
+      no app (só leitura de `agro.visitas`).
+    - **`agro.agenda_eventos`** — separada de `agro.visitas` de propósito
+      (decisão #4 de `DATABASE_CHANGES.md`): agenda é antes do fato,
+      visita é depois. `/app/agenda` (deixa de ser placeholder): agendar
+      (tipo/título/data/hora/produtor/talhão opcionais), lista agrupada em
+      atrasados/hoje/próximos 7 dias/depois, concluir/cancelar, histórico
+      recente. Simplificação assumida: concluir um evento tipo "visita"
+      não vincula automaticamente a uma linha de `visitas` — ficam
+      registrados em telas separadas por enquanto.
+    - **Formulário de registrar visita** — aba Monitoramento de
+      `/app/talhoes/[id]` ganhou o form de verdade (data, fenologia,
+      condição, observações, recomendação de campo, próxima visita, até
+      3 ocorrências fixas — sem lista dinâmica, simplificação deliberada;
+      a maioria das visitas registra poucos alvos).
+    - **`agro.notificacoes`** — tabela + `select` normal com RLS por
+      destinatário, **sem Realtime** nesta primeira versão (decisão
+      `PRODUCT_V2.md §2.6`: "badge que revalida no carregamento de
+      página"). Dois gatilhos reais (dos vários que a proposta original
+      deixava como exemplo a implementar quando fizesse falta):
+      `notificar_nova_recomendacao()` (como proposto) e
+      `notificar_visita_agendada()` (novo — dispara quando um evento de
+      agenda tipo "visita" com produtor definido é criado). Sino
+      (`components/sino-notificacoes.tsx`, contagem de não lidas) no
+      cabeçalho dos dois lados — `/app/notificacoes` e
+      `/produtor/notificacoes`, mesmo padrão de lista + marcar lida(s).
+    - `/produtor` ganhou o bullet "Visita técnica marcada para..." que o
+      mockup de `UX_ARCHITECTURE.md §7` já previa, mas ficava marcado como
+      dependente desta fase.
+    - `lib/navegacao.ts`: tira `embreve` de Agenda.
+- [ ] Fases 10–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---
 

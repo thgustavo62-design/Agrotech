@@ -337,6 +337,15 @@ drop table if exists agro.producao_registros;
 
 ## 0023 — Agenda do agrônomo
 
+**Escrita e aplicada em 2026-09-24** (`supabase/migrations/0023_agenda.sql`),
+idêntica à proposta abaixo. Fase 9 também carregou o débito técnico #4 do
+audit (formulário de registrar visita, que não existia) — ver
+`PROGRESSO.md`. Simplificação assumida na UI: "concluir" um evento de
+agenda tipo `visita` **não** preenche `visita_id` automaticamente ligando a
+uma linha de `agro.visitas` — o consultor registra a visita separadamente
+em `/app/talhoes/[id]`, aba Monitoramento. Ligar as duas telas fica pra
+quando fizer falta de verdade.
+
 ```sql
 -- 0023_agenda.sql
 
@@ -387,6 +396,14 @@ drop table if exists agro.agenda_eventos;
 ---
 
 ## 0024 — Notificações
+
+**Escrita e aplicada em 2026-09-24** (`supabase/migrations/0024_notificacoes.sql`).
+Só 2 dos gatilhos possíveis foram implementados de verdade —
+`notificar_nova_recomendacao()` (igual à proposta) e
+`notificar_visita_agendada()` (novo, dispara em `agenda_eventos`, tipo
+`visita`, quando tem `produtor_id`). `nova_analise`/`documento_disponivel`/
+`atividade_vencendo`/`conta_vencendo` continuam só valores válidos no
+`check` do `tipo` — sem gatilho ainda, ficam pra quando fizer falta.
 
 ```sql
 -- 0024_notificacoes.sql
