@@ -44,3 +44,19 @@ export async function perfilAtual() {
 
   return data;
 }
+
+/** Linha de `agro.produtores` do usuário logado (quando ele é o próprio produtor). null caso contrário. */
+export async function produtorAtual() {
+  const sb = await criarClienteServidor();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await sb
+    .schema('agro')
+    .from('produtores')
+    .select('id, nome')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  return data;
+}

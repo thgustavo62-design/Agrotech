@@ -14,6 +14,10 @@ export default async function LayoutProdutor({ children }: { children: React.Rea
     <div>
       <header className="topo">
         <div className="marca">AgroTech <span>Sua lavoura</span></div>
+        <nav style={{ display: 'flex', gap: 14, fontSize: 13.5 }}>
+          <Link href="/produtor" style={{ color: 'inherit' }}>Início</Link>
+          <Link href="/produtor/financeiro" style={{ color: 'inherit' }}>Financeiro</Link>
+        </nav>
         <div className="quem">
           <b>{perfil.nome ?? 'Produtor'}</b>
           <Link href="/produtor/sair" style={{ color: '#7fc6a3' }}>sair</Link>

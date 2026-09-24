@@ -1,11 +1,11 @@
 # DATABASE_CHANGES.md — schema novo proposto
 
 Continuação de `supabase/migrations/0001`–`0018` (ver inventário em
-`PRODUCT_AUDIT.md §4`). Este documento é a **proposta** de migrations
-`0019`–`0023`; nenhuma delas foi escrita ou aplicada ainda — isso só acontece
-quando uma fase de `PRODUCT_V2.md` for de fato implementada. Antes de
-escrever a primeira, confirmar o pré-requisito de `PRODUCT_V2.md §4`
-(migrations existentes validadas contra um Postgres real).
+`PRODUCT_AUDIT.md §4`). Este documento nasceu como a **proposta** de
+migrations `0019`–`0023`; `0019` e `0020` já foram escritas e aplicadas junto
+da Fase 6 (financeiro do produtor, 2026-09-23) — ver nota de divergência em
+cada seção. `0021`–`0023` continuam só propostas, escritas quando as fases
+correspondentes (9 e 11) forem de fato implementadas.
 
 Convenção mantida do schema existente (não a do pedido original, que sugeria
 `created_at`/`updated_at` em inglês): colunas de timestamp continuam
@@ -46,8 +46,17 @@ existentes pesa mais do que a convenção sugerida no pedido.
 
 ## 0019 — Safras e produção
 
+**Divergência (2026-09-23):** só a tabela `agro.safras` (e sua RLS) foi
+escrita, em `supabase/migrations/0019_safras.sql` — é o pré-requisito de
+`financeiro_lancamentos.safra_id`/`financeiro_orcamentos.safra_id` (0020).
+`agro.producao_registros` **continua só proposta** abaixo, sem tocar no
+banco: implementá-la agora seria adiantar schema da Fase 7 (Produção e
+safra) para dentro da Fase 6 (Financeiro), que não foi pedida. Quando a Fase
+7 for implementada, `producao_registros` ganha sua própria migration (número
+a definir na hora, depois de `0020` já estar ocupado).
+
 ```sql
--- 0019_safras_producao.sql
+-- proposta original — só a parte "agro.safras" foi de fato escrita (ver nota acima)
 
 create table agro.safras (
   id          uuid primary key default gen_random_uuid(),
@@ -131,8 +140,18 @@ drop table if exists agro.safras;
 
 ## 0020 — Financeiro do produtor
 
+**Divergência (2026-09-23):** escrita e aplicada em
+`supabase/migrations/0020_financeiro.sql`, igual à proposta abaixo, **mais**
+um bucket de Storage (`financeiro`) com 3 políticas (leitura/envio/exclusão,
+pasta = `produtor_id`) para o campo `comprovante_path` ter algo de verdade
+por trás — a proposta original não incluía Storage. Sem gate de plano: o
+feature flag `planos.features.financeiro` citado em `0023` (Fase 11) ainda
+não existe no banco, então por ora todo produtor autenticado vê o financeiro,
+independente do plano do escritório dele.
+
 ```sql
--- 0020_financeiro.sql
+-- 0020_financeiro.sql (escrita como proposto; ver nota de divergência acima
+-- para o que foi adicionado além deste bloco)
 
 create table agro.financeiro_categorias (
   id          uuid primary key default gen_random_uuid(),

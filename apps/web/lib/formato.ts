@@ -12,3 +12,10 @@ export function dataBR(iso: string | null | undefined): string {
   const [ano, mes, dia] = iso.slice(0, 10).split('-');
   return `${dia}/${mes}/${ano}`;
 }
+
+export function moeda(v: number): string {
+  return (Number.isFinite(v) ? v : 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+}

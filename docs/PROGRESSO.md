@@ -101,7 +101,43 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       `lib/atividade.ts` (rótulo + link de `audit_log`) e `lib/documentos.ts`
       (rótulo de status de `agro.documentos`) — `/app` e `/app/laudos`
       passaram a importar dali em vez de duplicar.
-- [ ] Fases 5–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
+- [x] **Fase 6 do pedido — Financeiro do produtor** (`0019_safras.sql` +
+      `0020_financeiro.sql`, primeiras migrations novas desde a auditoria além
+      de `0018`). Schema: `financeiro_categorias` (16 padrão semeadas via
+      `semear_categorias_financeiras()`, mesmo padrão do `garantirEscritorio()`
+      do onboarding), `financeiro_centros_custo`, `financeiro_contas`,
+      `financeiro_lancamentos` (receita/despesa, status
+      pendente/pago/atrasado/cancelado, comprovante opcional), `financeiro_orcamentos`.
+      **Isolamento total por decisão de produto** (`PRODUCT_V2.md §2.2`):
+      nenhuma tabela `financeiro_*` tem política de consultor — nem leitura —
+      só `produtor_id = jwt_produtor()`. Bucket de Storage `financeiro` novo
+      (não estava na proposta original, adicionado para o comprovante ter
+      algo de verdade por trás — ver divergência anotada em
+      `DATABASE_CHANGES.md`). `agro.safras` nasceu junto (pré-requisito de
+      `safra_id` em lançamento/orçamento) mas só a tabela — `producao_registros`
+      continua proposta, fica para quando a Fase 7 for implementada de fato.
+    - Tela nova `/produtor/financeiro` (abas: Resumo, Lançamentos, Contas &
+      categorias, Orçamento). Orçamento compara ao gasto pago no ano civil —
+      sem seletor de safra ainda (chega com a Fase 7); o valor planejado é
+      só por categoria por enquanto.
+    - `/produtor` ganhou o card "Resumo financeiro" (saldo + pendências,
+      linkando pro financeiro) citado em `UX_ARCHITECTURE.md §7`.
+    - Como a Fase 5 (dashboard/menu do produtor) ainda não foi implementada,
+      não existe o menu de 7 itens que `UX_ARCHITECTURE.md §1.2` desenha —
+      criei só um nav mínimo de 2 itens (Início/Financeiro) no header do
+      portal, o suficiente pra não deixar `/produtor/financeiro` orfão.
+      Os outros 5 itens do menu (Fazenda, Talhões, Recomendações,
+      Atividades, Produção, Documentos) continuam não existindo até que
+      suas fases cheguem.
+    - Sem feature flag de plano: `planos.features.financeiro` é da Fase 11
+      (`0023`, ainda proposta) — por ora todo produtor autenticado vê o
+      financeiro, independente do plano do escritório.
+    - Novo em `lib/`: `financeiro.ts` (rótulos de status, `statusEfetivo()` —
+      calcula "atrasado" na hora da leitura, já que não há job de fundo
+      mudando o status gravado — e `resumoFinanceiro()`, reaproveitado pelo
+      card do dashboard) e `moeda()` em `formato.ts`. `produtorAtual()` novo
+      em `lib/supabase/server.ts` (id de `agro.produtores` do usuário logado).
+- [ ] Fases 5, 7–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---
 

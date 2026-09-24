@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { criarClienteServidor } from '@/lib/supabase/server';
-import { f, dataBR } from '@/lib/formato';
+import { criarClienteServidor, produtorAtual } from '@/lib/supabase/server';
+import { f, dataBR, moeda } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
+import { resumoFinanceiro } from '@/lib/financeiro';
 import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -14,8 +15,9 @@ const ESTADO: Record<string, { txt: string; tom: 'ok' | 'alerta' | 'ruim' | 'cin
 
 export default async function PainelProdutor() {
   const sb = await criarClienteServidor();
+  const produtor = await produtorAtual();
 
-  const [{ data: talhoes }, { data: recs }] = await Promise.all([
+  const [{ data: talhoes }, { data: recs }, resumoFin] = await Promise.all([
     sb.schema('agro').from('vw_talhao_situacao')
       .select('talhao_id, nome, cultura, area_ha, data_coleta, situacao')
       .order('nome'),
@@ -24,6 +26,7 @@ export default async function PainelProdutor() {
       .is('arquivada_em', null)
       .order('emitida_em', { ascending: false })
       .limit(1),
+    produtor ? resumoFinanceiro(sb, produtor.id) : Promise.resolve(null),
   ]);
 
   const lista = (talhoes ?? []) as Array<{
@@ -50,6 +53,19 @@ export default async function PainelProdutor() {
           </p>
           <Link className="btn verde mini" href={`/produtor/laudos/${ultima.id}`} style={{ marginTop: 10 }}>
             Abrir o laudo completo
+          </Link>
+        </Cartao>
+      )}
+
+      {resumoFin && (
+        <Cartao olho="Resumo financeiro" titulo={moeda(resumoFin.saldo)}>
+          <p className="nota" style={{ margin: 0 }}>
+            {resumoFin.pendencias > 0
+              ? `${resumoFin.pendencias} lançamento(s) a vencer ou atrasado(s).`
+              : 'Nenhum lançamento pendente.'}
+          </p>
+          <Link className="btn sec mini" href="/produtor/financeiro" style={{ marginTop: 10 }}>
+            Abrir o financeiro
           </Link>
         </Cartao>
       )}
