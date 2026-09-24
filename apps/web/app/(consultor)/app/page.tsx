@@ -3,7 +3,10 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { rotuloAtividade, linkAtividade, type AtividadeBruta } from '@/lib/atividade';
-import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { pctTendencia } from '@/lib/tendencia';
+import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
+import { IconeProdutores, IconeTalhoes, IconeAnalises, IconeRecomendacoes } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,8 +44,21 @@ const VAZIO: Painel = {
 
 export default async function PaginaPainel() {
   const sb = await criarClienteServidor();
-  const { data } = await sb.schema('agro').rpc('painel_consultor');
+  await sb.schema('agro').rpc('registrar_metricas_hoje');
+
+  const limite25dias = new Date(Date.now() - 25 * 86400000).toISOString().slice(0, 10);
+  const [{ data }, { data: snapAnterior }] = await Promise.all([
+    sb.schema('agro').rpc('painel_consultor'),
+    sb.schema('agro').from('metricas_diarias')
+      .select('produtores, talhoes, analises, recomendacoes_emitidas_mes')
+      .lte('data', limite25dias).order('data', { ascending: false }).limit(1).maybeSingle(),
+  ]);
   const p = (data as Painel | null) ?? VAZIO;
+
+  const tendencia = (atual: number, anterior: number | null | undefined) => {
+    const pct = pctTendencia(atual, anterior);
+    return pct != null ? { pct, rotulo: 'vs. mês anterior' } : undefined;
+  };
 
   const culturas = Object.entries(p.area_por_cultura).sort((a, b) => b[1] - a[1]);
 
@@ -72,10 +88,11 @@ export default async function PaginaPainel() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Central do agrônomo"
         titulo="Início"
         descricao="O que pede a sua atenção hoje na assistência técnica."
+        tags={['Planejamento', 'Conhecimento', 'Resultados']}
         acoes={
           <>
             <Link className="btn verde" href="/app/analises/nova">Lançar análise</Link>
@@ -91,10 +108,10 @@ export default async function PaginaPainel() {
         <Metrica rotulo="Visitas atrasadas" valor={p.visitas_atrasadas_total} cor={p.visitas_atrasadas_total ? 'var(--c-mb)' : undefined} />
       </Grade>
       <Grade cols={4} style={{ marginTop: 12 }}>
-        <Metrica rotulo="Produtores" valor={p.produtores} />
-        <Metrica rotulo="Talhões" valor={p.talhoes} detalhe={`${f(p.area_total, 1)} ha`} />
-        <Metrica rotulo="Análises" valor={p.analises} />
-        <Metrica rotulo="Recomendações no mês" valor={p.recomendacoes_emitidas_mes} />
+        <Metrica rotulo="Produtores" valor={p.produtores} icone={IconeProdutores} tendencia={tendencia(p.produtores, snapAnterior?.produtores)} />
+        <Metrica rotulo="Talhões" valor={p.talhoes} detalhe={`${f(p.area_total, 1)} ha`} icone={IconeTalhoes} tendencia={tendencia(p.talhoes, snapAnterior?.talhoes)} />
+        <Metrica rotulo="Análises" valor={p.analises} icone={IconeAnalises} tendencia={tendencia(p.analises, snapAnterior?.analises)} />
+        <Metrica rotulo="Recomendações no mês" valor={p.recomendacoes_emitidas_mes} icone={IconeRecomendacoes} tendencia={tendencia(p.recomendacoes_emitidas_mes, snapAnterior?.recomendacoes_emitidas_mes)} />
       </Grade>
 
       <Cartao olho="Fila de trabalho" titulo="Precisa da sua atenção" style={{ marginTop: 14 }}>

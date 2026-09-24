@@ -327,6 +327,52 @@ td.num, th.num { text-align: right; font-family: var(--mono); }
 }
 .metrica em { font-style: normal; font-size: 12px; color: var(--grafite-2); }
 
+/* variante rica: ícone + tendência (Metrica com props icone/tendencia) */
+.metrica[data-rico="true"] { padding-top: 15px; padding-right: 52px; }
+.metrica-icone {
+  position: absolute; top: 14px; right: 14px;
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--folha-clara); color: var(--folha);
+}
+.metrica-tendencia {
+  display: inline-flex; align-items: center; gap: 3px; margin-top: 6px;
+  font-size: 11px; font-weight: 700; font-family: var(--mono);
+}
+.metrica-tendencia[data-sentido="alta"] { color: var(--c-mbom); }
+.metrica-tendencia[data-sentido="baixa"] { color: var(--c-mb); }
+
+/* ---------- avatar ---------- */
+.avatar {
+  width: 34px; height: 34px; border-radius: 99px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--folha); color: #fff; font-weight: 700; font-size: 13px;
+  font-family: var(--fonte); letter-spacing: 0;
+}
+.topo .avatar { background: #4fb286; color: #0b2018; }
+
+/* ---------- banner decorativo (hero) ---------- */
+.banner-hero {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: linear-gradient(135deg, var(--folha-escura) 0%, var(--folha) 60%, #1a7a5a 100%);
+  border-radius: var(--r); padding: 30px 26px; margin-bottom: 18px;
+  color: #fff; box-shadow: var(--sombra-alta);
+}
+.banner-hero-padrao { position: absolute; inset: 0; z-index: -1; opacity: .16; }
+.banner-hero-corpo { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; flex-wrap: wrap; }
+.banner-hero .olho { color: #bfe3d1; }
+.banner-hero h1 { color: #fff; font-size: 28px; }
+.banner-hero p { color: #d8ebe1; margin: 6px 0 0; font-size: 13.5px; max-width: 58ch; }
+.banner-hero-acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.banner-hero-acoes .btn.sec { background: rgba(255, 255, 255, .12); color: #fff; border-color: rgba(255, 255, 255, .3); }
+.banner-hero-acoes .btn.sec:hover { background: rgba(255, 255, 255, .2); }
+.banner-hero-tags {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+  color: #bfe3d1; font-weight: 700; text-align: right; white-space: nowrap;
+}
+@media (max-width: 680px) { .banner-hero-tags { display: none; } }
+
 /* ---------- régua de interpretação ---------- */
 .regua-linha {
   display: grid; grid-template-columns: 160px 72px 1fr; gap: 14px;

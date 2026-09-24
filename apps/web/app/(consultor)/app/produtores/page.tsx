@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
-import { CabecalhoVista, Vazio } from '@/components/ui';
+import { Grade, Metrica, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
+import { IconeProdutores, IconePropriedades } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,15 +15,27 @@ export default async function Produtores() {
     .order('nome');
 
   const produtores = data ?? [];
+  const totalPropriedades = produtores.reduce((s, p) => s + ((p.propriedades as unknown[])?.length ?? 0), 0);
+  const viaLaudo = produtores.filter((p) => p.origem === 'pdf').length;
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Carteira"
         titulo="Produtores"
         descricao="Quem você atende. O produtor é a raiz — talhões, análises e visitas ficam ligados a ele."
+        tags={['Carteira', 'Relacionamento', 'Assistência']}
         acoes={<Link className="btn verde" href="/app/produtores/nova">Novo produtor</Link>}
       />
+
+      {produtores.length > 0 && (
+        <Grade cols={3} style={{ marginBottom: 14 }}>
+          <Metrica rotulo="Produtores" valor={produtores.length} icone={IconeProdutores} />
+          <Metrica rotulo="Propriedades" valor={totalPropriedades} icone={IconePropriedades} />
+          <Metrica rotulo="Cadastrados via laudo" valor={viaLaudo} />
+        </Grade>
+      )}
+
       {produtores.length === 0 ? (
         <Vazio titulo="Nenhum produtor cadastrado">
           Comece por <Link href="/app/produtores/nova">cadastrar um produtor</Link>.

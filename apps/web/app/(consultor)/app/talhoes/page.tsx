@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { PADRAO } from '@agrotech/agro-core';
 import { f } from '@/lib/formato';
-import { CabecalhoVista, Tag, Vazio } from '@/components/ui';
+import { Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
+import { IconeTalhoes, IconePropriedades } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,14 +17,26 @@ export default async function Talhoes() {
     .order('nome');
 
   const talhoes = data ?? [];
+  const areaTotal = talhoes.reduce((s, t) => s + Number(t.area_ha ?? 0), 0);
+  const culturas = new Set(talhoes.map((t) => t.cultura).filter(Boolean)).size;
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Unidades de manejo"
         titulo="Talhões"
         descricao="Cada talhão carrega cultura, área e produtividade esperada — é o que alimenta a recomendação. Cadastre pela página do produtor."
+        tags={['Manejo', 'Produtividade', 'Solo']}
       />
+
+      {talhoes.length > 0 && (
+        <Grade cols={3} style={{ marginBottom: 14 }}>
+          <Metrica rotulo="Talhões" valor={talhoes.length} icone={IconeTalhoes} />
+          <Metrica rotulo="Área total" valor={`${f(areaTotal, 1)} ha`} icone={IconePropriedades} />
+          <Metrica rotulo="Culturas" valor={culturas} />
+        </Grade>
+      )}
+
       {talhoes.length === 0 ? (
         <Vazio titulo="Nenhum talhão cadastrado">Cadastre um produtor primeiro.</Vazio>
       ) : (

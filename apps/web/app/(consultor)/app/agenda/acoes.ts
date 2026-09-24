@@ -42,3 +42,11 @@ export async function mudarStatusEvento(fd: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath('/app/agenda');
 }
+
+/** Arrastar um evento pra outra coluna do kanban — só muda a data. */
+export async function moverEvento(id: string, novaData: string) {
+  const sb = await criarClienteServidor();
+  const { error } = await sb.schema('agro').from('agenda_eventos').update({ data: novaData }).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/app/agenda');
+}

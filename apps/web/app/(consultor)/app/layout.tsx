@@ -7,6 +7,7 @@ import { BarraMobile } from '@/components/barra-mobile';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { PaletaComandos } from '@/components/paleta-comandos';
 import { SinoNotificacoes } from '@/components/sino-notificacoes';
+import { AvatarUsuario } from '@/components/avatar-usuario';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,9 +32,12 @@ export default async function LayoutConsultor({ children }: { children: React.Re
         <div className="marca">AgroTech <span>Assistência técnica</span></div>
         <PaletaComandos />
         <SinoNotificacoes href="/app/notificacoes" contagem={naoLidas} />
-        <div className="quem">
-          <b>{perfil.nome ?? 'Consultor'}</b>
-          {perfil.crea ? `CREA ${perfil.crea}` : 'defina seu CREA em Config.'}
+        <div className="quem" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span>
+            <b>{perfil.nome ?? 'Consultor'}</b>
+            {perfil.crea ? `CREA ${perfil.crea}` : 'defina seu CREA em Config.'}
+          </span>
+          <AvatarUsuario nome={perfil.nome} />
         </div>
       </header>
       <div className="app-corpo">

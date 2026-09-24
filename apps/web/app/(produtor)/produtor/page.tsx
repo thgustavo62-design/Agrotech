@@ -5,7 +5,9 @@ import { nomeCultura } from '@/lib/culturas';
 import { resumoFinanceiro } from '@/lib/financeiro';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
 import { temFeature } from '@/lib/planos';
-import { CabecalhoVista, Cartao, Grade, Tag, Vazio } from '@/components/ui';
+import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
+import { IconeTalhoes, IconeRecomendacoes } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,7 +97,7 @@ export default async function PainelProdutor() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Sua lavoura"
         titulo={`${saudacao()}, ${perfil?.nome ?? 'produtor'}.`}
         descricao={
@@ -104,7 +106,13 @@ export default async function PainelProdutor() {
             {culturas.length > 0 ? ` · ${culturas.map((c) => nomeCultura(c)).join(', ')}` : ''}
           </>
         }
+        tags={['Solo', 'Safra', 'Resultado']}
       />
+
+      <Grade cols={2} style={{ marginBottom: 14 }}>
+        <Metrica rotulo="Talhões acompanhados" valor={lista.length} detalhe={`${f(areaTotal, 1)} ha`} icone={IconeTalhoes} />
+        <Metrica rotulo="Recomendações recebidas" valor={recomendacoes.length} icone={IconeRecomendacoes} />
+      </Grade>
 
       <Cartao olho="Fique de olho" titulo="Precisa da sua atenção">
         {atencao.length === 0 ? (

@@ -444,6 +444,67 @@ E o bypass de auth pra `/demo` no middleware ganhou o mesmo cuidado
 
 ---
 
+## Redesign visual + novas funcionalidades (mapa, histórico, kanban)
+
+Gustavo mandou 5 prints de um dashboard de referência e pediu visual mais
+rico + funcionalidades novas, terminando com auditoria própria — ver plano
+completo em `C:\Users\Seu Computador\.claude\plans\zany-noodling-kazoo.md`.
+Decisões confirmadas com ele antes de começar: visual completo estilo dos
+prints (não só evolução do atual); sem foto de banco de imagem (ilustração/
+gradiente próprio); sem clima (precisaria de API key); mapa completo mesmo
+sem contorno real cadastrado; histórico de métricas começa a ser guardado
+agora, sem inventar "+X%" antes de existir dado de verdade.
+
+- [x] **Sub-fase A — Fundação visual.** `components/banner-hero.tsx` (banner
+      decorativo, gradiente + padrão SVG próprio — sem foto de terceiro),
+      `components/avatar-usuario.tsx` (iniciais, sem upload de foto nesta
+      rodada), `Metrica` (`components/ui.tsx`) ganhou `icone`/`tendencia`
+      opcionais e 100% retrocompatíveis (toda chamada antiga continua
+      igual). Avatar no cabeçalho dos dois layouts (consultor/produtor).
+- [x] **Sub-fase B — Histórico de métricas.** `agro.metricas_diarias` +
+      `agro.registrar_metricas_hoje()` (`0027_metricas_diarias.sql`) —
+      upsert idempotente a cada carregamento de `/app`, sem cron. `/app`
+      compara com a snapshot de ~25-30 dias atrás; sem base anterior,
+      **omite a tendência** (nunca mostra "+0%" nem inventa número).
+- [x] **Sub-fase C — Mapa.** Dependência nova: `leaflet` + `react-leaflet@5`
+      (única lib nova do front além das já existentes) — tiles OpenStreetMap,
+      sem API key. `components/mapa-propriedades.tsx`: marcador por
+      propriedade via `propriedades.lat/lng` (existia desde `0002`, nunca
+      usado em UI); polígono de `talhoes.geom` quando existir — hoje nenhum
+      registro tem, cai pro marcador simples (biblioteca pronta, falta só o
+      dado). Embutido em `/app/propriedades`, aba "Mapa" ao lado de "Lista"
+      (`AbasPaineis`, mesmo componente da Visão 360º).
+- [x] **Sub-fase D — Kanban.** `/app/agenda` ganhou aba Kanban com
+      **drag-and-drop de verdade** (`components/kanban-agenda.tsx`, HTML5
+      DnD nativo, sem lib nova) — soltar num card chama `moverEvento(id,
+      novaData)` (`agenda/acoes.ts`), só um `update`. Fecha o que
+      `DATABASE_CHANGES.md` já previa pra essa tela. `/app/pendencias`
+      ganhou aba Kanban **só leitura** (`components/kanban-pendencias.tsx`
+      — classificação crítico/atenção/programado é derivada da análise, não
+      editável à mão) e passou a mostrar as 3 categorias completas (antes só
+      mostrava "crítico" — mesma lógica de `atencao` já usada em `/app`).
+- [x] **Sub-fase E (núcleo) — Visual aplicado nas telas de maior uso.**
+      `/app` (painel, com tendência real quando houver histórico),
+      `/app/produtores`, `/app/propriedades`, `/app/talhoes`, `/produtor`
+      (dashboard do portal) — todas com `BannerHero` + `Metrica` com ícone.
+      **Resto do catálogo (30+ telas: laudos, análises, recomendações,
+      financeiro, relatórios, inteligência, notificações, assinatura,
+      config, produtor/talhoes, produtor/producao etc.) continua no padrão
+      visual anterior** — decisão de escopo, não esquecimento: aviso o
+      Gustavo quais telas já mudaram, ele decide se/quando continuar.
+
+**Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
+`tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke
+test a cada sub-fase, igual ao resto do projeto — sem achado novo de bug
+nesta rodada além do que já tinha sido corrigido na auditoria anterior
+(error.tsx + trial vencido). Limitação registrada: sem navegador disponível
+neste ambiente, não dá pra confirmar visualmente o mapa renderizando —
+build/typecheck/SSR confirmam que não quebra o servidor, mas a conferência
+visual de verdade (cores, alinhamento, o mapa carregando os tiles) depende
+do Gustavo abrir no navegador dele.
+
+---
+
 ## Produto vendável (multi-tenant + billing)
 
 - [x] **Tenancy à prova de descuido** (`0012_tenancy.sql`) — `org_id`/`produtor_id`

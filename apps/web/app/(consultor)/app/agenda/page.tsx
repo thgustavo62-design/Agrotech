@@ -1,6 +1,9 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
-import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
+import { Cartao, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
+import { AbasPaineis, type Painel } from '@/components/abas-paineis';
+import { KanbanAgenda, type ColunaKanban } from '@/components/kanban-agenda';
 import { criarEvento, mudarStatusEvento } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -30,8 +33,10 @@ export default async function Agenda() {
   const produtores = (produtoresRaw ?? []) as Array<{ id: string; nome: string }>;
   const talhoes = (talhoesRaw ?? []) as unknown as Array<{ id: string; nome: string; propriedade: { produtor: { nome: string } | null } | null }>;
 
-  const hojeISO = new Date().toISOString().slice(0, 10);
-  const em7dias = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const dataMais = (dias: number) => new Date(Date.now() + dias * 86400000).toISOString().slice(0, 10);
+  const hojeISO = dataMais(0);
+  const amanhaISO = dataMais(1);
+  const em7dias = dataMais(7);
 
   const planejados = eventos.filter((e) => e.status === 'planejado');
   const atrasados = planejados.filter((e) => e.data < hojeISO);
@@ -39,6 +44,16 @@ export default async function Agenda() {
   const proximos7 = planejados.filter((e) => e.data > hojeISO && e.data <= em7dias);
   const depois = planejados.filter((e) => e.data > em7dias);
   const historico = eventos.filter((e) => e.status !== 'planejado').slice(0, 10);
+
+  const subtituloKanban = (e: Evento) =>
+    `${dataBR(e.data)}${e.hora ? ` · ${e.hora.slice(0, 5)}` : ''} · ${ROTULO_TIPO[e.tipo] ?? e.tipo}${e.produtor ? ` · ${e.produtor.nome}` : ''}`;
+  const colunasKanban: ColunaKanban[] = [
+    { id: 'atrasados', titulo: 'Atrasados', dataAlvo: null, eventos: atrasados.map((e) => ({ id: e.id, titulo: e.titulo, subtitulo: subtituloKanban(e) })) },
+    { id: 'hoje', titulo: 'Hoje', dataAlvo: hojeISO, eventos: hoje.map((e) => ({ id: e.id, titulo: e.titulo, subtitulo: subtituloKanban(e) })) },
+    { id: 'amanha', titulo: 'Amanhã', dataAlvo: amanhaISO, eventos: planejados.filter((e) => e.data === amanhaISO).map((e) => ({ id: e.id, titulo: e.titulo, subtitulo: subtituloKanban(e) })) },
+    { id: 'semana', titulo: 'Esta semana', dataAlvo: dataMais(4), eventos: proximos7.filter((e) => e.data !== amanhaISO).map((e) => ({ id: e.id, titulo: e.titulo, subtitulo: subtituloKanban(e) })) },
+    { id: 'depois', titulo: 'Depois', dataAlvo: dataMais(10), eventos: depois.map((e) => ({ id: e.id, titulo: e.titulo, subtitulo: subtituloKanban(e) })) },
+  ];
 
   const grupo = (titulo: string, lista: Evento[], tom: 'ok' | 'alerta' | 'ruim' | 'cinza') => lista.length === 0 ? null : (
     <Cartao olho={`${lista.length} evento(s)`} titulo={titulo} style={{ marginTop: 14 }}>
@@ -70,14 +85,8 @@ export default async function Agenda() {
     </Cartao>
   );
 
-  return (
+  const listaConteudo = (
     <>
-      <CabecalhoVista
-        olho="Sua rotina"
-        titulo="Agenda"
-        descricao="Visitas, coletas de solo, retornos e aplicações — o que vem por aí."
-      />
-
       {planejados.length === 0 ? <Vazio titulo="Nada agendado" /> : null}
       {grupo('Atrasados', atrasados, 'ruim')}
       {grupo('Hoje', hoje, 'alerta')}
@@ -132,6 +141,32 @@ export default async function Agenda() {
           </div>
         </Cartao>
       )}
+    </>
+  );
+
+  const paineis: Painel[] = [
+    { id: 'lista', rotulo: 'Lista', conteudo: listaConteudo },
+    {
+      id: 'kanban',
+      rotulo: 'Kanban',
+      conteudo: (
+        <>
+          <p className="nota" style={{ margin: '0 0 12px' }}>Arraste um evento pra outra coluna pra reagendar. Concluir/cancelar continua na aba Lista.</p>
+          <KanbanAgenda colunas={colunasKanban} />
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <BannerHero
+        olho="Sua rotina"
+        titulo="Agenda"
+        descricao="Visitas, coletas de solo, retornos e aplicações — o que vem por aí."
+        tags={['Rotina', 'Campo', 'Visitas']}
+      />
+      <AbasPaineis paineis={paineis} />
     </>
   );
 }

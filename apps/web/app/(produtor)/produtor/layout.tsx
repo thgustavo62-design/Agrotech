@@ -4,6 +4,7 @@ import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { contarNaoLidas } from '@/lib/notificacoes';
 import { NavProdutor } from '@/components/nav-produtor';
 import { SinoNotificacoes } from '@/components/sino-notificacoes';
+import { AvatarUsuario } from '@/components/avatar-usuario';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,7 @@ export default async function LayoutProdutor({ children }: { children: React.Rea
             <b style={{ display: 'block' }}>{perfil.nome ?? 'Produtor'}</b>
             <Link href="/produtor/sair" style={{ color: '#7fc6a3' }}>sair</Link>
           </span>
+          <AvatarUsuario nome={perfil.nome} />
         </div>
         <div style={{ flexBasis: '100%', order: 3 }}>
           <NavProdutor />

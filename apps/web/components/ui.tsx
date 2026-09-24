@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode, SVGProps } from 'react';
 
 /** Primitivas visuais compartilhadas. Presentacionais, sem estado. */
 
@@ -55,18 +55,28 @@ export function Grade({
 }
 
 export function Metrica({
-  rotulo, valor, detalhe, cor,
+  rotulo, valor, detalhe, cor, icone: Icone, tendencia,
 }: {
   rotulo: ReactNode;
   valor: ReactNode;
   detalhe?: ReactNode;
   cor?: string;
+  /** Opcional — badge de ícone no canto (reaproveita components/icones.tsx). */
+  icone?: ComponentType<SVGProps<SVGSVGElement>>;
+  /** Opcional — só passe quando houver histórico real pra comparar; nunca inventar número. */
+  tendencia?: { pct: number; rotulo: string };
 }) {
   return (
-    <div className="metrica">
+    <div className="metrica" data-rico={Icone ? 'true' : undefined}>
+      {Icone ? <span className="metrica-icone"><Icone width={18} height={18} /></span> : null}
       <span>{rotulo}</span>
       <b style={cor ? { color: cor } : undefined}>{valor}</b>
       {detalhe ? <em>{detalhe}</em> : null}
+      {tendencia ? (
+        <span className="metrica-tendencia" data-sentido={tendencia.pct >= 0 ? 'alta' : 'baixa'}>
+          {tendencia.pct >= 0 ? '↑' : '↓'} {Math.abs(tendencia.pct)}% {tendencia.rotulo}
+        </span>
+      ) : null}
     </div>
   );
 }
