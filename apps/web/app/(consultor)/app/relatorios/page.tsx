@@ -2,14 +2,26 @@ import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { nomeCultura } from '@/lib/culturas';
 import { f, dataBR } from '@/lib/formato';
+import { temFeature } from '@/lib/planos';
 import { CabecalhoVista, Cartao } from '@/components/ui';
 import { BotaoImprimir } from '@/components/botao-imprimir';
+import { PrecisaUpgrade } from '@/components/precisa-upgrade';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Relatorios() {
   const sb = await criarClienteServidor();
   const perfil = await perfilAtual();
+
+  if (!(await temFeature(sb, 'relatorios_avancados'))) {
+    return (
+      <PrecisaUpgrade
+        titulo="Relatórios"
+        descricao="Relatório A4 imprimível e exportação em CSV de toda a carteira."
+        href="/app/assinatura"
+      />
+    );
+  }
 
   const [{ data: org }, { data: situacaoRaw }] = await Promise.all([
     perfil?.org_id ? sb.schema('agro').from('orgs').select('nome').eq('id', perfil.org_id).single() : Promise.resolve({ data: null }),

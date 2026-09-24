@@ -4,6 +4,7 @@ import { f, dataBR, moeda } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { resumoFinanceiro } from '@/lib/financeiro';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
+import { temFeature } from '@/lib/planos';
 import { CabecalhoVista, Cartao, Grade, Tag, Vazio } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,7 @@ export default async function PainelProdutor() {
   const [perfil, produtor] = await Promise.all([perfilAtual(), produtorAtual()]);
 
   const hojeISO = new Date().toISOString().slice(0, 10);
+  const financeiroHabilitado = await temFeature(sb, 'financeiro');
   const [{ data: talhoes }, { data: recs }, { data: docsRaw }, { data: eventosRaw }, resumoFin] = await Promise.all([
     sb.schema('agro').from('vw_talhao_situacao')
       .select('talhao_id, nome, cultura, area_ha, data_coleta, situacao')
@@ -45,7 +47,7 @@ export default async function PainelProdutor() {
       .select('id, titulo, data, tipo')
       .eq('status', 'planejado').gte('data', hojeISO)
       .order('data', { ascending: true }).limit(1),
-    produtor ? resumoFinanceiro(sb, produtor.id) : Promise.resolve(null),
+    produtor && financeiroHabilitado ? resumoFinanceiro(sb, produtor.id) : Promise.resolve(null),
   ]);
 
   const lista = (talhoes ?? []) as Array<{

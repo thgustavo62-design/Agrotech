@@ -11,6 +11,17 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ## AgroTech v2 — dois produtos, uma infra
 
+**As 11 fases do roteiro pedido estão implementadas (concluído em
+2026-09-24).** Central do Agrônomo e Portal do Produtor, cada um com
+navegação própria, sobre a mesma infraestrutura (schema `agro`, RLS,
+`agro-core`) — o princípio central do pedido original. O que fica de fora
+por decisão deliberada, documentado em cada fase: fila de escrita offline
+(Fase 10), permissão granular por papel (Fase 11), checkout Asaas nunca
+testado contra conta real (Fase 11), `pgTAP`/`supabase test db` nunca
+rodado (falta de Docker neste ambiente). Site em produção, banco real
+migrado, deploy e migrations automáticos a cada push — ver entradas
+"Deploy em produção" e "autoalimentável" abaixo.
+
 - [x] **Auditoria + plano** (`PRODUCT_AUDIT.md`, `PRODUCT_V2.md`,
       `UX_ARCHITECTURE.md`, `DATABASE_CHANGES.md`) — inventário verificado do
       código real, decisões de arquitetura, roadmap nas 11 fases pedidas,
@@ -345,7 +356,38 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       `viewport`/`metadata` ganharam `themeColor` e `appleWebApp`.
     - Layout responsivo (grid quebra em `max-width:520px`) já existia
       desde antes desta fase — não foi retrabalhado.
-- [ ] Fase 11 — ver `PRODUCT_V2.md §3` para o roadmap completo
+- [x] **Fase 11 do pedido — Planos SaaS** (`0025_planos_features_e_papeis.sql`,
+      2026-09-24). **Última fase do roteiro de 11 — as 11 estão implementadas.**
+    - `planos.features` (jsonb) + `usuarios_max`. **Divergência deliberada**:
+      todos os planos nasceram com `financeiro`/`relatorios_avancados` em
+      `true` — a organização em uso hoje já testa as duas telas ativamente
+      há várias fases; travar alguma delas numa migration sem pedido
+      explícito quebraria o que já funciona. A infraestrutura de gating
+      está real e testada nas duas telas que ela protege
+      (`/produtor/financeiro`, `/app/relatorios` + `carteira.csv`); só não
+      está restringindo nada ainda. Decidir o que vira premium é decisão
+      comercial de quem vende o software — um `update agro.planos set
+      features = ...`, sem tocar em código.
+    - `agro.tenho_feature(text)` — function nova (fora da proposta
+      original) que faltava pra fechar o gating de verdade: `agro.assinaturas`
+      só tem política de leitura pra consultor/admin (0013), e sem essa
+      function o **produtor** não teria como checar se o financeiro do
+      escritório dele está habilitado. `components/precisa-upgrade.tsx`
+      é a tela mostrada no lugar de um recurso que o plano não inclui —
+      com ou sem botão "Ver planos" dependendo de quem pode de fato mudar
+      o plano (só consultor/admin).
+    - Papéis novos (`proprietario/tecnico/assistente`) no `check` de
+      `profiles.role` + coluna `titulo` — só o schema, como
+      `PRODUCT_V2.md §2.3` já decidia (permissão granular por papel fica
+      pra quando existir caso de uso real; `/app/equipe` continua "em breve").
+    - `/app/assinatura` ganhou botão "Assinar" por plano — gera um link de
+      checkout recorrente no Asaas (`paymentLinks`, cobrança mensal) e
+      redireciona pra lá; o `webhook-asaas` (já existente desde o "produto
+      vendável") recebe a confirmação. **Nunca testado contra uma conta
+      Asaas real** — este ambiente não tem credencial (`ASAAS_API_KEY`).
+      Sem a chave configurada, o botão explica isso com uma mensagem clara
+      em vez de fingir que funciona — mesmo padrão de degradação já usado
+      no envio de e-mail de convite (`RESEND_API_KEY` opcional).
 
 ---
 

@@ -1,6 +1,7 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { CabecalhoVista, Cartao, Grade, Metrica, Tag } from '@/components/ui';
+import { iniciarUpgrade } from './acoes';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,7 @@ export default async function Assinatura() {
 
   const planoAtual = (planos ?? []).find((p) => p.id === ass?.plano);
   const st = ass ? ROTULO_STATUS[ass.status as string] ?? { txt: ass.status as string, tom: 'cinza' as const } : null;
+  const checkoutConfigurado = Boolean(process.env.ASAAS_API_KEY);
 
   const Uso = ({ rot, usado, limite }: { rot: string; usado: number; limite?: number }) => {
     const pct = limite ? Math.min(100, Math.round((100 * usado) / limite)) : 0;
@@ -86,7 +88,7 @@ export default async function Assinatura() {
         <div className="rolagem">
           <table>
             <thead>
-              <tr><th>Plano</th><th className="num">Mensal</th><th className="num">Produtores</th><th className="num">Talhões</th><th className="num">Laudos/mês</th></tr>
+              <tr><th>Plano</th><th className="num">Mensal</th><th className="num">Produtores</th><th className="num">Talhões</th><th className="num">Laudos/mês</th><th /></tr>
             </thead>
             <tbody>
               {(planos ?? []).map((p) => (
@@ -96,11 +98,25 @@ export default async function Assinatura() {
                   <td className="num">{p.lim_produtores as number}</td>
                   <td className="num">{p.lim_talhoes as number}</td>
                   <td className="num">{p.lim_laudos_mes as number}</td>
+                  <td className="num">
+                    {p.id !== ass?.plano && Number(p.preco_mes) > 0 ? (
+                      <form action={iniciarUpgrade}>
+                        <input type="hidden" name="plano_id" value={p.id as string} />
+                        <button className="btn verde mini" type="submit">Assinar</button>
+                      </form>
+                    ) : null}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {!checkoutConfigurado && (
+          <p className="nota" style={{ marginTop: 10 }}>
+            O checkout automático (Asaas) ainda não está configurado neste ambiente — clicar em
+            &ldquo;Assinar&rdquo; explica isso em vez de travar. Pra mudar de plano agora, fale com o suporte da Nova7.
+          </p>
+        )}
       </Cartao>
 
       {(cobrancas ?? []).length > 0 && (

@@ -1,18 +1,20 @@
-# DATABASE_CHANGES.md — schema novo proposto
+# DATABASE_CHANGES.md — schema novo proposto (concluído em 2026-09-24)
 
 Continuação de `supabase/migrations/0001`–`0018` (ver inventário em
 `PRODUCT_AUDIT.md §4`). Este documento nasceu como a **proposta** de
-migrations `0019`–`0023`; `0019`, `0020` e `0022` já foram escritas e
-aplicadas (financeiro do produtor — Fase 6, 2026-09-23 — e produção/safra —
-Fase 7, 2026-09-24) — ver nota de divergência em cada seção. `0021` também
-já foi escrita, mas **fora da proposta original**:
-`0021_documentos_produtor.sql` fecha um buraco de RLS achado construindo a
-Fase 5 (produtor não conseguia ler os próprios `agro.documentos` — faltava
-política, o `GRANT` já cobria). Cada vez que uma migration proposta vira
-real fora da ordem do documento, as que restam são renumeradas — mesma
-disciplina usada desde que `0018` virou real na Fase 2. Hoje restam
-`0023`–`0025` (Agenda/Notificações/Planos), escritas quando as fases
-correspondentes (9 e 11) forem de fato implementadas.
+migrations `0019`–`0023`, para as Fases 6–11 do pedido. **Todas as 7
+migrations que restavam do roteiro (`0019`–`0025`) já foram escritas e
+aplicadas** — a última, `0025`, fechou a Fase 11 (a última do roteiro de
+11 fases). `0021` foi a única fora da proposta original (fecha um buraco
+de RLS achado construindo a Fase 5 — produtor não conseguia ler os
+próprios `agro.documentos`). Cada seção abaixo tem sua nota de
+divergência entre o que foi proposto e o que de fato foi escrito — nenhuma
+migration saiu idêntica à letra ao que este documento sugeriu originalmente,
+e isso é o esperado: a proposta é o ponto de partida, o código real é a
+verdade. Este documento agora é histórico — próxima migration nova começa
+em `0026`, direto num arquivo, sem precisar de uma proposta aqui antes
+(esse "propor antes de escrever" fazia sentido pra fechar o roteiro das 11
+fases; não é uma regra permanente do projeto).
 
 Convenção mantida do schema existente (não a do pedido original, que sugeria
 `created_at`/`updated_at` em inglês): colunas de timestamp continuam
@@ -472,6 +474,19 @@ drop table if exists agro.notificacoes;
 ---
 
 ## 0025 — Planos com feature flags e papéis novos
+
+**Escrita e aplicada em 2026-09-24** (`supabase/migrations/0025_planos_features_e_papeis.sql`).
+Duas divergências: (1) todos os planos nasceram com `financeiro`/
+`relatorios_avancados` em `true` — a org em uso hoje já testa as duas
+telas ativamente, e decidir o que vira premium é decisão comercial de
+quem vende o software, não algo pra travar sozinho numa migration.
+Mudar isso é um `update agro.planos set features = ...`, sem tocar em
+código. (2) function nova que a proposta original não previa,
+`agro.tenho_feature(text)` — necessária porque `agro.assinaturas` só
+tem política de leitura pra `consultor`/`admin` (0013); sem essa function,
+não haveria como o **produtor** checar se o financeiro do escritório dele
+está habilitado, e o gating em `/produtor/financeiro` não teria como
+funcionar. Mesmo padrão de exposição controlada já usado no projeto.
 
 ```sql
 -- 0025_planos_features_e_papeis.sql

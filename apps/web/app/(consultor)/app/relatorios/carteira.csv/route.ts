@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { nomeCultura } from '@/lib/culturas';
+import { temFeature } from '@/lib/planos';
 
 /** Exporta a carteira inteira (situação por talhão) em CSV — mesma fonte de agro.vw_talhao_situacao. */
 export async function GET() {
   const sb = await criarClienteServidor();
+
+  if (!(await temFeature(sb, 'relatorios_avancados'))) {
+    return new NextResponse('Seu plano não inclui relatórios avançados.', { status: 403 });
+  }
 
   const { data } = await sb
     .schema('agro')

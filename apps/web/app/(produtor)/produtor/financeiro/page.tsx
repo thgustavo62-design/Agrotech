@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation';
 import { criarClienteServidor, produtorAtual } from '@/lib/supabase/server';
 import { f, dataBR, moeda } from '@/lib/formato';
 import { ROTULO_STATUS_LANCAMENTO, statusEfetivo, NOME_TIPO_CONTA, type StatusLancamento } from '@/lib/financeiro';
+import { temFeature } from '@/lib/planos';
 import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
+import { PrecisaUpgrade } from '@/components/precisa-upgrade';
 import {
   criarLancamento, mudarStatusLancamento, excluirLancamento,
   criarConta, criarCategoria, criarCentroCusto, criarOrcamento, excluirOrcamento,
@@ -27,6 +29,16 @@ export default async function FinanceiroProdutor() {
   if (!produtor) notFound();
 
   const sb = await criarClienteServidor();
+
+  if (!(await temFeature(sb, 'financeiro'))) {
+    return (
+      <PrecisaUpgrade
+        titulo="Financeiro"
+        descricao="Lançamentos, contas, categorias e orçamento da sua produção — só você vê."
+      />
+    );
+  }
+
   await sb.schema('agro').rpc('semear_categorias_financeiras', { p_produtor: produtor.id });
 
   const [
