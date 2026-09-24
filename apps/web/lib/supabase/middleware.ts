@@ -41,9 +41,12 @@ export async function atualizarSessao(req: NextRequest) {
 
   const { data: { user } } = await sb.auth.getUser();
 
-  const areaConsultor = caminho.startsWith('/app');
+  // startsWith puro colide com rotas irmãs que só compartilham o prefixo de texto
+  // (ex.: "/apple-icon" começa com "/app" sem ser a área do consultor) — por
+  // isso confere limite de segmento (== ou seguido de "/").
+  const areaConsultor = caminho === '/app' || caminho.startsWith('/app/');
   const areaProdutor =
-    caminho.startsWith('/produtor') &&
+    (caminho === '/produtor' || caminho.startsWith('/produtor/')) &&
     !caminho.startsWith('/produtor/login') &&
     !caminho.startsWith('/produtor/aceitar');
 
