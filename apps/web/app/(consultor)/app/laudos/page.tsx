@@ -1,18 +1,10 @@
 import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
+import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
 import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
-
-const ROTULO_STATUS: Record<string, { txt: string; tom: 'ok' | 'alerta' | 'ruim' | 'cinza' }> = {
-  recebido: { txt: 'na fila', tom: 'cinza' },
-  extraindo: { txt: 'extraindo', tom: 'cinza' },
-  extraido: { txt: 'extraído', tom: 'cinza' },
-  revisao: { txt: 'aguardando conferência', tom: 'alerta' },
-  confirmado: { txt: 'confirmado', tom: 'ok' },
-  erro: { txt: 'erro', tom: 'ruim' },
-};
 
 export default async function Laudos() {
   const sb = await criarClienteServidor();
@@ -49,7 +41,7 @@ export default async function Laudos() {
       ) : (
         <div className="lista">
           {docs.map((d) => {
-            const s = ROTULO_STATUS[d.status as string] ?? { txt: d.status as string, tom: 'cinza' as const };
+            const s = ROTULO_STATUS_DOCUMENTO[d.status as string] ?? { txt: d.status as string, tom: 'cinza' as const };
             const acionavel = d.status === 'revisao' || d.status === 'erro' || d.status === 'confirmado';
             return (
               <div className="item" key={d.id as string}>

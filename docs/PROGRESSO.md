@@ -72,7 +72,35 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       cada evento). `analises/nova/acoes.ts` (`criarAnalise`) ganhou uma
       chamada a `registrar()` que faltava — sem isso a timeline não veria
       análises lançadas manualmente.
-- [ ] Fase 3 — Visão 360º do produtor (abas sobre a página já rica que existe)
+- [x] **Fase 3 do pedido — Visão 360º do produtor** (`/app/produtores/[id]`
+      reescrito em abas, mesmo padrão de `abas-paineis.tsx` da Fase 4). Header
+      fora das abas: nome/contato, tag de situação agregada (pior caso entre
+      os talhões: precisa de correção > fósforo baixo > em ordem > sem
+      análise), métricas (culturas/talhões/área/análises), última/próxima
+      visita. Nove abas: **Resumo** (alertas, área por cultura, últimas
+      análises com seta de tendência ▲/▼/– comparando com a coleta anterior do
+      mesmo talhão — substituto honesto e sem dependência nova para o
+      "gráfico de evolução do solo" do pedido, já que Recharts é não-objetivo
+      declarado em `PRODUCT_V2.md`), **Propriedades**, **Talhões** (agrupado
+      por cultura, com um único `resumos` pré-computado por talhão em vez de
+      recalcular `calcular()` por linha), **Análises** (lista achatada de
+      todos os talhões do produtor), **Recomendações** (`agro.recomendacoes`
+      filtrado por `produtor_id`, denormalizado desde `0012`), **Visitas**
+      (`agro.visitas` por `talhao_id`, hoje vazio — não existe formulário de
+      registrar visita, achado já registrado em `PRODUCT_AUDIT.md`),
+      **Documentos** (`agro.documentos` por `produtor_id`), **Acesso**
+      (desvio deliberado da lista de 9 abas do pedido: agrupa links de
+      resultados + convite de portal + zona de risco LGPD, que já existiam e
+      não mapeiam limpo pra nenhum nome do pedido — preferível a espalhar ou
+      forçar dentro de "Resumo"), **Linha do tempo** (novo: junta os ids do
+      produtor + talhões + análises + recomendações + documentos + visitas e
+      consulta `audit_log` uma vez por todos). **Sem aba Financeiro** — o
+      pedido já condiciona essa aba ao opt-in do produtor, e o schema
+      `financeiro_*` de `DATABASE_CHANGES.md` ainda não existe; melhor omitir
+      que simular. Extraído para reaproveitar entre painel e produtor:
+      `lib/atividade.ts` (rótulo + link de `audit_log`) e `lib/documentos.ts`
+      (rótulo de status de `agro.documentos`) — `/app` e `/app/laudos`
+      passaram a importar dali em vez de duplicar.
 - [ ] Fases 5–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---

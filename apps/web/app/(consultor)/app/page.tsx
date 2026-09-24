@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
+import { rotuloAtividade, linkAtividade, type AtividadeBruta } from '@/lib/atividade';
 import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -9,10 +10,6 @@ export const dynamic = 'force-dynamic';
 interface ItemLista {
   talhao_id: string; nome: string; data?: string | null;
   analise_id?: string | null; cultura?: string | null; v?: number | null; m?: number | null; data_coleta?: string | null;
-}
-interface AtividadeBruta {
-  acao: string; entidade: string | null; entidade_id: string | null;
-  dados: Record<string, unknown> | null; criado_em: string;
 }
 interface Painel {
   produtores: number;
@@ -41,35 +38,6 @@ const VAZIO: Painel = {
   produtores_sem_visita_recente: 0, talhoes_sem_analise_atualizada: 0, atividade_recente: [],
 };
 
-const ROTULO_ATIVIDADE: Record<string, (d: Record<string, unknown>) => string> = {
-  'analise.criada': () => 'Análise de solo lançada manualmente',
-  'laudo.enviado': (d) => `Laudo em PDF enviado${d.nome_arquivo ? ` — ${d.nome_arquivo}` : ''}`,
-  'laudo.confirmado': () => 'Laudo conferido e confirmado — virou análise',
-  'laudo.descartado': () => 'Laudo descartado na conferência',
-  'recomendacao.emitida': () => 'Recomendação emitida',
-  'produtor.criado': () => 'Produtor cadastrado',
-  'produtor.editado': () => 'Cadastro de produtor atualizado',
-  'produtor.convidado': (d) => `Convite de acesso enviado ao produtor${d.email ? ` (${d.email})` : ''}`,
-  'produtor.dados_exportados': () => 'Dados do produtor exportados (LGPD)',
-  'produtor.excluido_lgpd': () => 'Produtor excluído a pedido (LGPD)',
-  'talhao.criado': () => 'Talhão cadastrado',
-  'talhao.editado': () => 'Talhão atualizado',
-  'compartilhamento.criado': () => 'Link de resultados gerado para o produtor',
-  'perfil.editado': () => 'Perfil do consultor atualizado',
-};
-
-function linkAtividade(a: AtividadeBruta): string | undefined {
-  const dados = a.dados ?? {};
-  if (a.acao === 'recomendacao.emitida' && typeof dados.analise_id === 'string') {
-    return `/app/analises/${dados.analise_id}/laudo`;
-  }
-  if (!a.entidade_id) return undefined;
-  if (a.entidade === 'produtores') return `/app/produtores/${a.entidade_id}`;
-  if (a.entidade === 'talhoes') return `/app/talhoes/${a.entidade_id}`;
-  if (a.entidade === 'analises') return `/app/analises/${a.entidade_id}`;
-  if (a.entidade === 'documentos') return `/app/laudos/${a.entidade_id}`;
-  return undefined;
-}
 
 export default async function PaginaPainel() {
   const sb = await criarClienteServidor();
@@ -185,7 +153,7 @@ export default async function PaginaPainel() {
           ) : (
             <div className="lista">
               {p.atividade_recente.map((a, i) => {
-                const rotulo = ROTULO_ATIVIDADE[a.acao]?.(a.dados ?? {}) ?? a.acao;
+                const rotulo = rotuloAtividade(a);
                 const href = linkAtividade(a);
                 return (
                   <div className="item" key={i}>
