@@ -46,6 +46,33 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       Repositório conectado como `origin` (estava vazio, sem risco de
       sobrescrever nada). Credenciais só em `supabase/.env`/`.env.local`
       (gitignored), nunca commitadas.
+- [x] **Deploy em produção no Vercel (2026-09-23).** `apps/web/.env.local` e
+      `.env.local` (raiz) apontados pra API real do Supabase (`NEXT_PUBLIC_SUPABASE_URL`
+      + `NEXT_PUBLIC_SUPABASE_ANON_KEY`, a publishable key nova do formato
+      `sb_publishable_...`). Três problemas de configuração do projeto Vercel
+      (nenhum era bug de código, exceto o 2º) resolvidos:
+      1. **Root Directory** vazio → setado pra `apps/web` (Vercel buildava a
+         partir da raiz do monorepo, que não tem `next.config.js`).
+      2. **Bug real**: `apps/web`'s "build" script era só `next build` — não
+         buildava `@agrotech/agro-core` antes, e esse pacote aponta pro
+         `dist/` (`main`/`exports` do `package.json`), que só existe depois
+         de `tsc` rodar. Localmente sempre rodei os dois builds à mão (rotina
+         de todo phase desta sessão); no Vercel isso nunca acontecia, porque
+         com Root Directory=`apps/web` ele só roda o script do workspace web,
+         não o script da raiz (`npm run build --workspaces`, que builda
+         `packages/*` antes de `apps/*` por causa da ordem em
+         `workspaces`). Corrigido deixando o próprio script "build" do
+         `apps/web` autossuficiente: `cd ../.. && npm run build --workspace
+         @agrotech/agro-core && cd apps/web && next build` (commit `d6631b5`).
+      3. **Framework Preset** estava em "Other" → trocado pra "Next.js" no
+         painel (causava o erro `No Output Directory named "public"` — sem
+         o preset certo, o Vercel cai no fallback de site estático em vez de
+         usar `.next`).
+      Também precisou desligar o **Deployment Protection** (SSO da Vercel),
+      que bloqueava qualquer acesso não autenticado — inclusive dos usuários
+      reais do produto, não só de mim testando. Smoke test em produção
+      (`curl`) confirma o mesmo padrão de redirecionamento 307/200 validado
+      localmente o resto da sessão.
 - [x] **Fase 1 do pedido — navegação agrupada** — sidebar (desktop, ≥960px) com
       4 grupos (Visão geral / Gestão técnica / Inteligência / Gestão), colapsável
       (`lateral-consultor.tsx`, estado em `localStorage`); barra inferior no
