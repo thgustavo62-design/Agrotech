@@ -90,6 +90,14 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
 
   const proximaVisita = visitas.find((v) => v.proxima_visita)?.proxima_visita ?? null;
 
+  // Produção: só os campos agronômicos (agro.producao_visivel_consultor nunca
+  // seleciona preço/receita/observação — ver DATABASE_CHANGES.md §0022).
+  const { data: producaoRaw } = await sb.schema('agro').rpc('producao_visivel_consultor');
+  const producao = ((producaoRaw ?? []) as Array<{
+    id: string; talhao_id: string | null; safra_id: string | null;
+    producao_prevista: number | null; producao_realizada: number | null; unidade: string; criado_em: string;
+  }>).filter((p) => p.talhao_id === id);
+
   // ---- linha do tempo (prontuário) — análises + recomendações + visitas, uma só ordem ----
   type Evento = { data: string; tipo: string; rotulo: string; href?: string };
   const timeline: Evento[] = [
@@ -278,18 +286,43 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
       id: 'custos',
       rotulo: 'Custos',
       conteudo: (
-        <Vazio titulo="Custos por talhão ainda não existe">
-          Depende do módulo financeiro do produtor — proposto em <code>docs/DATABASE_CHANGES.md</code> (Fase 6, tabela <code>financeiro_lancamentos</code>), ainda não implementado.
+        <Vazio titulo="Custos não ficam visíveis pra você, por padrão">
+          O financeiro do produtor (<code>financeiro_lancamentos</code>) é isolado por desenho — nenhum
+          consultor tem acesso, nem leitura, salvo se o produtor decidir compartilhar explicitamente algum
+          dia (ainda não existe essa opção). Não é uma tela que falta construir.
         </Vazio>
       ),
     },
     {
       id: 'producao',
       rotulo: 'Produção',
-      conteudo: (
-        <Vazio titulo="Produção por safra ainda não existe">
-          Depende de <code>agro.safras</code> e <code>agro.producao_registros</code> — propostas em <code>docs/DATABASE_CHANGES.md</code> (Fase 7), ainda não implementadas.
+      contagem: producao.length,
+      conteudo: producao.length === 0 ? (
+        <Vazio titulo="Nenhum registro de produção para este talhão">
+          O produtor ainda não lançou nada em <code>/produtor/producao</code>.
         </Vazio>
+      ) : (
+        <Cartao olho="Só campos agronômicos — preço e receita ficam com o produtor" titulo="Prevista × realizada">
+          <div className="lista">
+            {producao.map((p) => {
+              const pct = p.producao_prevista ? (100 * Number(p.producao_realizada ?? 0)) / Number(p.producao_prevista) : null;
+              return (
+                <div className="item" key={p.id}>
+                  <div className="cresce">
+                    <h3>{dataBR(p.criado_em.slice(0, 10))}</h3>
+                    <small className="mono">
+                      {p.producao_prevista != null ? `previsto ${f(Number(p.producao_prevista), 1)} ${p.unidade}` : 'sem previsão'}
+                      {p.producao_realizada != null ? ` · realizado ${f(Number(p.producao_realizada), 1)} ${p.unidade}` : ''}
+                    </small>
+                  </div>
+                  {pct != null ? (
+                    <Tag tom={pct >= 90 ? 'ok' : pct >= 60 ? 'alerta' : 'ruim'}>{f(pct, 0)}%</Tag>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </Cartao>
       ),
     },
   ];

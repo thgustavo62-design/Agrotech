@@ -238,7 +238,32 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       `DATABASE_CHANGES.md` (Agenda/Notificações/Planos) foram renumeradas
       de `0021`–`0023` pra `0022`–`0024`, mesma disciplina da vez que `0018`
       virou real.
-- [ ] Fases 7–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
+- [x] **Fase 7 do pedido — Produção e safra** (`0022_producao.sql`, 2026-09-24).
+      `agro.producao_registros` (o resto do que `0019` tinha deixado só como
+      `agro.safras`). **Corrigiu de verdade a lacuna de RLS que a proposta
+      original deixava aberta**: a política de leitura do consultor
+      desenhada em `DATABASE_CHANGES.md` era um `select` de linha inteira,
+      que exporia `preco_medio`/`receita_obtida` também — contradizendo a
+      própria decisão #2 do documento ("campos comerciais continuam só do
+      produtor"). RLS não filtra coluna, só linha; a correção foi tirar essa
+      política da tabela base e criar `agro.producao_visivel_consultor()`
+      (function `security definer`, mesmo padrão de `painel_consultor()`/
+      `casar_produtor()`) que nem seleciona as colunas comerciais no
+      retorno — o consultor não vê preço/receita porque a query nunca busca
+      essas colunas, não porque uma policy "esconde" depois.
+    - `/produtor/producao` (novo, real): lançar produção por talhão/safra
+      (receita calculada automaticamente se não informada — realizada ×
+      preço médio), agrupado por safra com % de atingimento, + criação
+      rápida de safra inline (ainda não existe uma tela dedicada de gestão
+      de safras — fica pra quando fizer falta).
+    - Aba **Produção** de `/app/talhoes/[id]` (consultor) deixa de ser
+      placeholder: mostra prevista×realizada via a function acima.
+    - Aba **Custos** do mesmo talhão teve a mensagem reescrita — não é mais
+      "ainda não existe" (`financeiro_lancamentos` já existe desde a Fase
+      6), e sim "não é visível pra você, por padrão": isolamento total do
+      financeiro do produtor é decisão de design (`PRODUCT_V2.md §2.2`),
+      não uma lacuna de implementação a preencher depois.
+- [ ] Fases 8–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---
 

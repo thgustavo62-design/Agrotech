@@ -2,15 +2,16 @@
 
 Continuação de `supabase/migrations/0001`–`0018` (ver inventário em
 `PRODUCT_AUDIT.md §4`). Este documento nasceu como a **proposta** de
-migrations `0019`–`0023`; `0019` e `0020` já foram escritas e aplicadas junto
-da Fase 6 (financeiro do produtor, 2026-09-23) — ver nota de divergência em
-cada seção. `0021` também já foi escrita, mas **fora da proposta original**:
+migrations `0019`–`0023`; `0019`, `0020` e `0022` já foram escritas e
+aplicadas (financeiro do produtor — Fase 6, 2026-09-23 — e produção/safra —
+Fase 7, 2026-09-24) — ver nota de divergência em cada seção. `0021` também
+já foi escrita, mas **fora da proposta original**:
 `0021_documentos_produtor.sql` fecha um buraco de RLS achado construindo a
 Fase 5 (produtor não conseguia ler os próprios `agro.documentos` — faltava
-política, o `GRANT` já cobria). Por isso as propostas que restam
-(Agenda/Notificações/Planos) foram renumeradas de `0021`–`0023` pra
-`0022`–`0024` — mesma disciplina usada quando `0018` virou real na Fase 2.
-`0022`–`0024` continuam só propostas, escritas quando as fases
+política, o `GRANT` já cobria). Cada vez que uma migration proposta vira
+real fora da ordem do documento, as que restam são renumeradas — mesma
+disciplina usada desde que `0018` virou real na Fase 2. Hoje restam
+`0023`–`0025` (Agenda/Notificações/Planos), escritas quando as fases
 correspondentes (9 e 11) forem de fato implementadas.
 
 Convenção mantida do schema existente (não a do pedido original, que sugeria
@@ -53,13 +54,15 @@ existentes pesa mais do que a convenção sugerida no pedido.
 ## 0019 — Safras e produção
 
 **Divergência (2026-09-23):** só a tabela `agro.safras` (e sua RLS) foi
-escrita, em `supabase/migrations/0019_safras.sql` — é o pré-requisito de
-`financeiro_lancamentos.safra_id`/`financeiro_orcamentos.safra_id` (0020).
-`agro.producao_registros` **continua só proposta** abaixo, sem tocar no
-banco: implementá-la agora seria adiantar schema da Fase 7 (Produção e
-safra) para dentro da Fase 6 (Financeiro), que não foi pedida. Quando a Fase
-7 for implementada, `producao_registros` ganha sua própria migration (número
-a definir na hora, depois de `0020` já estar ocupado).
+escrita nesta migration, em `supabase/migrations/0019_safras.sql` — é o
+pré-requisito de `financeiro_lancamentos.safra_id`/
+`financeiro_orcamentos.safra_id` (0020). `agro.producao_registros` ficou
+só proposta até a Fase 7 chegar (2026-09-24) — ganhou sua própria migration,
+`0022_producao.sql` (ver seção "0022" abaixo, com a correção de RLS que
+faltava aqui: a política de consultor abaixo (`producao_consultor_leitura`)
+expõe a linha inteira, inclusive `preco_medio`/`receita_obtida` — RLS não
+filtra coluna, só linha. `0022_producao.sql` corrige isso de verdade com
+uma function).
 
 ```sql
 -- proposta original — só a parte "agro.safras" foi de fato escrita (ver nota acima)
@@ -151,7 +154,7 @@ drop table if exists agro.safras;
 um bucket de Storage (`financeiro`) com 3 políticas (leitura/envio/exclusão,
 pasta = `produtor_id`) para o campo `comprovante_path` ter algo de verdade
 por trás — a proposta original não incluía Storage. Sem gate de plano: o
-feature flag `planos.features.financeiro` citado em `0024` (Fase 11) ainda
+feature flag `planos.features.financeiro` citado em `0025` (Fase 11) ainda
 não existe no banco, então por ora todo produtor autenticado vê o financeiro,
 independente do plano do escritório dele.
 
@@ -276,10 +279,66 @@ drop table if exists agro.financeiro_categorias;
 
 ---
 
-## 0022 — Agenda do agrônomo
+## 0022 — Produção e safra (Fase 7)
+
+**Escrita e aplicada em 2026-09-24** (`supabase/migrations/0022_producao.sql`),
+completando o que `0019` deixou pra trás. Divergência em relação à proposta
+original: a política `producao_consultor_leitura` (SELECT de linha inteira
+pra consultor) **não foi implementada** — ela contradizia a própria decisão
+#2 deste documento ("campos comerciais continuam só do produtor"), porque
+RLS filtra linha, não coluna; um `select *` do consultor veria
+`preco_medio`/`receita_obtida` também. No lugar dela:
 
 ```sql
--- 0022_agenda.sql
+-- tabela base: SEM política de consultor
+create policy producao_dono on agro.producao_registros for all to authenticated
+  using (produtor_id = (select agro.jwt_produtor()))
+  with check (produtor_id = (select agro.jwt_produtor()));
+
+-- consultor só enxerga produção por aqui — nunca seleciona as colunas comerciais
+create or replace function agro.producao_visivel_consultor()
+returns table (
+  id uuid, produtor_id uuid, talhao_id uuid, safra_id uuid,
+  cultura text, area_ha numeric, producao_prevista numeric, producao_realizada numeric,
+  unidade text, criado_em timestamptz
+)
+language sql stable security definer set search_path = agro, public as $$
+  select r.id, r.produtor_id, r.talhao_id, r.safra_id, r.cultura, r.area_ha,
+         r.producao_prevista, r.producao_realizada, r.unidade, r.criado_em
+  from agro.producao_registros r
+  where r.org_id = (select agro.jwt_org())
+    and (select agro.jwt_role()) in ('consultor','admin')
+$$;
+grant execute on function agro.producao_visivel_consultor() to authenticated;
+```
+
+Mesmo padrão já usado no projeto pra exposição controlada (`painel_consultor()`,
+`casar_produtor()`, `resultados_por_token()`): function `security definer`
+com filtro e lista de colunas explícitos, em vez de confiar em RLS pra
+esconder coluna — RLS não faz isso.
+
+**Telas:** `/produtor/producao` (CRUD do produtor, todas as colunas) e a aba
+"Produção" de `/app/talhoes/[id]` (consultor, só leitura, via a function
+acima). A aba "Custos" do mesmo talhão permanece **intencionalmente**
+inacessível ao consultor — `financeiro_*` é 100% isolado por decisão #1,
+sem exceção; a mensagem da aba deixa isso explícito em vez de sugerir que é
+"em breve".
+
+**Rollback:**
+```sql
+drop function if exists agro.producao_visivel_consultor();
+drop trigger if exists producao_registros_herda on agro.producao_registros;
+drop trigger if exists producao_registros_touch on agro.producao_registros;
+drop function if exists agro.herdar_de_produtor_direto();
+drop table if exists agro.producao_registros;
+```
+
+---
+
+## 0023 — Agenda do agrônomo
+
+```sql
+-- 0023_agenda.sql
 
 create table agro.agenda_eventos (
   id            uuid primary key default gen_random_uuid(),
@@ -327,10 +386,10 @@ drop table if exists agro.agenda_eventos;
 
 ---
 
-## 0023 — Notificações
+## 0024 — Notificações
 
 ```sql
--- 0023_notificacoes.sql
+-- 0024_notificacoes.sql
 
 create table agro.notificacoes (
   id                    uuid primary key default gen_random_uuid(),
@@ -395,10 +454,10 @@ drop table if exists agro.notificacoes;
 
 ---
 
-## 0024 — Planos com feature flags e papéis novos
+## 0025 — Planos com feature flags e papéis novos
 
 ```sql
--- 0024_planos_features_e_papeis.sql
+-- 0025_planos_features_e_papeis.sql
 
 alter table agro.planos add column if not exists features jsonb not null default '{}'::jsonb;
 alter table agro.planos add column if not exists usuarios_max int not null default 1;
