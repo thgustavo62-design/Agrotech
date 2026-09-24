@@ -487,11 +487,29 @@ agora, sem inventar "+X%" antes de existir dado de verdade.
       `/app` (painel, com tendência real quando houver histórico),
       `/app/produtores`, `/app/propriedades`, `/app/talhoes`, `/produtor`
       (dashboard do portal) — todas com `BannerHero` + `Metrica` com ícone.
-      **Resto do catálogo (30+ telas: laudos, análises, recomendações,
-      financeiro, relatórios, inteligência, notificações, assinatura,
-      config, produtor/talhoes, produtor/producao etc.) continua no padrão
-      visual anterior** — decisão de escopo, não esquecimento: aviso o
-      Gustavo quais telas já mudaram, ele decide se/quando continuar.
+- [x] **Sub-fase E (continuação) — resto das telas de lista/dashboard.**
+      `/app/analises`, `/app/laudos`, `/app/monitoramento` (e corrigi de
+      passagem um texto desatualizado: o botão dizia "Registrar visita
+      (Fase 5)" e ficava sempre desabilitado — a Fase 9 já tinha
+      construído esse formulário de verdade dentro do talhão; troquei o
+      botão morto por um link "abrir talhão" em cada item da lista),
+      `/app/recomendacoes`, `/app/tabelas`, `/app/notificacoes`,
+      `/app/config`, `/app/inteligencia`, `/app/assinatura`, e do lado do
+      produtor: `/produtor/documentos`, `/produtor/fazenda`,
+      `/produtor/notificacoes`, `/produtor/producao`,
+      `/produtor/recomendacoes`, `/produtor/talhoes`,
+      `/produtor/financeiro`. `/app/relatorios` ficou de fora de propósito
+      — o cabeçalho dali precisa ficar escondido na impressão
+      (`nao-imprime`), e `BannerHero` ainda não tem esse comportamento;
+      só removi o import de `CabecalhoVista` que tinha ficado morto lá.
+      **Continuam no padrão anterior, por decisão de escopo — telas de
+      formulário/edição** (`analises/nova`, `laudos/novo`, `laudos/[id]`,
+      `produtores/nova`, `produtores/[id]/editar`, `talhoes/[id]/editar`)
+      **e as duas visões 360º** (`produtores/[id]`, `talhoes/[id]` — já
+      têm cabeçalho com `Tag`/ações próprias, trocar exige mais cuidado
+      pra não perder nada) — um banner grande de decoração não combina
+      com tela de digitar dado; formulário pede objetividade, não drama
+      visual. `demo/tabelas` (vitrine pública) também ficou fora.
 
 **Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
 `tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke

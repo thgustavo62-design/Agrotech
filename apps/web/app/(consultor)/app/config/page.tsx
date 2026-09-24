@@ -1,5 +1,6 @@
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
-import { CabecalhoVista, Cartao } from '@/components/ui';
+import { Cartao } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 import { salvarPerfilConsultor } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -16,10 +17,11 @@ export default async function Config() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Configurações"
         titulo="Seus dados"
         descricao="Nome, CREA e ART assinam todo laudo emitido pelo app."
+        tags={['Perfil', 'Identidade', 'Assinatura']}
       />
       <Cartao olho="Responsável técnico" titulo="Perfil">
         <form action={salvarPerfilConsultor} className="grade g2">

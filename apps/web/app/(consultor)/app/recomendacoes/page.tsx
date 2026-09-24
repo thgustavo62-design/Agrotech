@@ -3,7 +3,9 @@ import { nomeCorretivo } from '@agrotech/agro-core';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR, f } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
-import { CabecalhoVista, Tag, Vazio } from '@/components/ui';
+import { Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
+import { IconeRecomendacoes } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,11 +26,18 @@ export default async function Recomendacoes() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Gestão técnica"
         titulo="Recomendações"
         descricao="Todas as recomendações emitidas, de todos os produtores e talhões — cada uma carrega a versão do motor e o snapshot das tabelas usadas."
+        tags={['Calagem', 'Adubação', 'Rastreabilidade']}
       />
+
+      {recomendacoes.length > 0 && (
+        <div style={{ maxWidth: 260, marginBottom: 14 }}>
+          <Metrica rotulo="Recomendações emitidas" valor={recomendacoes.length} icone={IconeRecomendacoes} />
+        </div>
+      )}
       {recomendacoes.length === 0 ? (
         <Vazio titulo="Nenhuma recomendação emitida ainda">
           Emita uma pela tela de interpretação de uma análise.

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_TIPO_NOTIFICACAO } from '@/lib/notificacoes';
-import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
+import { Cartao, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 import { marcarNotificacaoLida, marcarTodasLidas } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -23,10 +24,11 @@ export default async function Notificacoes() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Avisos"
         titulo="Notificações"
         descricao={naoLidas > 0 ? `${naoLidas} não lida(s).` : 'Tudo em dia.'}
+        tags={['Avisos', 'Novidades', 'Acompanhamento']}
         acoes={naoLidas > 0 ? (
           <form action={marcarTodasLidas}>
             <input type="hidden" name="voltar" value="/app/notificacoes" />

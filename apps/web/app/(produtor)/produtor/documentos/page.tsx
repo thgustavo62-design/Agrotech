@@ -1,7 +1,8 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
-import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
+import { Cartao, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,9 +26,10 @@ export default async function DocumentosProdutor() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Sua lavoura"
         titulo="Documentos"
+        tags={['Laudos', 'Histórico', 'Arquivo']}
         descricao="Os laudos em PDF que o seu técnico enviou."
       />
 

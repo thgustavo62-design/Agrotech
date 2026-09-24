@@ -4,7 +4,8 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { nomeCultura, paraAnalise } from '@/lib/culturas';
 import { f, dataBR } from '@/lib/formato';
-import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -131,10 +132,11 @@ export default async function Inteligencia({
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Sua carteira"
         titulo="Inteligência"
         descricao="Consultas sobre toda a carteira — talhões fora da meta, deficiências mais comuns, insumo estimado por cultura."
+        tags={['Análise', 'Padrões', 'Carteira']}
         acoes={<Link className="btn sec" href="/app/relatorios">Relatórios</Link>}
       />
 

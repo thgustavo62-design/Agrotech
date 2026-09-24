@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
-import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
+import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
+import { IconeLaudos } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,15 +17,26 @@ export default async function Laudos() {
     .order('criado_em', { ascending: false });
 
   const docs = data ?? [];
+  const naFila = docs.filter((d) => d.status === 'revisao').length;
+  const confirmados = docs.filter((d) => d.status === 'confirmado').length;
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Ingestão"
         titulo="Laudos em PDF"
         descricao="Envie o PDF do laboratório. O sistema extrai os parâmetros e devolve para conferência antes de virar análise."
+        tags={['Automação', 'Extração', 'Conferência']}
         acoes={<Link className="btn verde" href="/app/laudos/novo">Enviar PDF</Link>}
       />
+
+      {docs.length > 0 && (
+        <Grade cols={3} style={{ marginBottom: 14 }}>
+          <Metrica rotulo="Laudos enviados" valor={docs.length} icone={IconeLaudos} />
+          <Metrica rotulo="Aguardando conferência" valor={naFila} cor={naFila ? 'var(--c-b)' : undefined} />
+          <Metrica rotulo="Confirmados" valor={confirmados} />
+        </Grade>
+      )}
 
       <Cartao olho="Como funciona" titulo="Pipeline de ingestão">
         <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.7 }}>

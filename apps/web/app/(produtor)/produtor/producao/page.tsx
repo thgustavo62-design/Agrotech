@@ -3,7 +3,8 @@ import { criarClienteServidor, produtorAtual } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { f, dataBR, moeda } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
-import { CabecalhoVista, Cartao, Grade, Metrica, Vazio } from '@/components/ui';
+import { Cartao, Grade, Metrica, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 import { criarSafra, criarProducao, excluirProducao } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -51,10 +52,11 @@ export default async function ProducaoProdutor() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Sua lavoura"
         titulo="Produção"
         descricao="Produtividade esperada e realizada por safra e por talhão."
+        tags={['Safra', 'Colheita', 'Resultado']}
       />
 
       <Grade cols={3}>

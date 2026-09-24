@@ -1,7 +1,8 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { f } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
-import { CabecalhoVista, Cartao, Grade, Metrica, Vazio } from '@/components/ui';
+import { Cartao, Grade, Metrica, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,9 +28,10 @@ export default async function FazendaProdutor() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Sua lavoura"
         titulo="Minha fazenda"
+        tags={['Propriedade', 'Território', 'Talhões']}
         descricao="Suas propriedades e os talhões de cada uma."
       />
 

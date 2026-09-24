@@ -1,7 +1,8 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
-import { CabecalhoVista, Cartao, Tag, Vazio } from '@/components/ui';
+import { Cartao, Tag, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,9 +28,10 @@ export default async function TalhoesProdutor() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Sua lavoura"
         titulo="Meus talhões"
+        tags={['Talhões', 'Solo', 'Situação']}
         descricao="Todos os talhões que o seu técnico acompanha, com a situação da última análise de solo."
       />
 

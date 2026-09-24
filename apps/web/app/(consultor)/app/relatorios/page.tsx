@@ -3,7 +3,7 @@ import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { nomeCultura } from '@/lib/culturas';
 import { f, dataBR } from '@/lib/formato';
 import { temFeature } from '@/lib/planos';
-import { CabecalhoVista, Cartao } from '@/components/ui';
+import { Cartao } from '@/components/ui';
 import { BotaoImprimir } from '@/components/botao-imprimir';
 import { PrecisaUpgrade } from '@/components/precisa-upgrade';
 

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
-import { CabecalhoVista, Cartao, Vazio } from '@/components/ui';
+import { Cartao, Vazio } from '@/components/ui';
+import { BannerHero } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,9 +23,10 @@ export default async function RecomendacoesProdutor() {
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero
         olho="Sua lavoura"
         titulo="Recomendações"
+        tags={['Laudos', 'Orientação', 'Técnica']}
         descricao="Toda recomendação que o seu técnico já emitiu, com o laudo completo."
       />
 
