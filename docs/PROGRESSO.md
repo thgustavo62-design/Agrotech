@@ -322,7 +322,30 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
       mockup de `UX_ARCHITECTURE.md §7` já previa, mas ficava marcado como
       dependente desta fase.
     - `lib/navegacao.ts`: tira `embreve` de Agenda.
-- [ ] Fases 10–11 — ver `PRODUCT_V2.md §3` para o roadmap completo
+- [x] **Fase 10 do pedido — PWA e polimento mobile** (2026-09-24). Escopo
+      deliberado, como `UX_ARCHITECTURE.md §8.4` já definia: PWA instalável
+      + cache de leitura de páginas já visitadas — **não** fila de escrita
+      offline (registrar visita sem sinal fica pra quando fizer falta de
+      verdade; é maior que cabe numa fase de polimento). Sem migration,
+      sem dependência nova (nenhum `next-pwa`/Workbox — service worker
+      escrito à mão, consistente com o resto do projeto).
+    - `app/manifest.ts` (convenção do Next, serve em `/manifest.webmanifest`,
+      link injetado automaticamente no `<head>`) + `app/icon.tsx`/
+      `app/apple-icon.tsx`/`app/icones-pwa/[size]/route.tsx` — ícones
+      gerados sob demanda com `ImageResponse` (`next/og`), sem nenhum
+      arquivo binário no repo; mesma marca (losango) de `.marca::before`
+      em `globals.css`.
+    - `app/sw.js/route.ts` — service worker servido como route handler
+      (sem precisar de pasta `public/`). Estratégia: rede primeiro,
+      grava no cache a cada resposta 200 same-origin; offline, serve do
+      cache o que já foi visitado, ou `/offline` (novo, página estática)
+      pra navegação nunca vista. Versionado (`agrotech-cache-v1`) — nunca
+      serve JS/CSS velho por cima de build novo enquanto houver sinal.
+    - `components/registrar-sw.tsx` registra o SW no layout raiz.
+      `viewport`/`metadata` ganharam `themeColor` e `appleWebApp`.
+    - Layout responsivo (grid quebra em `max-width:520px`) já existia
+      desde antes desta fase — não foi retrabalhado.
+- [ ] Fase 11 — ver `PRODUCT_V2.md §3` para o roadmap completo
 
 ---
 

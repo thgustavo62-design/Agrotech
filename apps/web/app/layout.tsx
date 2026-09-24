@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Archivo, IBM_Plex_Mono } from 'next/font/google';
+import { RegistrarSW } from '@/components/registrar-sw';
 import './globals.css';
 
 const archivo = Archivo({
@@ -19,12 +20,27 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: 'AgroTech',
   description: 'Assistência técnica agronômica — Campo Forte',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AgroTech',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0f5c43',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${archivo.variable} ${plexMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <RegistrarSW />
+        {children}
+      </body>
     </html>
   );
 }
