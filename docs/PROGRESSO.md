@@ -634,6 +634,14 @@ seguir esse visual "em tudo" e usar banco de imagens gratuitas.
       consultor/admin, **nenhuma** política de produtor em nenhuma tabela.
       Fora de escopo por ora (mesma simplificação inicial do financeiro do
       produtor): centros de custo e orçamento. Commit `c4ee75e`.
+- [x] **Editar o escritório em Configurações.** "Continue a fase de
+      configuração" — a própria tela dizia "Renomear o escritório ainda
+      não é possível pelo app", achado de auditoria registrado desde a
+      Fase 1 (`PRODUCT_AUDIT.md` item 14: `agro.orgs` nunca teve policy de
+      `update`). `0029_orgs_atualizar.sql` — policy restrita a
+      consultor/admin da própria org. Form de nome/município/UF em
+      `/app/config`, grava auditoria (`escritorio.editado`, mesmo padrão
+      de `perfil.editado`). Aplicada no Supabase real. Commit `6edc45c`.
 
 **Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
 `tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke
