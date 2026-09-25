@@ -1,6 +1,6 @@
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { Cartao } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { salvarPerfilConsultor } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +17,7 @@ export default async function Config() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Configurações"
         titulo="Seus dados"
         descricao="Nome, CREA e ART assinam todo laudo emitido pelo app."

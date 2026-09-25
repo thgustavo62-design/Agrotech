@@ -1,7 +1,7 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { Cartao, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
 import { KanbanAgenda, type ColunaKanban } from '@/components/kanban-agenda';
 import { criarEvento, mudarStatusEvento } from './acoes';
@@ -160,7 +160,7 @@ export default async function Agenda() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Sua rotina"
         titulo="Agenda"
         descricao="Visitas, coletas de solo, retornos e aplicações — o que vem por aí."

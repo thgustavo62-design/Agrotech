@@ -6,7 +6,7 @@ import { resumoFinanceiro } from '@/lib/financeiro';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
 import { temFeature } from '@/lib/planos';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 import { IconeTalhoes, IconeRecomendacoes } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
@@ -97,7 +97,7 @@ export default async function PainelProdutor() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_PRODUTOR}
         olho="Sua lavoura"
         titulo={`${saudacao()}, ${perfil?.nome ?? 'produtor'}.`}
         descricao={

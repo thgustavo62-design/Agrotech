@@ -3,7 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { PADRAO } from '@agrotech/agro-core';
 import { f } from '@/lib/formato';
 import { Grade, Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { IconeTalhoes, IconePropriedades } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,7 @@ export default async function Talhoes() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Unidades de manejo"
         titulo="Talhões"
         descricao="Cada talhão carrega cultura, área e produtividade esperada — é o que alimenta a recomendação. Cadastre pela página do produtor."

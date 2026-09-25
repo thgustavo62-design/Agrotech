@@ -5,7 +5,7 @@ import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura, paraAnalise } from '@/lib/culturas';
 import { Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CAFE } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +38,7 @@ export default async function ListaAnalises({
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CAFE}
         olho="Fertilidade"
         titulo="Análises de solo"
         descricao="Lance o laudo e o AgroTech interpreta, calcula calagem e monta a adubação."

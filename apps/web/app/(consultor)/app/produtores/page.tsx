@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { Grade, Metrica, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { IconeProdutores, IconePropriedades } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,7 @@ export default async function Produtores() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Carteira"
         titulo="Produtores"
         descricao="Quem você atende. O produtor é a raiz — talhões, análises e visitas ficam ligados a ele."

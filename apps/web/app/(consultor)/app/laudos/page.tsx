@@ -3,7 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CAFE } from '@/components/banner-hero';
 import { IconeLaudos } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,7 @@ export default async function Laudos() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CAFE}
         olho="Ingestão"
         titulo="Laudos em PDF"
         descricao="Envie o PDF do laboratório. O sistema extrai os parâmetros e devolve para conferência antes de virar análise."

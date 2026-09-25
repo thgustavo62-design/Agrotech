@@ -3,7 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_TIPO_NOTIFICACAO } from '@/lib/notificacoes';
 import { Cartao, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 import { marcarNotificacaoLida, marcarTodasLidas } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +24,7 @@ export default async function NotificacoesProdutor() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_PRODUTOR}
         olho="Sua lavoura"
         titulo="Notificações"
         descricao={naoLidas > 0 ? `${naoLidas} não lida(s).` : 'Tudo em dia.'}

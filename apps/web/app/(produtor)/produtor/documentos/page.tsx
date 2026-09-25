@@ -2,7 +2,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
 import { Cartao, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +26,7 @@ export default async function DocumentosProdutor() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_PRODUTOR}
         olho="Sua lavoura"
         titulo="Documentos"
         tags={['Laudos', 'Histórico', 'Arquivo']}

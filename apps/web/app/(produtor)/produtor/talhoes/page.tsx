@@ -2,7 +2,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { Cartao, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export default async function TalhoesProdutor() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_PRODUTOR}
         olho="Sua lavoura"
         titulo="Meus talhões"
         tags={['Talhões', 'Solo', 'Situação']}

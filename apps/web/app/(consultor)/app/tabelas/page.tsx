@@ -1,6 +1,6 @@
 import { PADRAO, f2 } from '@agrotech/agro-core';
 import { Cartao } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,7 @@ export default function TabelasConsultor() {
   const c = PADRAO.culturas;
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Base técnica"
         titulo="Tabelas de referência"
         descricao="Valores de literatura (5ª Aproximação/MG + Incaper/ES). A edição por organização — cada escritório calibra a própria cópia — entra na Fase 2."

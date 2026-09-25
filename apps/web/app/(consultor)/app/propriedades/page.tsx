@@ -3,7 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { f } from '@/lib/formato';
 import { geomParaPoligono } from '@/lib/geo';
 import { Grade, Metrica, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
 import { MapaPropriedades } from '@/components/mapa-propriedades';
 import { IconePropriedades, IconeTalhoes } from '@/components/icones';
@@ -72,7 +72,7 @@ export default async function Propriedades() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Gestão técnica"
         titulo="Propriedades"
         descricao="Todas as propriedades da carteira, de todos os produtores. Cadastro fica na página de cada produtor."

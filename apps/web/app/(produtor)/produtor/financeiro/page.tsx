@@ -5,7 +5,7 @@ import { f, dataBR, moeda } from '@/lib/formato';
 import { ROTULO_STATUS_LANCAMENTO, statusEfetivo, NOME_TIPO_CONTA, type StatusLancamento } from '@/lib/financeiro';
 import { temFeature } from '@/lib/planos';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
 import { PrecisaUpgrade } from '@/components/precisa-upgrade';
 import {
@@ -492,7 +492,7 @@ export default async function FinanceiroProdutor() {
         <Link className="btn sec mini" href="/produtor">← Início</Link>
       </div>
 
-      <BannerHero
+      <BannerHero imagem={FOTO_PRODUTOR}
         olho="Sua lavoura"
         titulo="Financeiro"
         descricao="Só você vê estas informações — nem o seu técnico tem acesso a esta aba."

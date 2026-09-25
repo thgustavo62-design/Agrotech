@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { Grade, Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { IconeMonitoramento } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,7 @@ export default async function Monitoramento() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Caderno de campo"
         titulo="Monitoramento"
         descricao="Visita com fenologia, amostragem fitossanitária e comparação com o nível de controle. Registrar uma visita nova é feito de dentro do talhão."

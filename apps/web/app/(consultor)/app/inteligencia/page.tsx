@@ -5,7 +5,7 @@ import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { nomeCultura, paraAnalise } from '@/lib/culturas';
 import { f, dataBR } from '@/lib/formato';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,7 +132,7 @@ export default async function Inteligencia({
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Sua carteira"
         titulo="Inteligência"
         descricao="Consultas sobre toda a carteira — talhões fora da meta, deficiências mais comuns, insumo estimado por cultura."

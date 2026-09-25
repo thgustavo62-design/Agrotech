@@ -1,7 +1,7 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { Cartao, Grade, Metrica, Tag } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { iniciarUpgrade } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +56,7 @@ export default async function Assinatura() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Conta"
         titulo="Assinatura"
         descricao="Plano, uso e histórico de cobrança. A gestão de pagamento é feita pelo Asaas."

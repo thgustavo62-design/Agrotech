@@ -3,7 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { Cartao, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel as AbaPainel } from '@/components/abas-paineis';
 import { KanbanPendencias, type ColunaPendencias } from '@/components/kanban-pendencias';
 
@@ -98,7 +98,7 @@ export default async function Pendencias() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Fila de trabalho"
         titulo="Pendências"
         descricao="Talhões fora da meta, recomendações sem emitir e visitas programadas — tudo que pede sua atenção."

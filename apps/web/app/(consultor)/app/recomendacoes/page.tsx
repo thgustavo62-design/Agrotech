@@ -4,7 +4,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR, f } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { IconeRecomendacoes } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,7 @@ export default async function Recomendacoes() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Gestão técnica"
         titulo="Recomendações"
         descricao="Todas as recomendações emitidas, de todos os produtores e talhões — cada uma carrega a versão do motor e o snapshot das tabelas usadas."

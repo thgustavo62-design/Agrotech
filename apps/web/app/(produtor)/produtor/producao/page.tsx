@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { f, dataBR, moeda } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { Cartao, Grade, Metrica, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 import { criarSafra, criarProducao, excluirProducao } from './acoes';
 
 export const dynamic = 'force-dynamic';
@@ -52,7 +52,7 @@ export default async function ProducaoProdutor() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_PRODUTOR}
         olho="Sua lavoura"
         titulo="Produção"
         descricao="Produtividade esperada e realizada por safra e por talhão."

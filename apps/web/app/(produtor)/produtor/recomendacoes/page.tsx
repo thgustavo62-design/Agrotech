@@ -3,7 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { Cartao, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +23,7 @@ export default async function RecomendacoesProdutor() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_PRODUTOR}
         olho="Sua lavoura"
         titulo="Recomendações"
         tags={['Laudos', 'Orientação', 'Técnica']}

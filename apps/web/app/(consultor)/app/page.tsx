@@ -5,7 +5,7 @@ import { nomeCultura } from '@/lib/culturas';
 import { rotuloAtividade, linkAtividade, type AtividadeBruta } from '@/lib/atividade';
 import { pctTendencia } from '@/lib/tendencia';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
-import { BannerHero } from '@/components/banner-hero';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { IconeProdutores, IconeTalhoes, IconeAnalises, IconeRecomendacoes } from '@/components/icones';
 
 export const dynamic = 'force-dynamic';
@@ -88,7 +88,7 @@ export default async function PaginaPainel() {
 
   return (
     <>
-      <BannerHero
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Central do agrônomo"
         titulo="Início"
         descricao="O que pede a sua atenção hoje na assistência técnica."
