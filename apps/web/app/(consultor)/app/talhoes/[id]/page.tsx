@@ -5,7 +5,8 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { nomeCultura, paraAnalise } from '@/lib/culturas';
 import { f, dataBR } from '@/lib/formato';
-import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
 import { InterpretacaoView } from '@/components/interpretacao-view';
 import { registrarVisita } from './acoes';
@@ -379,7 +380,7 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
         </Link>
       </div>
 
-      <CabecalhoVista
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho={`${produtor?.nome ?? '—'} · ${nomeCultura(talhao.cultura as string | null)}`}
         titulo={talhao.nome as string}
         descricao={`${f(Number(talhao.area_ha ?? 0), 1)} ha${talhao.ano_implantacao ? ` · plantado em ${talhao.ano_implantacao}` : ''}${talhao.espacamento ? ` · ${talhao.espacamento}` : ''}`}

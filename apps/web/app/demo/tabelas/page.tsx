@@ -1,15 +1,17 @@
 import { PADRAO, f2 } from '@agrotech/agro-core';
-import { CabecalhoVista, Cartao } from '@/components/ui';
+import { Cartao } from '@/components/ui';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 
 export default function DemoTabelas() {
   const c = PADRAO.culturas;
 
   return (
     <>
-      <CabecalhoVista
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Base técnica"
         titulo="Tabelas de referência"
         descricao="Ponto de partida (5ª Aproximação/MG + Incaper/ES). Cada escritório recebe a própria cópia e calibra — a recomendação segue exatamente o que estiver aqui."
+        tags={['Adubação', 'Calagem', 'Referência']}
       />
 
       <Cartao olho="Doses de referência" titulo="Adubação por cultura">

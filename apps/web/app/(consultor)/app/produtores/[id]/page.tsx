@@ -7,7 +7,8 @@ import { nomeCultura, CULTURAS, paraAnalise } from '@/lib/culturas';
 import { f, dataBR } from '@/lib/formato';
 import { rotuloAtividade, linkAtividade, type AtividadeBruta } from '@/lib/atividade';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
-import { CabecalhoVista, Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
+import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
 import { LinkCompartilhado } from '@/components/link-compartilhado';
 import { criarCompartilhamento, alternarCompartilhamento, convidarProdutor, excluirProdutor } from './acoes';
@@ -632,7 +633,7 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
         <Link className="btn sec mini" href="/app/produtores">← Produtores</Link>
       </div>
 
-      <CabecalhoVista
+      <BannerHero imagem={FOTO_CONSULTOR}
         olho="Produtor"
         titulo={prod.nome}
         descricao={
@@ -643,6 +644,7 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
             {proximaVisita ? ` · próxima em ${dataBR(proximaVisita)}` : ''}
           </>
         }
+        tags={culturasOrdenadas.filter((c) => c !== '__sem').map((c) => nomeCultura(c))}
         acoes={
           <>
             <Tag tom={situacaoGeral.tom}>{situacaoGeral.txt}</Tag>
