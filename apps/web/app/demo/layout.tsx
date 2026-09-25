@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { LogoMarca } from '@/components/logo';
+import { LogoIcone } from '@/components/logo';
 
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
       <header className="topo">
-        <div className="marca"><LogoMarca />AgroTech <span>Assistência técnica</span></div>
+        <div className="marca"><LogoIcone />AgroTech <span>Assistência técnica</span></div>
         <div className="quem">
           <b>Vitrine</b>
           <Link href="/login" style={{ color: '#7fc6a3' }}>entrar no app</Link>

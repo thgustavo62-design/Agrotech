@@ -79,7 +79,6 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid #0a110c;
 }
 .marca { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.035em; font-size: 19px; }
-.marca svg { flex-shrink: 0; }
 .marca span { display: block; color: #7fc6a3; font-weight: 500; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; }
 .topo .quem { margin-left: auto; text-align: right; font-size: 11.5px; color: #98a39b; line-height: 1.35; }
 .topo .quem b { display: block; color: #eaefe9; font-size: 13px; font-weight: 600; }
@@ -466,7 +465,8 @@ textarea { min-height: 82px; resize: vertical; }
 .tela-auth-marca { display: flex; align-items: center; gap: 13px; }
 .tela-auth-marca b { display: block; font-size: 23px; font-weight: 800; letter-spacing: -.03em; color: #fff; }
 .tela-auth-marca span { display: block; margin-top: 1px; font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #8fd2ac; }
-.tela-auth-corpo { margin-top: auto; padding-top: 60px; max-width: 480px; }
+.tela-auth-risco { width: 40px; height: 2px; background: #4fb286; border: none; margin: 26px 0 22px; opacity: .8; }
+.tela-auth-corpo { margin-top: auto; padding-top: 34px; max-width: 480px; }
 .tela-auth-corpo h1 { font-size: 33px; line-height: 1.16; color: #fff; margin: 0 0 14px; }
 .tela-auth-corpo h1 em { font-style: normal; color: #7fe3af; }
 .tela-auth-corpo > p { font-size: 14.5px; color: #cfe3d7; margin: 0 0 30px; max-width: 400px; }
@@ -475,17 +475,20 @@ textarea { min-height: 82px; resize: vertical; }
 .recurso-auth-icone {
   flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14);
-  color: #9fe0bc;
+  background: #144536; color: #8fe0b7;
 }
 .recurso-auth b { display: block; font-size: 14px; color: #fff; font-weight: 700; }
 .recurso-auth p { margin: 2px 0 0; font-size: 12.5px; color: #bfd8ca; line-height: 1.4; }
 
 .tela-auth-lado {
   display: flex; align-items: center; justify-content: center;
-  padding: 40px 24px;
+  padding: 40px 24px; overflow-y: auto;
 }
-.tela-auth-cartao { width: 100%; max-width: 420px; }
+.tela-auth-cartao {
+  width: 100%; max-width: 420px; background: var(--papel-2);
+  border: 1px solid var(--linha); border-radius: var(--r);
+  box-shadow: var(--sombra-alta); padding: 30px;
+}
 .tela-auth-abas {
   display: flex; gap: 4px; padding: 4px;
   background: var(--papel-3); border: 1px solid var(--linha);
@@ -503,9 +506,38 @@ textarea { min-height: 82px; resize: vertical; }
 .tela-auth-cartao .btn { width: 100%; justify-content: center; margin-top: 20px; }
 .tela-auth-rodape { margin-top: 18px; text-align: center; font-size: 12.5px; color: var(--grafite); }
 
+.campo-auth { position: relative; }
+.campo-auth-icone {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  display: flex; color: var(--grafite-2); pointer-events: none;
+}
+.campo-auth input { padding-left: 34px; }
+.campo-auth-alterna {
+  position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+  display: flex; padding: 3px; border-radius: 5px; color: var(--grafite-2);
+}
+.campo-auth-alterna:hover { color: var(--folha); background: var(--papel-3); }
+
+.tela-auth-termos { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; }
+.tela-auth-termos input { width: auto; margin-top: 2px; accent-color: var(--folha); }
+.tela-auth-cartao .tela-auth-termos label { margin: 0; font-size: 12px; font-weight: 400; color: var(--grafite); text-transform: none; letter-spacing: 0; line-height: 1.5; }
+
+.tela-auth-ou {
+  display: flex; align-items: center; gap: 10px; margin: 18px 0;
+  font-size: 11.5px; color: var(--grafite-2); text-transform: uppercase; letter-spacing: .08em;
+}
+.tela-auth-ou::before, .tela-auth-ou::after { content: ""; flex: 1; height: 1px; background: var(--linha); }
+.btn-google {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 10px 0; border: 1px solid var(--linha-forte); border-radius: var(--r-p);
+  background: #fff; color: var(--tinta); font-size: 13.5px; font-weight: 700;
+}
+.btn-google:hover { background: var(--papel-3); }
+
 @media (max-width: 880px) {
   .tela-auth { grid-template-columns: 1fr; }
   .tela-auth-foto { display: none; }
+  .tela-auth-cartao { box-shadow: none; border: none; padding: 0; }
 }
 
 /* ---------- laudo ---------- */

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 import { TelaAuth } from '@/components/tela-auth';
-import { IconeAgenda, IconeLaudos, IconeProdutores } from '@/components/icones';
+import { CampoAuth, CampoSenha } from '@/components/campo-auth';
+import { IconeAgenda, IconeCadeado, IconeEmail, IconeGoogle, IconeLaudos, IconeProdutores } from '@/components/icones';
 
 export default function LoginConsultor() {
   const router = useRouter();
@@ -28,6 +29,16 @@ export default function LoginConsultor() {
     router.replace('/app');
   }
 
+  async function entrarComGoogle() {
+    setErro(null);
+    const sb = criarClienteNavegador();
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/app` },
+    });
+    if (error) setErro('Login com Google ainda não está disponível.');
+  }
+
   return (
     <TelaAuth
       imagem="/banners/tecnico-campo.jpg"
@@ -46,17 +57,21 @@ export default function LoginConsultor() {
       <form onSubmit={entrar}>
         <label>
           E-mail
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <CampoAuth icone={<IconeEmail width={16} height={16} />} type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label>
           Senha
-          <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
+          <CampoSenha icone={<IconeCadeado width={16} height={16} />} placeholder="Sua senha" value={senha} onChange={(e) => setSenha(e.target.value)} required />
         </label>
         {erro ? <p style={{ color: 'var(--c-mb)', fontSize: 13, marginTop: 12 }}>{erro}</p> : null}
         <button type="submit" className="btn verde" disabled={carregando}>
           {carregando ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
+      <div className="tela-auth-ou">ou</div>
+      <button type="button" className="btn-google" onClick={entrarComGoogle}>
+        <IconeGoogle /> Continuar com Google
+      </button>
       <p className="tela-auth-rodape">
         Só quer ver? <Link href="/demo">abrir a vitrine</Link>.
       </p>

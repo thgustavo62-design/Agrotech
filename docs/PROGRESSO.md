@@ -523,6 +523,89 @@ agora, sem inventar "+X%" antes de existir dado de verdade.
       padrão SVG antigo (nenhuma tela ficou sem opção). Prop conectado nas
       22 telas que já usavam `BannerHero`. Commit `d8e2555`.
 
+---
+
+## Nova marca + telas de login/cadastro (2026-09-25)
+
+Gustavo mandou um mockup de referência (tela de login/cadastro dividida:
+foto + lista de recursos à esquerda, cartão de formulário com abas Entrar/
+Criar conta à direita) e uma nova logo (folha) gerada por IA, pedindo pra
+seguir esse visual "em tudo" e usar banco de imagens gratuitas.
+
+- [x] **Marca nova (recriada à mão, versão inicial).** Enquanto o PNG da
+      logo não estava disponível como arquivo (só colado no chat, sem
+      caminho extraível neste ambiente), recriei o motivo "folha" como um
+      SVG próprio desenhado à mão em `components/logo.tsx`.
+- [x] **Marca nova (logo real, versão final).** Gustavo colocou os dois
+      PNGs em `Downloads/` e pediu pra extrair e usar de verdade. Como o
+      `sharp` já está disponível (dependência do Next.js), rodei um script
+      único (`extrair-logo.js`, descartado depois de usar) que recorta só a
+      região do ícone (sem a palavra "AgroTech"), corta as bordas até o
+      conteúdo (`trim`) e remove o fundo branco por canal alpha
+      (`alpha = 255 − min(R,G,B)` por pixel — funciona bem porque o ícone
+      não tem branco puro na própria arte; testado compondo sobre fundo
+      escuro antes de aceitar, sem halo visível). Resultado:
+      `apps/web/public/logo-icone.png` (320×283, ~42KB, fundo transparente).
+      `components/logo.tsx` agora exporta `LogoIcone` (via `next/image`,
+      usa o PNG real) para todo lugar que renderiza no navegador — barra do
+      consultor, do produtor, vitrine `/demo`, `/termos`, `/privacidade` e
+      a vitrine de login — substituindo o quadrado rotacionado antigo **e**
+      a versão SVG desenhada à mão. O favicon/apple-icon/ícones PWA também
+      passaram a usar o PNG real (embutido como data URI dentro do
+      `ImageResponse` via `lib/logo-buffer.ts`, já que um `<img src="/...">`
+      relativo não é resolvido pelo Satori em tempo de requisição). Fora de
+      propósito: `app/r/[token]` (impressão de campo) — tem marca própria
+      em mono, pensada pra imprimir em papel, sem ícone.
+- [x] **Login/cadastro em vitrine dividida.** `components/tela-auth.tsx`
+      (`TelaAuth`) — foto real à esquerda com gradiente verde da marca por
+      cima (mesmo tratamento do `BannerHero`) + headline + lista de
+      recursos (ícone + título + descrição, reaproveitando `icones.tsx`
+      existente); cartão de formulário à direita, com abas Entrar/Criar
+      conta quando aplicável. Abaixo de 880px a foto some — sobra só o
+      cartão, decoração não é prioridade no celular numa tela de entrar.
+      Aplicado em `/login`, `/cadastro` (+ estado de confirmação de
+      e-mail), `/produtor/login` e `/produtor/aceitar` (reaproveita
+      `FOTO_PRODUTOR`, já existente desde o redesign anterior).
+- [x] **Foto nova.** `apps/web/public/banners/tecnico-campo.jpg` (Pexels,
+      licença comercial livre, sem exigência de crédito — mesma licença já
+      verificada pros banners do redesign anterior) — homem em campo com
+      tablet, usado no lado consultor da vitrine de login/cadastro.
+- Verificação: `tsc --noEmit` limpo, `next build` zero warning,
+  `test:core` 45/45, smoke test local + em produção (todas as rotas
+  novas, `/icon` e `/apple-icon` respondendo `image/png`). Commit
+  `3fbb2a2`.
+- [x] **Fidelidade ao mockup (segunda rodada).** Gustavo pediu "quero a
+      página de login igual essa" depois de ver o resultado — fechei os
+      detalhes que faltavam: ícone (pessoa/e-mail/cadeado) dentro dos
+      campos de texto (`components/campo-auth.tsx`, `CampoAuth`), botão de
+      mostrar/ocultar senha (`CampoSenha`), confirmação de senha no
+      cadastro (validada no cliente antes de enviar), risco decorativo sob
+      a marca na foto, badges dos recursos com cor sólida (antes
+      semi-transparentes, destoava do mockup). **Achado ao revisar:**
+      `.tela-auth-cartao` nunca tinha ganhado fundo/sombra própria — o
+      "cartão" branco do formulário só existia visualmente por acaso
+      (herdava o fundo da página); corrigido junto.
+- [x] **Login/cadastro com Google.** Botão "Continuar com Google" real —
+      chama `supabase.auth.signInWithOAuth({ provider: 'google' })`; só
+      funciona depois que o provedor Google for habilitado no painel do
+      Supabase (Authentication → Providers), igual ao padrão já usado pro
+      Asaas/Resend: a ação é real, só falta a credencial de produção.
+- [x] **Termos de uso e política de privacidade.** O mockup exige aceite
+      de termos pra criar conta — como as páginas não existiam, criei
+      `/termos` e `/privacidade` (`app/termos`, `app/privacidade`) com
+      conteúdo real (não é lorem ipsum) cobrindo o que o AgroTech
+      efetivamente faz com os dados hoje (isolamento financeiro
+      produtor×consultor, exportação/exclusão já implementadas na Fase
+      LGPD). **Aviso visível no rodapé de ambas as páginas:** é um texto
+      inicial da plataforma, recomenda revisão por advogado antes de
+      operação comercial formal — não é um documento jurídico definitivo.
+      Checkbox de aceite agora é obrigatório pra criar conta em `/cadastro`.
+      **Decisão de escopo:** não implementei o campo "Perfil" (seletor
+      Técnico/Produtor) que aparece no mockup de cadastro — o app real não
+      permite que produtor se autocadastre (conta de produtor só existe via
+      convite do técnico, decisão de `PRODUCT_V2.md`); um seletor ali seria
+      uma opção fantasma sem fluxo funcional por trás.
+
 **Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
 `tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke
 test a cada sub-fase, igual ao resto do projeto — sem achado novo de bug

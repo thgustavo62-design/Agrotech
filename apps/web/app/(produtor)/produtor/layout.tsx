@@ -5,7 +5,7 @@ import { contarNaoLidas } from '@/lib/notificacoes';
 import { NavProdutor } from '@/components/nav-produtor';
 import { SinoNotificacoes } from '@/components/sino-notificacoes';
 import { AvatarUsuario } from '@/components/avatar-usuario';
-import { LogoMarca } from '@/components/logo';
+import { LogoIcone } from '@/components/logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export default async function LayoutProdutor({ children }: { children: React.Rea
   return (
     <div>
       <header className="topo" style={{ flexWrap: 'wrap', rowGap: 10 }}>
-        <div className="marca"><LogoMarca />AgroTech <span>Sua lavoura</span></div>
+        <div className="marca"><LogoIcone />AgroTech <span>Sua lavoura</span></div>
         <div className="quem" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <SinoNotificacoes href="/produtor/notificacoes" contagem={naoLidas} />
           <span>

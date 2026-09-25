@@ -1,10 +1,13 @@
 import { ImageResponse } from 'next/og';
-import { LogoMarca } from '@/components/logo';
+import { logoIconeDataUri } from '@/lib/logo-buffer';
 
-/** Ícone do manifest PWA, gerado sob demanda (sem binário no repo) — mesma marca de components/logo.tsx. */
+/** Ícone do manifest PWA, gerado sob demanda (sem binário duplicado no repo) — mesma marca de lib/logo-buffer.ts. */
 export async function GET(_req: Request, { params }: { params: Promise<{ size: string }> }) {
   const { size } = await params;
   const n = size === '512' ? 512 : 192;
+  const logo = await logoIconeDataUri();
+  const w = Math.round(n * 0.68);
+  const h = Math.round(w * (283 / 320));
 
   return new ImageResponse(
     (
@@ -14,7 +17,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ size: s
           background: '#0f5c43',
         }}
       >
-        <LogoMarca tamanho={n * 0.68} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logo} width={w} height={h} alt="" />
       </div>
     ),
     { width: n, height: n },

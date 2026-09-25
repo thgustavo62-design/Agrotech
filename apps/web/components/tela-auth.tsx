@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LogoMarca } from '@/components/logo';
+import { LogoIcone } from '@/components/logo';
 
 export interface RecursoAuth {
   icone: ReactNode;
@@ -36,12 +36,13 @@ export function TelaAuth({
         }}
       >
         <div className="tela-auth-marca">
-          <LogoMarca tamanho={38} />
+          <LogoIcone tamanho={38} />
           <div>
             <b>AgroTech</b>
             <span>{tagline}</span>
           </div>
         </div>
+        <hr className="tela-auth-risco" />
         <div className="tela-auth-corpo">
           <h1>{headline}</h1>
           <p>{descricao}</p>

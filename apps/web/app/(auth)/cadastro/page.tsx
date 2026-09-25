@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 import { TelaAuth } from '@/components/tela-auth';
-import { IconeAgenda, IconeLaudos, IconeProdutores } from '@/components/icones';
+import { CampoAuth, CampoSenha } from '@/components/campo-auth';
+import {
+  IconeAgenda, IconeCadeado, IconeEmail, IconeGoogle, IconeLaudos, IconeProdutores, IconeUsuario,
+} from '@/components/icones';
 
 const RECURSOS = [
   { icone: <IconeAgenda />, titulo: 'Agenda de campo', descricao: 'Organize visitas e acompanhe suas atividades com praticidade.' },
@@ -15,7 +18,8 @@ const RECURSOS = [
 
 export default function Cadastro() {
   const router = useRouter();
-  const [f, setF] = useState({ nome: '', escritorio: '', crea: '', email: '', senha: '' });
+  const [f, setF] = useState({ nome: '', escritorio: '', crea: '', email: '', senha: '', confirmar: '' });
+  const [aceite, setAceite] = useState(false);
   const [estado, setEstado] = useState<'form' | 'enviando' | 'confirmar'>('form');
   const [erro, setErro] = useState<string | null>(null);
 
@@ -26,6 +30,10 @@ export default function Cadastro() {
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
+    if (f.senha !== f.confirmar) {
+      setErro('As senhas não são iguais.');
+      return;
+    }
     setEstado('enviando');
     setErro(null);
     const sb = criarClienteNavegador();
@@ -45,6 +53,16 @@ export default function Cadastro() {
       return;
     }
     setEstado('confirmar');
+  }
+
+  async function entrarComGoogle() {
+    setErro(null);
+    const sb = criarClienteNavegador();
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/app` },
+    });
+    if (error) setErro('Cadastro com Google ainda não está disponível.');
   }
 
   if (estado === 'confirmar') {
@@ -75,16 +93,40 @@ export default function Cadastro() {
       legenda="Comece a usar o AgroTech e tenha toda a gestão técnica do seu trabalho no campo."
     >
       <form onSubmit={enviar}>
-        <label>Seu nome<input required autoComplete="name" {...campo('nome')} /></label>
+        <label>
+          Seu nome
+          <CampoAuth icone={<IconeUsuario width={16} height={16} />} required autoComplete="name" placeholder="Seu nome completo" {...campo('nome')} />
+        </label>
         <label>Nome do escritório<input required autoComplete="organization" {...campo('escritorio')} /></label>
         <label>CREA<input {...campo('crea')} /></label>
-        <label>E-mail<input type="email" required autoComplete="email" {...campo('email')} /></label>
-        <label>Senha<input type="password" required minLength={8} autoComplete="new-password" {...campo('senha')} /></label>
+        <label>
+          E-mail
+          <CampoAuth icone={<IconeEmail width={16} height={16} />} type="email" required autoComplete="email" placeholder="seu@email.com" {...campo('email')} />
+        </label>
+        <label>
+          Senha
+          <CampoSenha icone={<IconeCadeado width={16} height={16} />} required minLength={8} autoComplete="new-password" placeholder="Crie uma senha" {...campo('senha')} />
+        </label>
+        <label>
+          Confirmar senha
+          <CampoSenha icone={<IconeCadeado width={16} height={16} />} required minLength={8} autoComplete="new-password" placeholder="Confirme sua senha" {...campo('confirmar')} />
+        </label>
+        <div className="tela-auth-termos">
+          <input type="checkbox" id="aceite" checked={aceite} onChange={(e) => setAceite(e.target.checked)} required />
+          <label htmlFor="aceite">
+            Li e aceito os <Link href="/termos" target="_blank">termos de uso</Link> e a{' '}
+            <Link href="/privacidade" target="_blank">política de privacidade</Link>.
+          </label>
+        </div>
         {erro ? <p style={{ color: 'var(--c-mb)', fontSize: 13, marginTop: 12 }}>{erro}</p> : null}
-        <button className="btn verde" type="submit" disabled={estado === 'enviando'}>
+        <button className="btn verde" type="submit" disabled={estado === 'enviando' || !aceite}>
           {estado === 'enviando' ? 'Criando…' : 'Criar conta'}
         </button>
       </form>
+      <div className="tela-auth-ou">ou</div>
+      <button type="button" className="btn-google" onClick={entrarComGoogle}>
+        <IconeGoogle /> Continuar com Google
+      </button>
     </TelaAuth>
   );
 }

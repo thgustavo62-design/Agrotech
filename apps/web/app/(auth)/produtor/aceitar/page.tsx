@@ -4,8 +4,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 import { TelaAuth } from '@/components/tela-auth';
+import { CampoAuth, CampoSenha } from '@/components/campo-auth';
 import { FOTO_PRODUTOR } from '@/components/banner-hero';
-import { IconeAnalises, IconeFinanceiro, IconeTalhoes } from '@/components/icones';
+import { IconeAnalises, IconeCadeado, IconeEmail, IconeFinanceiro, IconeTalhoes } from '@/components/icones';
 
 interface Resumo {
   valido: boolean;
@@ -107,9 +108,13 @@ function AceitarConviteInterno() {
       legenda={`${resumo.organizacao} liberou seu acesso ao painel de ${resumo.produtor}. Crie uma senha para entrar.`}
     >
       <form onSubmit={aceitar}>
-        <label>E-mail<input value={resumo.email ?? ''} disabled /></label>
-        <label>Senha (mínimo 10 caracteres)
-          <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={10} autoComplete="new-password" />
+        <label>
+          E-mail
+          <CampoAuth icone={<IconeEmail width={16} height={16} />} value={resumo.email ?? ''} disabled />
+        </label>
+        <label>
+          Senha (mínimo 10 caracteres)
+          <CampoSenha icone={<IconeCadeado width={16} height={16} />} value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={10} autoComplete="new-password" />
         </label>
         {erro ? <p style={{ color: 'var(--c-mb)', fontSize: 13, marginTop: 12 }}>{erro}</p> : null}
         <button className="btn verde" type="submit" disabled={estado === 'enviando'}>

@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 import { TelaAuth } from '@/components/tela-auth';
+import { CampoAuth, CampoSenha } from '@/components/campo-auth';
 import { FOTO_PRODUTOR } from '@/components/banner-hero';
-import { IconeAnalises, IconeFinanceiro, IconeTalhoes } from '@/components/icones';
+import { IconeAnalises, IconeCadeado, IconeEmail, IconeFinanceiro, IconeTalhoes } from '@/components/icones';
 
 export default function LoginProdutor() {
   const router = useRouter();
@@ -43,8 +44,14 @@ export default function LoginProdutor() {
       legenda="Entrada do produtor. O acesso é criado pelo seu técnico."
     >
       <form onSubmit={entrar}>
-        <label>E-mail<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-        <label>Senha<input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required /></label>
+        <label>
+          E-mail
+          <CampoAuth icone={<IconeEmail width={16} height={16} />} type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </label>
+        <label>
+          Senha
+          <CampoSenha icone={<IconeCadeado width={16} height={16} />} placeholder="Sua senha" value={senha} onChange={(e) => setSenha(e.target.value)} required />
+        </label>
         {erro ? <p style={{ color: 'var(--c-mb)', fontSize: 13, marginTop: 12 }}>{erro}</p> : null}
         <button className="btn verde" type="submit" disabled={carregando}>
           {carregando ? 'Entrando…' : 'Entrar'}
