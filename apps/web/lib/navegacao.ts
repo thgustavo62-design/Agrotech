@@ -66,11 +66,11 @@ export const NAVEGACAO_CONSULTOR: GrupoNav[] = [
   {
     titulo: 'Gestão',
     itens: [
-      { href: '/app/financeiro-escritorio', rotulo: 'Financeiro do escritório', icone: IconeFinanceiro, embreve: true },
+      { href: '/app/financeiro-escritorio', rotulo: 'Financeiro do escritório', icone: IconeFinanceiro },
       { href: '/app/equipe', rotulo: 'Equipe', icone: IconeEquipe, embreve: true },
       { href: '/app/tabelas', rotulo: 'Tabelas técnicas', icone: IconeTabelas },
       { href: '/app/assinatura', rotulo: 'Assinatura', icone: IconeAssinatura },
-      { href: '/app/config', rotulo: 'Configurações', icone: IconeConfig, embreve: true },
+      { href: '/app/config', rotulo: 'Configurações', icone: IconeConfig },
     ],
   },
 ];
