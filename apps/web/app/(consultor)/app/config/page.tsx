@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { Cartao } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
@@ -52,6 +53,13 @@ export default async function Config() {
           {org?.municipio ? `${org.municipio}/${org.uf ?? ''}` : 'Município não informado.'}
           {' '}Renomear o escritório ainda não é possível pelo app.
         </p>
+      </Cartao>
+
+      <Cartao olho="Sessão" titulo="Sair da conta">
+        <p className="nota" style={{ margin: '0 0 14px' }}>
+          Encerra o acesso deste dispositivo. Você pode entrar novamente a qualquer momento.
+        </p>
+        <Link href="/sair" className="btn">Sair da conta</Link>
       </Cartao>
     </>
   );
