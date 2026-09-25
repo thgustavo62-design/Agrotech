@@ -605,6 +605,14 @@ seguir esse visual "em tudo" e usar banco de imagens gratuitas.
       permite que produtor se autocadastre (conta de produtor só existe via
       convite do técnico, decisão de `PRODUCT_V2.md`); um seletor ali seria
       uma opção fantasma sem fluxo funcional por trás.
+- [x] **Logout na área do consultor.** Achado ao mexer nas telas de
+      autenticação: o lado do produtor tinha "sair" no cabeçalho desde a
+      Fase 4, mas o lado do consultor **nunca teve nenhuma forma de
+      encerrar sessão** — Gustavo pediu explicitamente. `app/(auth)/sair/
+      route.ts` (mesmo padrão do `produtor/sair` — `signOut` + redireciona
+      pro `/login`); link "sair" no cabeçalho de `/app` (ao lado do
+      nome/CREA) e cartão "Sair da conta" em `/app/config`. Commit
+      `2f33f76`.
 
 **Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
 `tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke
