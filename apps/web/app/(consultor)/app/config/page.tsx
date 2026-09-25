@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { Cartao } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
-import { salvarPerfilConsultor } from './acoes';
+import { salvarPerfilConsultor, salvarEscritorio } from './acoes';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,10 +49,23 @@ export default async function Config() {
       </Cartao>
 
       <Cartao olho="Escritório" titulo={org?.nome ?? 'Sem organização'}>
-        <p className="nota" style={{ margin: 0 }}>
-          {org?.municipio ? `${org.municipio}/${org.uf ?? ''}` : 'Município não informado.'}
-          {' '}Renomear o escritório ainda não é possível pelo app.
-        </p>
+        <form action={salvarEscritorio} className="grade g2">
+          <div className="campo">
+            <label htmlFor="org_nome">Nome do escritório</label>
+            <input id="org_nome" name="nome" defaultValue={org?.nome ?? ''} required autoComplete="off" />
+          </div>
+          <div className="campo">
+            <label htmlFor="org_municipio">Município</label>
+            <input id="org_municipio" name="municipio" defaultValue={org?.municipio ?? ''} autoComplete="off" />
+          </div>
+          <div className="campo">
+            <label htmlFor="org_uf">UF</label>
+            <input id="org_uf" name="uf" defaultValue={org?.uf ?? ''} maxLength={2} style={{ textTransform: 'uppercase' }} autoComplete="off" />
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <button className="btn verde" type="submit">Salvar escritório</button>
+          </div>
+        </form>
       </Cartao>
 
       <Cartao olho="Sessão" titulo="Sair da conta">
