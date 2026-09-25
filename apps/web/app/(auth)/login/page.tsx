@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { criarClienteNavegador } from '@/lib/supabase/client';
+import { TelaAuth } from '@/components/tela-auth';
+import { IconeAgenda, IconeLaudos, IconeProdutores } from '@/components/icones';
 
 export default function LoginConsultor() {
   const router = useRouter();
@@ -27,13 +29,20 @@ export default function LoginConsultor() {
   }
 
   return (
-    <div className="tela-login">
-      <div className="marca">AgroTech <span>Assistência técnica</span></div>
-      <p>
-        Entrada do consultor. Novo escritório? <Link href="/cadastro">criar conta</Link>.
-        <br />
-        Só quer ver? <Link href="/demo">abrir a vitrine</Link>.
-      </p>
+    <TelaAuth
+      imagem="/banners/tecnico-campo.jpg"
+      tagline="Assistência técnica"
+      headline={<>Gestão técnica, visitas, análises e laudos <em>em um só lugar.</em></>}
+      descricao="Mais produtividade para o seu dia a dia no campo com uma plataforma completa e fácil de usar."
+      recursos={[
+        { icone: <IconeAgenda />, titulo: 'Agenda de campo', descricao: 'Organize visitas e acompanhe suas atividades com praticidade.' },
+        { icone: <IconeLaudos />, titulo: 'Laudos e análises', descricao: 'Registre e gerencie análises técnicas de forma simples.' },
+        { icone: <IconeProdutores />, titulo: 'Produtores e propriedades', descricao: 'Mantenha todas as informações em um só lugar.' },
+      ]}
+      abas={{ entrarHref: '/login', criarHref: '/cadastro', ativa: 'entrar' }}
+      titulo="Entrar na sua conta"
+      legenda="Acesse o painel do seu escritório."
+    >
       <form onSubmit={entrar}>
         <label>
           E-mail
@@ -48,6 +57,9 @@ export default function LoginConsultor() {
           {carregando ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
-    </div>
+      <p className="tela-auth-rodape">
+        Só quer ver? <Link href="/demo">abrir a vitrine</Link>.
+      </p>
+    </TelaAuth>
   );
 }

@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { criarClienteNavegador } from '@/lib/supabase/client';
+import { TelaAuth } from '@/components/tela-auth';
+import { IconeAgenda, IconeLaudos, IconeProdutores } from '@/components/icones';
+
+const RECURSOS = [
+  { icone: <IconeAgenda />, titulo: 'Agenda de campo', descricao: 'Organize visitas e acompanhe suas atividades com praticidade.' },
+  { icone: <IconeLaudos />, titulo: 'Laudos e análises', descricao: 'Registre e gerencie análises técnicas de forma simples.' },
+  { icone: <IconeProdutores />, titulo: 'Produtores e propriedades', descricao: 'Mantenha todas as informações em um só lugar.' },
+];
 
 export default function Cadastro() {
   const router = useRouter();
@@ -41,21 +49,31 @@ export default function Cadastro() {
 
   if (estado === 'confirmar') {
     return (
-      <div className="tela-login">
-        <div className="marca">AgroTech <span>Assistência técnica</span></div>
-        <p>
-          Enviamos um e-mail de confirmação para <b>{f.email}</b>. Confirme e faça login — na primeira
-          entrada o app cria seu escritório e copia as tabelas de referência padrão.
-        </p>
+      <TelaAuth
+        imagem="/banners/tecnico-campo.jpg"
+        tagline="Assistência técnica"
+        headline={<>Gestão técnica, visitas, análises e laudos <em>em um só lugar.</em></>}
+        descricao="Mais produtividade para o seu dia a dia no campo com uma plataforma completa e fácil de usar."
+        recursos={RECURSOS}
+        titulo="Confirme seu e-mail"
+        legenda={`Enviamos um e-mail de confirmação para ${f.email}. Confirme e faça login — na primeira entrada o app cria seu escritório e copia as tabelas de referência padrão.`}
+      >
         <Link className="btn verde" href="/login" style={{ width: '100%', justifyContent: 'center' }}>Ir para o login</Link>
-      </div>
+      </TelaAuth>
     );
   }
 
   return (
-    <div className="tela-login">
-      <div className="marca">AgroTech <span>Assistência técnica</span></div>
-      <p>Criar escritório. Já tem conta? <Link href="/login">entrar</Link>.</p>
+    <TelaAuth
+      imagem="/banners/tecnico-campo.jpg"
+      tagline="Assistência técnica"
+      headline={<>Gestão técnica, visitas, análises e laudos <em>em um só lugar.</em></>}
+      descricao="Mais produtividade para o seu dia a dia no campo com uma plataforma completa e fácil de usar."
+      recursos={RECURSOS}
+      abas={{ entrarHref: '/login', criarHref: '/cadastro', ativa: 'criar' }}
+      titulo="Criar sua conta"
+      legenda="Comece a usar o AgroTech e tenha toda a gestão técnica do seu trabalho no campo."
+    >
       <form onSubmit={enviar}>
         <label>Seu nome<input required autoComplete="name" {...campo('nome')} /></label>
         <label>Nome do escritório<input required autoComplete="organization" {...campo('escritorio')} /></label>
@@ -67,6 +85,6 @@ export default function Cadastro() {
           {estado === 'enviando' ? 'Criando…' : 'Criar conta'}
         </button>
       </form>
-    </div>
+    </TelaAuth>
   );
 }

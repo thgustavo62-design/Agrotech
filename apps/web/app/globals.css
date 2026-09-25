@@ -78,12 +78,9 @@ a:hover { text-decoration: underline; }
   color: #eaefe9;
   border-bottom: 1px solid #0a110c;
 }
-.marca { display: flex; align-items: baseline; gap: 9px; font-weight: 800; letter-spacing: -.035em; font-size: 19px; }
-.marca::before {
-  content: ""; width: 9px; height: 9px; border-radius: 2px;
-  background: #4fb286; transform: rotate(45deg);
-}
-.marca span { color: #7fc6a3; font-weight: 500; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; }
+.marca { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.035em; font-size: 19px; }
+.marca svg { flex-shrink: 0; }
+.marca span { display: block; color: #7fc6a3; font-weight: 500; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; }
 .topo .quem { margin-left: auto; text-align: right; font-size: 11.5px; color: #98a39b; line-height: 1.35; }
 .topo .quem b { display: block; color: #eaefe9; font-size: 13px; font-weight: 600; }
 
@@ -441,17 +438,75 @@ input::placeholder { color: var(--grafite-2); }
 textarea { min-height: 82px; resize: vertical; }
 .campo { display: flex; flex-direction: column; }
 
-/* ---------- tela de login ---------- */
+/* ---------- tela de login (fallback simples, sem a vitrine) ---------- */
 .tela-login {
   max-width: 390px; margin: 12vh auto; padding: 30px;
   background: var(--papel-2); border: 1px solid var(--linha);
   border-radius: var(--r); box-shadow: var(--sombra);
 }
 .tela-login .marca { color: var(--tinta); margin-bottom: 4px; }
-.tela-login .marca::before { background: var(--folha); }
 .tela-login p { color: var(--grafite); font-size: 13px; margin: 0 0 20px; }
 .tela-login label { margin-top: 12px; }
 .tela-login .btn { width: 100%; justify-content: center; margin-top: 18px; }
+
+/* ---------- tela de autenticação (vitrine dividida — login/cadastro) ---------- */
+.tela-auth {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  background: var(--papel);
+}
+.tela-auth-foto {
+  position: relative;
+  display: flex; flex-direction: column;
+  padding: 44px 46px;
+  color: #eaf3ee;
+  background-size: cover; background-position: center;
+}
+.tela-auth-marca { display: flex; align-items: center; gap: 13px; }
+.tela-auth-marca b { display: block; font-size: 23px; font-weight: 800; letter-spacing: -.03em; color: #fff; }
+.tela-auth-marca span { display: block; margin-top: 1px; font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #8fd2ac; }
+.tela-auth-corpo { margin-top: auto; padding-top: 60px; max-width: 480px; }
+.tela-auth-corpo h1 { font-size: 33px; line-height: 1.16; color: #fff; margin: 0 0 14px; }
+.tela-auth-corpo h1 em { font-style: normal; color: #7fe3af; }
+.tela-auth-corpo > p { font-size: 14.5px; color: #cfe3d7; margin: 0 0 30px; max-width: 400px; }
+.tela-auth-recursos { display: flex; flex-direction: column; gap: 16px; }
+.recurso-auth { display: flex; align-items: flex-start; gap: 13px; }
+.recurso-auth-icone {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14);
+  color: #9fe0bc;
+}
+.recurso-auth b { display: block; font-size: 14px; color: #fff; font-weight: 700; }
+.recurso-auth p { margin: 2px 0 0; font-size: 12.5px; color: #bfd8ca; line-height: 1.4; }
+
+.tela-auth-lado {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 24px;
+}
+.tela-auth-cartao { width: 100%; max-width: 420px; }
+.tela-auth-abas {
+  display: flex; gap: 4px; padding: 4px;
+  background: var(--papel-3); border: 1px solid var(--linha);
+  border-radius: 11px; margin-bottom: 26px;
+}
+.tela-auth-aba {
+  flex: 1; text-align: center; padding: 9px 0; border-radius: 8px;
+  font-size: 13.5px; font-weight: 700; color: var(--grafite);
+}
+.tela-auth-aba:hover { text-decoration: none; }
+.tela-auth-aba[data-ativa="true"] { background: var(--folha); color: #fff; box-shadow: var(--sombra); }
+.tela-auth-cartao h1 { font-size: 22px; margin-bottom: 6px; }
+.tela-auth-cartao > p.legenda { color: var(--grafite); font-size: 13px; margin: 0 0 22px; }
+.tela-auth-cartao form label { margin-top: 12px; }
+.tela-auth-cartao .btn { width: 100%; justify-content: center; margin-top: 20px; }
+.tela-auth-rodape { margin-top: 18px; text-align: center; font-size: 12.5px; color: var(--grafite); }
+
+@media (max-width: 880px) {
+  .tela-auth { grid-template-columns: 1fr; }
+  .tela-auth-foto { display: none; }
+}
 
 /* ---------- laudo ---------- */
 .folha-a4 {

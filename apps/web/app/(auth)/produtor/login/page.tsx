@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { criarClienteNavegador } from '@/lib/supabase/client';
+import { TelaAuth } from '@/components/tela-auth';
+import { FOTO_PRODUTOR } from '@/components/banner-hero';
+import { IconeAnalises, IconeFinanceiro, IconeTalhoes } from '@/components/icones';
 
 export default function LoginProdutor() {
   const router = useRouter();
@@ -26,9 +29,19 @@ export default function LoginProdutor() {
   }
 
   return (
-    <div className="tela-login">
-      <div className="marca">AgroTech <span>Sua lavoura</span></div>
-      <p>Entrada do produtor. O acesso é criado pelo seu técnico.</p>
+    <TelaAuth
+      imagem={FOTO_PRODUTOR}
+      tagline="Sua lavoura"
+      headline={<>Seus talhões, análises e resultados <em>em um só lugar.</em></>}
+      descricao="Acompanhe o trabalho do seu técnico e a situação da sua lavoura direto do celular."
+      recursos={[
+        { icone: <IconeTalhoes />, titulo: 'Seus talhões', descricao: 'Área, cultura e situação de cada talhão da sua propriedade.' },
+        { icone: <IconeAnalises />, titulo: 'Análises de solo', descricao: 'Resultados e recomendações explicados em linguagem simples.' },
+        { icone: <IconeFinanceiro />, titulo: 'Financeiro da lavoura', descricao: 'Custos e receitas da sua produção, separados do seu técnico.' },
+      ]}
+      titulo="Entrar na sua conta"
+      legenda="Entrada do produtor. O acesso é criado pelo seu técnico."
+    >
       <form onSubmit={entrar}>
         <label>E-mail<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label>Senha<input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required /></label>
@@ -37,6 +50,6 @@ export default function LoginProdutor() {
           {carregando ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
-    </div>
+    </TelaAuth>
   );
 }

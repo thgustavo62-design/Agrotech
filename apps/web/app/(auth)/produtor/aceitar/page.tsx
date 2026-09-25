@@ -3,6 +3,9 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { criarClienteNavegador } from '@/lib/supabase/client';
+import { TelaAuth } from '@/components/tela-auth';
+import { FOTO_PRODUTOR } from '@/components/banner-hero';
+import { IconeAnalises, IconeFinanceiro, IconeTalhoes } from '@/components/icones';
 
 interface Resumo {
   valido: boolean;
@@ -11,9 +14,31 @@ interface Resumo {
   email: string | null;
 }
 
+const RECURSOS = [
+  { icone: <IconeTalhoes />, titulo: 'Seus talhões', descricao: 'Área, cultura e situação de cada talhão da sua propriedade.' },
+  { icone: <IconeAnalises />, titulo: 'Análises de solo', descricao: 'Resultados e recomendações explicados em linguagem simples.' },
+  { icone: <IconeFinanceiro />, titulo: 'Financeiro da lavoura', descricao: 'Custos e receitas da sua produção, separados do seu técnico.' },
+];
+
+function CartaoAceitar({ titulo, legenda, children }: { titulo: string; legenda?: string; children?: React.ReactNode }) {
+  return (
+    <TelaAuth
+      imagem={FOTO_PRODUTOR}
+      tagline="Sua lavoura"
+      headline={<>Seus talhões, análises e resultados <em>em um só lugar.</em></>}
+      descricao="Acompanhe o trabalho do seu técnico e a situação da sua lavoura direto do celular."
+      recursos={RECURSOS}
+      titulo={titulo}
+      legenda={legenda}
+    >
+      {children}
+    </TelaAuth>
+  );
+}
+
 export default function AceitarConvite() {
   return (
-    <Suspense fallback={<div className="tela-login"><p>Carregando…</p></div>}>
+    <Suspense fallback={<CartaoAceitar titulo="Carregando…" />}>
       <AceitarConviteInterno />
     </Suspense>
   );
@@ -68,24 +93,19 @@ function AceitarConviteInterno() {
     router.replace('/produtor');
   }
 
-  if (resumo === 'carregando') return <div className="tela-login"><p>Carregando…</p></div>;
+  if (resumo === 'carregando') return <CartaoAceitar titulo="Carregando…" />;
 
   if (!resumo || !resumo.valido) {
     return (
-      <div className="tela-login">
-        <div className="marca">AgroTech <span>Sua lavoura</span></div>
-        <p>Convite inválido, já usado ou expirado. Peça um novo ao seu técnico.</p>
-      </div>
+      <CartaoAceitar titulo="Convite inválido" legenda="Convite inválido, já usado ou expirado. Peça um novo ao seu técnico." />
     );
   }
 
   return (
-    <div className="tela-login">
-      <div className="marca">AgroTech <span>Sua lavoura</span></div>
-      <p>
-        <b>{resumo.organizacao}</b> liberou seu acesso ao painel de <b>{resumo.produtor}</b>.
-        Crie uma senha para entrar.
-      </p>
+    <CartaoAceitar
+      titulo="Criar seu acesso"
+      legenda={`${resumo.organizacao} liberou seu acesso ao painel de ${resumo.produtor}. Crie uma senha para entrar.`}
+    >
       <form onSubmit={aceitar}>
         <label>E-mail<input value={resumo.email ?? ''} disabled /></label>
         <label>Senha (mínimo 10 caracteres)
@@ -96,6 +116,6 @@ function AceitarConviteInterno() {
           {estado === 'enviando' ? 'Concluindo…' : 'Criar acesso'}
         </button>
       </form>
-    </div>
+    </CartaoAceitar>
   );
 }
