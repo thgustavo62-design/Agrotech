@@ -642,6 +642,23 @@ seguir esse visual "em tudo" e usar banco de imagens gratuitas.
       consultor/admin da própria org. Form de nome/município/UF em
       `/app/config`, grava auditoria (`escritorio.editado`, mesmo padrão
       de `perfil.editado`). Aplicada no Supabase real. Commit `6edc45c`.
+- [x] **Equipe — convidar colegas pro escritório.** Último item "em
+      breve" do grupo Gestão. Segue a decisão já registrada em
+      `PRODUCT_V2.md §2.3`: **sem permissão granular por papel** nesta
+      leva — todo integrante convidado vira `role='consultor'` (mesmo
+      acesso de hoje); `titulo` é só rótulo cosmético (Agrônomo, Técnico,
+      Assistente…), não mexe em RLS nenhuma. `0030_equipe.sql` —
+      `profiles.titulo`, tabela `convites_equipe` (mesmo desenho de
+      `agro.convites`, sem `produtor_id`) + RPCs `aceitar_convite_equipe`/
+      `convite_equipe_resumo` (mesmo padrão do convite de produtor).
+      `profiles` já tinha `select` de toda a org pro consultor
+      (`profiles_org`, 0007) — faltava `update`, adicionado restrito a
+      manter a mesma org ou zerar (saída/remoção). `/app/equipe`: lista
+      quem já está no escritório, convida por e-mail, lista/cancela
+      convites pendentes, remove integrante (zera `org_id` — no próximo
+      login a pessoa ganha um escritório novo e vazio, não perde a
+      conta). `/equipe/aceitar`: mesmo fluxo de `/produtor/aceitar`.
+      Aplicada no Supabase real. Commit `b41fd73`.
 
 **Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
 `tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke
