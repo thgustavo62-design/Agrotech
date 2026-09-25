@@ -510,6 +510,18 @@ agora, sem inventar "+X%" antes de existir dado de verdade.
       pra não perder nada) — um banner grande de decoração não combina
       com tela de digitar dado; formulário pede objetividade, não drama
       visual. `demo/tabelas` (vitrine pública) também ficou fora.
+- [x] **Sub-fase E (fotos reais) — reverte a decisão de "sem foto".**
+      Gustavo pediu explicitamente ("quero que utilize imagens") depois de
+      ver o resultado só-gradiente. Usei o **Pexels** (licença comercial
+      livre, sem exigência de crédito, confirmada em pexels.com/license) —
+      3 fotos baixadas pra `apps/web/public/banners/`: `campo-aereo.jpg`
+      (área rural aérea, lado consultor), `vale-verde.jpg` (vale verde,
+      portal do produtor), `cafe-cereja.jpg` (cereja de café, telas de
+      análise/laudo). `BannerHero` ganhou o prop opcional `imagem` — com
+      foto, aplica um gradiente verde da marca por cima
+      (`rgba(11,72,52,.90)…`) pra manter o texto legível; sem foto, cai no
+      padrão SVG antigo (nenhuma tela ficou sem opção). Prop conectado nas
+      22 telas que já usavam `BannerHero`. Commit `d8e2555`.
 
 **Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
 `tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke
