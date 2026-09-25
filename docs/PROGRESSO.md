@@ -613,6 +613,27 @@ seguir esse visual "em tudo" e usar banco de imagens gratuitas.
       pro `/login`); link "sair" no cabeçalho de `/app` (ao lado do
       nome/CREA) e cartão "Sair da conta" em `/app/config`. Commit
       `2f33f76`.
+- [x] **Visual novo nas duas visões 360º + vitrine de tabelas.** Pedido
+      genérico "continue" — apliquei o `BannerHero` em `/app/produtores/[id]`
+      e `/app/talhoes/[id]` (visões de detalhe ricas, não formulário — cabe
+      bem), preservando 100% das ações/Tags existentes, e em `demo/tabelas`
+      (vitrine pública). Formulários/edição e a conferência de laudo
+      continuam no padrão antigo, mesma razão de sempre. Commit `c4450de`.
+- [x] **Financeiro do escritório (de verdade) + selo "em breve" indevido
+      em Configurações.** Gustavo pediu "crie a aba de financeiro e
+      configurações". Achado ao investigar: `/app/config` já era real e
+      funcional — só o item do menu (`lib/navegacao.ts`) tinha ficado
+      marcado `embreve: true` por engano desde a Fase 1, mostrando o selo
+      "em breve" numa tela que já funcionava; corrigido só o flag.
+      "Financeiro do escritório" (`/app/financeiro-escritorio`) esse sim
+      era só placeholder — construído com o mesmo desenho do financeiro do
+      produtor (`0020`), mas escopado por `org_id`: contas, categorias
+      (semeadas automaticamente), lançamentos de receita/despesa com
+      comprovante e vínculo opcional a um cliente. `0028_financeiro_
+      escritorio.sql` — isolamento total na direção oposta do `0020`: só
+      consultor/admin, **nenhuma** política de produtor em nenhuma tabela.
+      Fora de escopo por ora (mesma simplificação inicial do financeiro do
+      produtor): centros de custo e orçamento. Commit `c4ee75e`.
 
 **Auditoria própria pedida por ele** (parte do mesmo pedido): rodada de
 `tsc --noEmit` + `next build` (zero warning) + `test:core` (45/45) + smoke
