@@ -5,6 +5,9 @@
 begin;
 select plan(7);
 
+-- o helper tests.autenticar() mora neste schema; ele não existe num banco limpo
+create schema if not exists tests;
+
 -- ---------------------------------------------------------------------------
 -- massa de teste: 2 orgs, 1 consultor e 1 produtor em cada, 1 talhão cada
 -- ---------------------------------------------------------------------------

@@ -30,7 +30,7 @@ describe('fila offline', () => {
     expect(String(fd.get('chave_cliente'))).toMatch(/^[0-9a-f-]{36}$/);
     const fotos = fd.getAll('fotos') as File[];
     expect(fotos).toHaveLength(1);
-    expect(fotos[0]!.name).toBe('a.jpg');
+    expect(fotos[0]!.type).toBe('image/jpeg'); // o nome do arquivo não sobrevive ao clone no Node 20 (CI); o servidor não usa o nome
     expect(fotos[0]!.size).toBe(3);
   });
 
