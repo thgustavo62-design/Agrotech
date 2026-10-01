@@ -8,7 +8,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  */
 export async function tabelasDaOrg(sb: SupabaseClient): Promise<TabelasReferencia> {
   const { data } = await sb.schema('agro').from('tabelas_referencia').select('tipo, conteudo');
-  const linhas = (data ?? []) as Array<{ tipo: string; conteudo: unknown }>;
+  return tabelasDeLinhas((data ?? []) as Array<{ tipo: string; conteudo: unknown }>);
+}
+
+/** Linhas `{ tipo, conteudo }` -> tabelas completas; o que faltar vem do PADRAO. */
+export function tabelasDeLinhas(linhas: Array<{ tipo: string; conteudo: unknown }>): TabelasReferencia {
   if (linhas.length === 0) return PADRAO;
 
   const porTipo = new Map(linhas.map((l) => [l.tipo, l.conteudo]));

@@ -436,8 +436,7 @@ export default async function FinanceiroProdutor() {
       conteudo: (
         <>
           <p className="nota" style={{ margin: '0 0 14px' }}>
-            Comparado ao gasto pago em {anoAtual}. Ainda não há seleção de safra aqui —
-            isso chega junto da Fase 7 (Produção); por ora o período é o ano civil.
+            Comparado ao gasto pago em {anoAtual} (o período é o ano civil).
           </p>
           {orcamentos.length === 0 ? (
             <Vazio titulo="Nenhum orçamento definido" />

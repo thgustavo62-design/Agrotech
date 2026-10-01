@@ -459,7 +459,7 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
       contagem: visitas.length,
       conteudo: visitas.length === 0 ? (
         <Vazio titulo="Nenhuma visita registrada para este produtor">
-          O formulário de registrar visita ainda não existe no app (ver <code>PRODUCT_AUDIT.md</code>).
+          Para registrar uma visita, abra um talhão deste produtor e use &ldquo;Registrar visita&rdquo; (aceita fotos e localização, e funciona sem sinal).
         </Vazio>
       ) : (
         <div className="lista">

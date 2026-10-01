@@ -743,7 +743,7 @@ do Gustavo abrir no navegador dele.
       `@page` A4 + `.nao-imprime` já no `globals.css`). Conteúdo vem da recomendação
       (motor_versao), nada recalculado.
 - [x] **PDF do laudo no servidor** — `packages/laudo-pdf` (pdf-lib, A4, 5 testes: PDF válido, texto bate com o emitido, paginação, caracteres fora do WinAnsi) + Edge Function `gerar-laudo-pdf` reescrita: confere JWT (consultor da org dona ou o próprio produtor), gera uma vez, grava em `recomendacoes/` + `pdf_path`, devolve URL assinada de 5 min. Botão "Baixar PDF" nos laudos do consultor e do produtor. Validado em Deno (`deno check` + execução). **Ainda não deployada** — a função importa `agro-core/src` com extensão `.js`, que o Deno só resolve com `--sloppy-imports`; testar `supabase functions deploy gerar-laudo-pdf` antes de depender dela (se o bundler reclamar, apontar o import map pro `dist/`)
-- [x] **Editor das tabelas de referência por organização (culturas)** — `/app/tabelas` mostra a cópia do escritório (`tabelasDaOrg`), edita ref/V%/m%/N/P₂O₅/K₂O por cultura e restaura a literatura. Validação no motor (`validarCultura`, 3 testes: erro bloqueia, dose que sobe em solo rico só avisa), versão incrementa, ação vai pro `audit_log`. **Também editáveis agora: faixas de interpretação (19 parâmetros) e fósforo por argila** (`validarQuebras`: 4 cortes crescentes; restaurar literatura). Faltam fertilizantes e pragas (listas — precisam de adicionar/remover linha). **Lacuna conhecida:** o link público de resultados (`/r/[token]`) ainda calcula com a tabela PADRÃO, não com a calibrada do escritório — pode divergir do laudo emitido; o certo é exibir a recomendação persistida
+- [x] **Editor das tabelas de referência por organização (culturas)** — `/app/tabelas` mostra a cópia do escritório (`tabelasDaOrg`), edita ref/V%/m%/N/P₂O₅/K₂O por cultura e restaura a literatura. Validação no motor (`validarCultura`, 3 testes: erro bloqueia, dose que sobe em solo rico só avisa), versão incrementa, ação vai pro `audit_log`. **Também editáveis agora: faixas de interpretação (19 parâmetros) e fósforo por argila** (`validarQuebras`: 4 cortes crescentes; restaurar literatura). Faltam fertilizantes e pragas (listas — precisam de adicionar/remover linha). ~~Lacuna: o link público `/r/[token]` calculava com a tabela PADRÃO~~ — resolvido na `0035` (a função devolve as tabelas da org) 
 - [ ] Tela de conferência do laudo (Fase 3) reaproveitando `interpretacao-view`
 
 ## Fase 3 — Ingestão de PDF
@@ -792,6 +792,12 @@ O PDF real tinha **0 caracteres de texto** (página inteira desenhada como vetor
 
 - [ ] Preço da commodity no painel do produtor
 - [ ] Estimativa de receita e custo da recomendação com preço real de insumo
+
+---
+
+## Auditoria 03 (01/10/2026)
+
+Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas graves de segurança no banco (`0032` leitura entre produtores, `0034` RPCs públicas), mensagens de erro invisíveis em produção, datas em UTC, link público com tabela errada, índices e uploads. Detalhe, gravidade, testes e **o que ficou sem resolver** em [AUDITORIA-03.md](AUDITORIA-03.md). Migrations `0034`–`0036`.
 
 ---
 

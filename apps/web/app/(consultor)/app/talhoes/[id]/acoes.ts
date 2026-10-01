@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { tipoDeImagem } from '@/lib/arquivos';
 import { ehControleDoNext, ErroDeUsuario, lancarDoBanco, MENSAGEM_GENERICA } from '@/lib/acao';
 
 const txt = (fd: FormData, k: string) => {
@@ -106,11 +107,15 @@ async function enviarFotos(sb: SupabaseClient, orgId: string | null, visitaId: s
   let falhas = Math.max(0, arquivos.length - MAX_FOTOS);
 
   for (const arq of arquivos.slice(0, MAX_FOTOS)) {
-    const ext = EXTENSAO[arq.type];
-    if (!ext || arq.size > MAX_BYTES) { falhas++; continue; }
+    if (arq.size > MAX_BYTES) { falhas++; continue; }
+    // o tipo declarado pelo navegador é forjável: vale o conteúdo do arquivo
+    const bytes = new Uint8Array(await arq.arrayBuffer());
+    const tipo = tipoDeImagem(bytes);
+    const ext = tipo ? EXTENSAO[tipo] : undefined;
+    if (!tipo || !ext) { falhas++; continue; }
 
     const caminho = `${orgId}/${visitaId}/${crypto.randomUUID()}.${ext}`;
-    const { error: eUp } = await sb.storage.from('visitas').upload(caminho, arq, { contentType: arq.type });
+    const { error: eUp } = await sb.storage.from('visitas').upload(caminho, bytes, { contentType: tipo });
     if (eUp) { falhas++; continue; }
 
     const { error: eFoto } = await sb.schema('agro').from('visita_fotos')

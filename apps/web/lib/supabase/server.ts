@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
@@ -29,8 +30,12 @@ export async function criarClienteServidor() {
   );
 }
 
-/** Perfil do usuário logado (id, role, org_id). null se não houver sessão. */
-export async function perfilAtual() {
+/**
+ * Perfil do usuário logado (id, role, org_id). null se não houver sessão.
+ * `cache` memoiza por requisição: layout + página + ações chamavam isto várias vezes, e cada
+ * chamada era uma ida ao Auth (getUser valida o token no servidor) mais uma consulta a profiles.
+ */
+export const perfilAtual = cache(async () => {
   const sb = await criarClienteServidor();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return null;
@@ -43,10 +48,10 @@ export async function perfilAtual() {
     .single();
 
   return data;
-}
+});
 
 /** Linha de `agro.produtores` do usuário logado (quando ele é o próprio produtor). null caso contrário. */
-export async function produtorAtual() {
+export const produtorAtual = cache(async () => {
   const sb = await criarClienteServidor();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return null;
@@ -59,4 +64,4 @@ export async function produtorAtual() {
     .maybeSingle();
 
   return data;
-}
+});

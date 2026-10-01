@@ -2,15 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { criarClienteNavegador } from '@/lib/supabase/client';
+import { buscarGlobal, type ResultadoBusca } from '@/app/(consultor)/app/busca-acoes';
 import { IconeBusca, IconeFechar } from './icones';
 
-interface Resultado {
-  grupo: string;
-  rotulo: string;
-  detalhe?: string;
-  href: string;
-}
+type Resultado = ResultadoBusca;
 
 const ACOES_RAPIDAS: Resultado[] = [
   { grupo: 'Ações rápidas', rotulo: 'Novo produtor', href: '/app/produtores/nova' },
@@ -51,33 +46,22 @@ export function PaletaComandos() {
     else { setTermo(''); setResultados([]); }
   }, [aberta]);
 
+  // só a resposta da última busca vale: uma resposta lenta de "ma" não pode sobrescrever a de "maria"
+  const ultimaBusca = useRef(0);
   const buscar = useCallback(async (q: string) => {
-    if (q.trim().length < 2) { setResultados([]); return; }
+    const minha = ++ultimaBusca.current;
+    if (q.trim().length < 2) { setResultados([]); setCarregando(false); return; }
     setCarregando(true);
-    const sb = criarClienteNavegador();
-    const padrao = `%${q.trim()}%`;
-    const [{ data: produtores }, { data: propriedades }, { data: talhoes }] = await Promise.all([
-      sb.schema('agro').from('produtores').select('id, nome').ilike('nome', padrao).limit(5),
-      sb.schema('agro').from('propriedades').select('id, nome, produtor:produtor_id(id, nome)').ilike('nome', padrao).limit(5),
-      sb.schema('agro').from('talhoes').select('id, nome, cultura, propriedade:propriedade_id(produtor:produtor_id(nome))').ilike('nome', padrao).limit(5),
-    ]);
-
-    const achados: Resultado[] = [
-      ...(produtores ?? []).map((p) => ({ grupo: 'Produtores', rotulo: p.nome as string, href: `/app/produtores/${p.id}` })),
-      ...(propriedades ?? []).map((p) => ({
-        grupo: 'Propriedades', rotulo: p.nome as string,
-        // deno-lint-ignore no-explicit-any
-        detalhe: (p as any).produtor?.nome, href: `/app/produtores/${(p as any).produtor?.id ?? ''}`,
-      })),
-      ...(talhoes ?? []).map((t) => ({
-        grupo: 'Talhões', rotulo: t.nome as string,
-        // deno-lint-ignore no-explicit-any
-        detalhe: (t as any).propriedade?.produtor?.nome, href: `/app/talhoes/${t.id}`,
-      })),
-    ];
-    setResultados(achados);
-    setRealce(0);
-    setCarregando(false);
+    try {
+      const achados = await buscarGlobal(q);
+      if (minha !== ultimaBusca.current) return;
+      setResultados(achados);
+      setRealce(0);
+    } catch {
+      if (minha === ultimaBusca.current) setResultados([]);
+    } finally {
+      if (minha === ultimaBusca.current) setCarregando(false);
+    }
   }, []);
 
   function aoDigitar(v: string) {

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { gerarRecomendacao, PADRAO } from '@agrotech/agro-core';
+import { gerarRecomendacao } from '@agrotech/agro-core';
 import { f, dataBR } from '@/lib/formato';
-import { nomeCultura, culturaDe, paraAnalise } from '@/lib/culturas';
+import { nomeCultura, paraAnalise } from '@/lib/culturas';
+import { tabelasDeLinhas } from '@/lib/tabelas-org';
 import { clientePublico } from '@/lib/supabase/publico';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,8 @@ interface Payload {
   cultura_filtro: string | null;
   rotulo: string | null;
   gerado_em: string;
+  /** tabelas calibradas do escritório dono do link (tipo -> conteúdo); o que faltar cai no PADRÃO */
+  tabelas?: Record<string, unknown>;
   analises: AnalisePayload[];
 }
 
@@ -44,6 +47,9 @@ export default async function ResultadosPublicos({ params }: { params: Promise<{
       </main>
     );
   }
+
+  // mesmas tabelas do laudo emitido (as do escritório), não as da literatura
+  const tabelas = tabelasDeLinhas(Object.entries(dados.tabelas ?? {}).map(([tipo, conteudo]) => ({ tipo, conteudo })));
 
   // agrupa por cultura
   const grupos = new Map<string, AnalisePayload[]>();
@@ -75,13 +81,13 @@ export default async function ResultadosPublicos({ params }: { params: Promise<{
         <section key={chave}>
           <h2>{nomeCultura(chave === '__sem' ? null : chave)}</h2>
           {lista.map((a) => {
-            const cultura = culturaDe(a.cultura);
+            const cultura = a.cultura ? tabelas.culturas[a.cultura] : undefined;
             const rec = gerarRecomendacao({
               analise: paraAnalise(a),
               ...(cultura ? { cultura } : {}),
               areaHa: Number(a.area_ha ?? 0),
               ...(a.prod_esperada != null ? { prodEsperadaTalhao: Number(a.prod_esperada) } : {}),
-              tabelas: PADRAO,
+              tabelas,
             });
             const r = rec.calculo;
             const V2 = cultura?.V2 ?? 60;

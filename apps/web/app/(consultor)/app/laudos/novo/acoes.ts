@@ -7,6 +7,7 @@ import { processarLaudoEscaneado } from '@/lib/processar-laudo';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
+import { ehPdf, MAX_PDF_BYTES } from '@/lib/arquivos';
 
 async function sha256Hex(buf: ArrayBuffer): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', buf);
@@ -29,8 +30,10 @@ async function enviarLaudoImpl(fd: FormData) {
   const perfil = await perfilAtual();
   if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem organização.');
 
+  if (arquivo.size > MAX_PDF_BYTES) throw new ErroDeUsuario('O PDF passa de 10 MB. Reduza o arquivo e envie de novo.');
   const arrayBuf = await arquivo.arrayBuffer();
   const buf = new Uint8Array(arrayBuf);
+  if (!ehPdf(buf)) throw new ErroDeUsuario('Este arquivo não é um PDF válido.');
   const hash = await sha256Hex(arrayBuf);
   const sb = await criarClienteServidor();
 

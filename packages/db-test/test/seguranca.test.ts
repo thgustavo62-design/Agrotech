@@ -54,6 +54,16 @@ describe('catálogo do schema agro', () => {
     expect(rows.map((r) => r.proname)).toEqual(['convite_equipe_resumo', 'convite_resumo', 'resultados_por_token']);
   });
 
+  it('toda chave estrangeira simples tem índice na coluna filha (0036)', async () => {
+    const { rows } = await db.query<{ coluna: string }>(`
+      select c.conrelid::regclass::text || '.' || a.attname as coluna
+      from pg_constraint c join pg_attribute a on a.attrelid = c.conrelid and a.attnum = c.conkey[1]
+      where c.contype = 'f' and c.connamespace = 'agro'::regnamespace and array_length(c.conkey, 1) = 1
+        and not exists (select 1 from pg_index i where i.indrelid = c.conrelid and i.indkey[0] = c.conkey[1])
+      order by 1`);
+    expect(rows.map((r) => r.coluna)).toEqual([]);
+  });
+
   it('o hook de login não é executável por authenticated', async () => {
     const { rows } = await db.query<{ ok: boolean }>(
       "select has_function_privilege('authenticated', 'agro.custom_access_token_hook(jsonb)', 'execute') as ok",
@@ -127,6 +137,23 @@ describe('funções públicas por token', () => {
       expect(await codigoDeErro(db, "select agro.resultados_por_token('00000000-0000-0000-0000-000000000000')")).toBeNull();
     });
   });
+  it('o link público devolve as tabelas calibradas do escritório dono (0035), e só dele', async () => {
+    await db.exec(`
+      insert into agro.tabelas_referencia (org_id, tipo, conteudo) values
+        ('${ID.orgA}', 'fosforo', '[{"argila":"x","min":0,"q":[1,2,3,4]}]'),
+        ('${ID.orgB}', 'fosforo', '[{"argila":"y","min":0,"q":[9,9,9,9]}]');
+      insert into agro.compartilhamentos (id, org_id, produtor_id, token)
+        values ('c0000000-0000-0000-0000-000000000001', '${ID.orgA}', '${ID.cadA}', 'cccccccc-0000-0000-0000-00000000aaaa');
+    `);
+    await comoAnon(async () => {
+      const { rows } = await db.query<{ r: { tabelas: Record<string, unknown>; produtor: string } }>(
+        "select agro.resultados_por_token('cccccccc-0000-0000-0000-00000000aaaa') as r",
+      );
+      expect(rows[0]!.r.tabelas).toEqual({ fosforo: [{ argila: 'x', min: 0, q: [1, 2, 3, 4] }] });
+      expect(JSON.stringify(rows[0]!.r)).not.toContain('"y"'); // nada da org B
+    });
+  });
+
   it('anon não aceita convite (exige sessão)', async () => {
     await comoAnon(async () => {
       expect(await codigoDeErro(db, "select agro.aceitar_convite('00000000-0000-0000-0000-000000000000')")).toBe('42501');
