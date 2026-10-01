@@ -769,8 +769,8 @@ do Gustavo abrir no navegador dele.
 - [x] **Emissão persistida** — `emitirRecomendacao` grava `agro.recomendacoes`
       (`motor_versao` + `tabelas_snapshot` + `resultado` com contexto). `LaudoView`
       renderiza da recomendação persistida, não recalcula. `0017` — GRANTs do schema `agro`.
-- [ ] Notificação ao produtor quando sai recomendação nova
-- [ ] Exclusão da conta de auth do produtor no fluxo LGPD (hoje remove só os dados de negócio)
+- [x] Notificação ao produtor quando sai recomendação nova (trigger `0024`, já em produção — item estava desatualizado)
+- [x] **Exclusão da conta de auth do produtor no fluxo LGPD** — `excluirProdutor` agora também remove a conta via service role (`lib/supabase/admin.ts`), só se for role `produtor` e sem outro cadastro ligado; resultado vai pro `audit_log` (`produtor.conta_auth_lgpd`) e falha alto se a conta ficar pendente
 
 ## Fase 5 — Campo
 

@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { clienteAdmin } from '@/lib/supabase/admin';
 import { registrar } from '@/lib/audit';
 
 /** Cria um link público de resultados para o produtor (cultura opcional). */
@@ -89,6 +91,11 @@ export async function excluirProdutor(fd: FormData) {
 
   const perfil = await perfilAtual();
   const sb = await criarClienteServidor();
+
+  // Lido antes de apagar (pela RLS do consultor): depois do delete o vínculo some.
+  const { data: produtor } = await sb.schema('agro').from('produtores').select('user_id').eq('id', id).maybeSingle();
+  const contaAuth = (produtor?.user_id as string | null | undefined) ?? null;
+
   await registrar(sb, {
     acao: 'produtor.excluido_lgpd',
     entidade: 'produtores',
@@ -98,7 +105,48 @@ export async function excluirProdutor(fd: FormData) {
 
   const { error } = await sb.schema('agro').from('produtores').delete().eq('id', id);
   if (error) throw new Error(error.message);
+
+  if (contaAuth) await eliminarContaDoProdutor(sb, contaAuth, id, perfil?.org_id ?? null);
   redirect('/app/produtores');
+}
+
+/** Elimina a conta de auth do produtor (e, por cascata, profile e notificações).
+ *  Só apaga se for conta de produtor e não estiver ligada a outro cadastro —
+ *  nunca uma conta de consultor. Falha alta: os dados de negócio já foram
+ *  apagados, então o consultor precisa saber que a conta ficou pendente. */
+async function eliminarContaDoProdutor(sb: SupabaseClient, userId: string, produtorId: string, orgId: string | null) {
+  const registrarConta = (resultado: string) =>
+    registrar(sb, {
+      acao: 'produtor.conta_auth_lgpd',
+      entidade: 'produtores',
+      entidade_id: produtorId,
+      org_id: orgId,
+      dados: { resultado },
+    });
+
+  const admin = clienteAdmin();
+  if (!admin) {
+    await registrarConta('pendente: SUPABASE_SERVICE_ROLE_KEY ausente');
+    throw new Error('Dados apagados, mas a conta de acesso do produtor não pôde ser removida (service role não configurada). Remova-a no painel do Supabase.');
+  }
+
+  const { data: perfil } = await admin.schema('agro').from('profiles').select('role').eq('id', userId).maybeSingle();
+  if (perfil && perfil.role !== 'produtor') {
+    await registrarConta('ignorada: conta não é de produtor');
+    return;
+  }
+  const { count } = await admin.schema('agro').from('produtores').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+  if (count) {
+    await registrarConta('ignorada: conta ligada a outro cadastro');
+    return;
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) {
+    await registrarConta(`pendente: ${error.message}`);
+    throw new Error(`Dados apagados, mas a conta de acesso do produtor não foi removida: ${error.message}`);
+  }
+  await registrarConta('eliminada');
 }
 
 export async function alternarCompartilhamento(fd: FormData) {
