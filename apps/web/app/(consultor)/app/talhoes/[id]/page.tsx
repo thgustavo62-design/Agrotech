@@ -11,6 +11,7 @@ import { AbasPaineis, type Painel } from '@/components/abas-paineis';
 import { InterpretacaoView } from '@/components/interpretacao-view';
 import { registrarVisita } from './acoes';
 import { CampoFotosVisita } from '@/components/campo-fotos-visita';
+import { FormFilaOffline } from '@/components/form-fila-offline';
 
 export const dynamic = 'force-dynamic';
 
@@ -264,7 +265,7 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
           )}
 
           <Cartao olho="Novo" titulo="Registrar visita" style={{ marginTop: 14 }}>
-            <form action={registrarVisita} className="grade g2">
+            <FormFilaOffline action={registrarVisita} className="grade g2" rotuloOk="Visita salva.">
               <input type="hidden" name="talhao_id" value={id} />
               <div className="campo"><label htmlFor="v_data">Data</label><input id="v_data" name="data" type="date" required /></div>
               <div className="campo"><label htmlFor="v_fenologia">Estádio fenológico</label><input id="v_fenologia" name="fenologia" autoComplete="off" /></div>
@@ -303,7 +304,7 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
               <CampoFotosVisita />
 
               <div style={{ gridColumn: '1 / -1' }}><button className="btn verde" type="submit">Salvar visita</button></div>
-            </form>
+            </FormFilaOffline>
           </Cartao>
         </>
       ),

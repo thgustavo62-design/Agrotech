@@ -20,6 +20,9 @@ export async function registrarVisita(fd: FormData) {
   const data = txt(fd, 'data');
   if (!talhao_id || !data) throw new Error('Talhão e data são obrigatórios.');
 
+  const chaveBruta = txt(fd, 'chave_cliente');
+  const chave = chaveBruta && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(chaveBruta) ? chaveBruta : null;
+
   const perfil = await perfilAtual();
   const sb = await criarClienteServidor();
 
@@ -32,7 +35,13 @@ export async function registrarVisita(fd: FormData) {
     observacoes: txt(fd, 'observacoes'),
     recomendacao: txt(fd, 'recomendacao'),
     proxima_visita: txt(fd, 'proxima_visita'),
+    chave_cliente: chave,
   }).select('id').single();
+  // reenvio da fila offline: o servidor já gravou esta visita (a resposta é que se perdeu)
+  if (error?.code === '23505' && chave) {
+    revalidatePath(`/app/talhoes/${talhao_id}`);
+    return;
+  }
   if (error) throw new Error(error.message);
 
   const ocorrencias = [1, 2, 3]

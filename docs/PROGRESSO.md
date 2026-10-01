@@ -775,7 +775,7 @@ do Gustavo abrir no navegador dele.
 ## Fase 5 — Campo
 
 - [x] **Caderno de campo com foto + geolocalização** — `registrarVisita` agora sobe até 6 fotos para `visitas/{org}/{visita}/` e grava `visita_fotos` (legenda, lat/lng). O navegador reduz cada foto (lado máx. 1600 px, JPEG 80%) antes de enviar; servidor valida tipo (jpeg/png/webp) e 8 MB; `bodySizeLimit` do Next subiu para 12 MB. A localização é a do aparelho no botão "Registrar minha localização" e vale para todas as fotos da visita (não lê EXIF por foto). Foto que falha não desfaz a visita — avisa quantas falharam. A aba Fotos mostra o ponto com link pro mapa. **Não testado contra Supabase real**; o produtor ainda não vê as fotos (policy de Storage só libera a org)
-- [ ] PWA com fila offline
+- [x] **Fila offline para o registro de visita** — `lib/fila-offline.ts` (IndexedDB; 6 testes com fake-indexeddb), `FormFilaOffline` (tenta enviar; se falhar por conexão guarda campos + fotos no aparelho) e `SincronizadorOffline` no layout do consultor (reenvia ao abrir, no evento `online` e no botão; faixa só quando há pendência; itens recusados pelo servidor ficam com o motivo e podem ser descartados). **Idempotência:** `0031` adiciona `visitas.chave_cliente` único; reenvio depois de resposta perdida vira no-op. Sem Background Sync (Safari não tem) — só reenvia com o app aberto. Offline só funciona em talhão já visitado antes (cache de leitura do SW). Só visitas entram na fila por ora. **Não testado em navegador/celular real**
 
 ## Fase 6 — Integração Campo Forte
 

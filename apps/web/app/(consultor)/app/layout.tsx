@@ -10,6 +10,7 @@ import { PaletaComandos } from '@/components/paleta-comandos';
 import { SinoNotificacoes } from '@/components/sino-notificacoes';
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { LogoIcone } from '@/components/logo';
+import { SincronizadorOffline } from '@/components/sincronizador-offline';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,7 @@ export default async function LayoutConsultor({ children }: { children: React.Re
         </div>
       </div>
       <BarraMobile />
+      <SincronizadorOffline />
     </div>
   );
 }

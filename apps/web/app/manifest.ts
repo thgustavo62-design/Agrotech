@@ -2,9 +2,8 @@ import type { MetadataRoute } from 'next';
 
 /**
  * PWA instalável — Fase 10 do pedido. Escopo deliberado (UX_ARCHITECTURE.md
- * §8.4): instalável + cache de leitura de páginas já visitadas. Fila de
- * escrita offline (registrar visita sem sinal) fica pra depois — é maior
- * que cabe numa fase de polimento.
+ * §8.4): instalável + cache de leitura de páginas já visitadas. A fila de
+ * escrita offline (registrar visita sem sinal) veio depois: lib/fila-offline.ts.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
