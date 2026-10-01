@@ -774,7 +774,7 @@ do Gustavo abrir no navegador dele.
 
 ## Fase 5 — Campo
 
-- [ ] Caderno de campo com foto + geolocalização
+- [x] **Caderno de campo com foto + geolocalização** — `registrarVisita` agora sobe até 6 fotos para `visitas/{org}/{visita}/` e grava `visita_fotos` (legenda, lat/lng). O navegador reduz cada foto (lado máx. 1600 px, JPEG 80%) antes de enviar; servidor valida tipo (jpeg/png/webp) e 8 MB; `bodySizeLimit` do Next subiu para 12 MB. A localização é a do aparelho no botão "Registrar minha localização" e vale para todas as fotos da visita (não lê EXIF por foto). Foto que falha não desfaz a visita — avisa quantas falharam. A aba Fotos mostra o ponto com link pro mapa. **Não testado contra Supabase real**; o produtor ainda não vê as fotos (policy de Storage só libera a org)
 - [ ] PWA com fila offline
 
 ## Fase 6 — Integração Campo Forte

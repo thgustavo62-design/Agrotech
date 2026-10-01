@@ -10,6 +10,7 @@ import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
 import { InterpretacaoView } from '@/components/interpretacao-view';
 import { registrarVisita } from './acoes';
+import { CampoFotosVisita } from '@/components/campo-fotos-visita';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ type LinhaAnalise = {
 };
 type LinhaRecomendacao = { id: string; analise_id: string; emitida_em: string; resultado: unknown };
 type LinhaOcorrencia = { alvo: string; valor: string | null; acima_nivel: boolean };
-type LinhaFoto = { id: string; storage_path: string; legenda: string | null };
+type LinhaFoto = { id: string; storage_path: string; legenda: string | null; lat: number | null; lng: number | null };
 type LinhaVisita = {
   id: string; data: string; fenologia: string | null; condicao: string | null;
   observacoes: string | null; recomendacao: string | null; proxima_visita: string | null;
@@ -50,7 +51,7 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
       .eq('talhao_id', id).is('arquivado_em', null)
       .order('data_coleta', { ascending: false }),
     sb.schema('agro').from('visitas')
-      .select('id, data, fenologia, condicao, observacoes, recomendacao, proxima_visita, ocorrencias:visita_ocorrencias(alvo, valor, acima_nivel), fotos:visita_fotos(id, storage_path, legenda)')
+      .select('id, data, fenologia, condicao, observacoes, recomendacao, proxima_visita, ocorrencias:visita_ocorrencias(alvo, valor, acima_nivel), fotos:visita_fotos(id, storage_path, legenda, lat, lng)')
       .eq('talhao_id', id).order('data', { ascending: false }),
     tabelasDaOrg(sb),
   ]);
@@ -299,6 +300,8 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
                 ))}
               </div>
 
+              <CampoFotosVisita />
+
               <div style={{ gridColumn: '1 / -1' }}><button className="btn verde" type="submit">Salvar visita</button></div>
             </form>
           </Cartao>
@@ -321,6 +324,13 @@ export default async function TalhaoPagina({ params }: { params: Promise<{ id: s
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {url ? <img src={url} alt={ft.legenda ?? 'foto da visita'} style={{ width: '100%', borderRadius: 6, display: 'block' }} /> : null}
                 {ft.legenda ? <p className="nota" style={{ margin: '6px 0 0' }}>{ft.legenda}</p> : null}
+                {ft.lat != null && ft.lng != null ? (
+                  <p className="nota" style={{ margin: '4px 0 0' }}>
+                    <a href={`https://www.openstreetmap.org/?mlat=${ft.lat}&mlon=${ft.lng}#map=17/${ft.lat}/${ft.lng}`} target="_blank" rel="noopener noreferrer">
+                      📍 {Number(ft.lat).toFixed(5)}, {Number(ft.lng).toFixed(5)}
+                    </a>
+                  </p>
+                ) : null}
               </div>
             );
           })}
