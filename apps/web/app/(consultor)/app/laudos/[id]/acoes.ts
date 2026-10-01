@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
+import { hojeISO } from '@/lib/formato';
 
 const num = (fd: FormData, k: string): number | null => {
   const v = String(fd.get(k) ?? '').trim().replace(',', '.');
@@ -26,7 +27,7 @@ export async function confirmarLaudo(fd: FormData) {
     talhao_id,
     documento_id,
     origem: 'pdf' as const,
-    data_coleta: String(fd.get('data_coleta') ?? '') || new Date().toISOString().slice(0, 10),
+    data_coleta: String(fd.get('data_coleta') ?? '') || hojeISO(),
     profundidade: String(fd.get('profundidade') ?? '') || '0-20',
     laboratorio: String(fd.get('laboratorio') ?? '') || null,
     argila: num(fd, 'argila'), ph: num(fd, 'ph'), mo: num(fd, 'mo'),

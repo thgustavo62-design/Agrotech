@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { criarClienteServidor, produtorAtual, perfilAtual } from '@/lib/supabase/server';
-import { f, dataBR, moeda } from '@/lib/formato';
+import { f, dataBR, moeda, hojeISO as dataDeHoje } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { resumoFinanceiro } from '@/lib/financeiro';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
@@ -30,7 +30,7 @@ export default async function PainelProdutor() {
   const sb = await criarClienteServidor();
   const [perfil, produtor] = await Promise.all([perfilAtual(), produtorAtual()]);
 
-  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeISO = dataDeHoje();
   const financeiroHabilitado = await temFeature(sb, 'financeiro');
   const [{ data: talhoes }, { data: recs }, { data: docsRaw }, { data: eventosRaw }, resumoFin] = await Promise.all([
     sb.schema('agro').from('vw_talhao_situacao')

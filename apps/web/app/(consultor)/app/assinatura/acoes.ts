@@ -53,5 +53,15 @@ export async function iniciarUpgrade(fd: FormData) {
   const dados = (await resp.json()) as { url?: string };
   if (!dados.url) throw new Error('O Asaas não devolveu o link de pagamento.');
 
-  redirect(dados.url);
+  // só segue para o domínio do Asaas por HTTPS (defesa em profundidade: o link vem de uma API externa)
+  let destino: URL;
+  try {
+    destino = new URL(dados.url);
+  } catch {
+    throw new Error('O Asaas devolveu um link inválido.');
+  }
+  if (destino.protocol !== 'https:' || !/(^|\.)asaas\.com$/.test(destino.hostname)) {
+    throw new Error('O Asaas devolveu um link fora do domínio esperado.');
+  }
+  redirect(destino.toString());
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { nomeCultura } from '@/lib/culturas';
 import { temFeature } from '@/lib/planos';
+import { hojeISO } from '@/lib/formato';
 
 /** Exporta a carteira inteira (situação por talhão) em CSV — mesma fonte de agro.vw_talhao_situacao. */
 export async function GET() {
@@ -33,7 +34,7 @@ export async function GET() {
   return new NextResponse(csv, {
     headers: {
       'content-type': 'text/csv; charset=utf-8',
-      'content-disposition': `attachment; filename="agrotech-carteira-${new Date().toISOString().slice(0, 10)}.csv"`,
+      'content-disposition': `attachment; filename="agrotech-carteira-${hojeISO()}.csv"`,
     },
   });
 }

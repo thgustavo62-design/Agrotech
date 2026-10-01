@@ -1,5 +1,5 @@
 import { criarClienteServidor } from '@/lib/supabase/server';
-import { dataBR } from '@/lib/formato';
+import { dataBR, diasDepoisISO } from '@/lib/formato';
 import { Cartao, Tag, Vazio } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
@@ -33,7 +33,7 @@ export default async function Agenda() {
   const produtores = (produtoresRaw ?? []) as Array<{ id: string; nome: string }>;
   const talhoes = (talhoesRaw ?? []) as unknown as Array<{ id: string; nome: string; propriedade: { produtor: { nome: string } | null } | null }>;
 
-  const dataMais = (dias: number) => new Date(Date.now() + dias * 86400000).toISOString().slice(0, 10);
+  const dataMais = (dias: number) => diasDepoisISO(dias);
   const hojeISO = dataMais(0);
   const amanhaISO = dataMais(1);
   const em7dias = dataMais(7);

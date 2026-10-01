@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { nomeCultura } from '@/lib/culturas';
-import { f, dataBR } from '@/lib/formato';
+import { f, dataBR, hojeISO } from '@/lib/formato';
 import { temFeature } from '@/lib/planos';
 import { Cartao } from '@/components/ui';
 import { BotaoImprimir } from '@/components/botao-imprimir';
@@ -40,7 +40,7 @@ export default async function Relatorios() {
   }
   const culturasOrdenadas = [...porCultura.entries()].sort((a, b) => b[1] - a[1]);
 
-  const hoje = dataBR(new Date().toISOString().slice(0, 10));
+  const hoje = dataBR(hojeISO());
 
   return (
     <>

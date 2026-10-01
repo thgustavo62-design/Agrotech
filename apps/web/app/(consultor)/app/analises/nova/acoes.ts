@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
+import { hojeISO } from '@/lib/formato';
 
 const NUM = (fd: FormData, k: string): number | null => {
   const v = String(fd.get(k) ?? '').trim().replace(',', '.');
@@ -15,7 +16,7 @@ export async function criarAnalise(fd: FormData) {
   const sb = await criarClienteServidor();
 
   const talhao_id = String(fd.get('talhao_id') ?? '');
-  const data_coleta = String(fd.get('data_coleta') ?? '') || new Date().toISOString().slice(0, 10);
+  const data_coleta = String(fd.get('data_coleta') ?? '') || hojeISO();
   if (!talhao_id) throw new Error('Selecione um talhão.');
 
   const { data, error } = await sb

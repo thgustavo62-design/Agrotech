@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
+import { hojeISO } from '@/lib/formato';
 
 /**
  * Exportação completa dos dados de um produtor em JSON aberto (LGPD — direito de
@@ -47,7 +48,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return new NextResponse(JSON.stringify(pacote, null, 2), {
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'content-disposition': `attachment; filename="agrotech-${nome}-${new Date().toISOString().slice(0, 10)}.json"`,
+      'content-disposition': `attachment; filename="agrotech-${nome}-${hojeISO()}.json"`,
     },
   });
 }

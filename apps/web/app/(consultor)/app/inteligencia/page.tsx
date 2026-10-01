@@ -3,7 +3,7 @@ import { calcular } from '@agrotech/agro-core';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { nomeCultura, paraAnalise } from '@/lib/culturas';
-import { f, dataBR } from '@/lib/formato';
+import { f, dataBR, diasDepoisISO } from '@/lib/formato';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 
@@ -78,7 +78,7 @@ export default async function Inteligencia({
     .sort((a, b) => (a.situacao === 'precisa_correcao' ? 0 : 1) - (b.situacao === 'precisa_correcao' ? 0 : 1));
 
   // produtores sem análise recente (180 dias, mesmo limiar de painel_consultor())
-  const hojeMenos180 = new Date(Date.now() - 180 * 86400000).toISOString().slice(0, 10);
+  const hojeMenos180 = diasDepoisISO(-180);
   const porProdutor = new Map<string, { nome: string; ultimaData: string | null }>();
   for (const t of talhoes) {
     const produtor = t.propriedade?.produtor;

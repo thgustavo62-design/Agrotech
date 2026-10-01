@@ -9,4 +9,19 @@ const nextConfig = {
   experimental: { serverActions: { bodySizeLimit: '12mb' } },
 };
 
+/**
+ * Cabeçalhos de segurança. Sem CSP de propósito: o Next injeta scripts inline e uma CSP sem
+ * nonce quebraria a hidratação; a CSP entra numa rodada própria, testada num navegador.
+ */
+const cabecalhos = [
+  { key: 'X-Frame-Options', value: 'DENY' }, // ninguém embute o app em iframe (clickjacking)
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // geolocalização é usada no caderno de campo; o resto do hardware não
+  { key: 'Permissions-Policy', value: 'geolocation=(self), camera=(), microphone=(), payment=()' },
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+];
+
+nextConfig.headers = async () => [{ source: '/:path*', headers: cabecalhos }];
+
 export default nextConfig;

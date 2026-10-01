@@ -4,7 +4,7 @@ import { calcular, nomeCorretivo, type Corretivo } from '@agrotech/agro-core';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { nomeCultura, CULTURAS, paraAnalise } from '@/lib/culturas';
-import { f, dataBR } from '@/lib/formato';
+import { f, dataBR, hojeISO as dataDeHoje } from '@/lib/formato';
 import { rotuloAtividade, linkAtividade, type AtividadeBruta } from '@/lib/atividade';
 import { ROTULO_STATUS_DOCUMENTO } from '@/lib/documentos';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
@@ -113,7 +113,7 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
     : resumos.some((x) => x.situacao === 'em_ordem') ? { txt: 'solo em ordem', tom: 'ok' }
     : { txt: 'sem análise lançada', tom: 'cinza' };
 
-  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeISO = dataDeHoje();
   const ultimaVisita = [...visitas].sort((a, b) => b.data.localeCompare(a.data))[0];
   const proximaVisita = visitas.map((v) => v.proxima_visita).filter((d): d is string => d != null && d >= hojeISO).sort()[0];
 

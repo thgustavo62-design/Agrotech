@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
 import { criarAnalise } from '@/app/(consultor)/app/analises/nova/acoes';
+import { hojeISO } from '@/lib/formato';
 
 type Talhao = { id: string; nome: string; produtor: string };
 
@@ -40,7 +41,7 @@ export function FormAnalise({ talhoes }: { talhoes: Talhao[] }) {
           </div>
           <div className="campo">
             <label htmlFor="data_coleta">Data da coleta</label>
-            <input type="date" id="data_coleta" name="data_coleta" defaultValue={new Date().toISOString().slice(0, 10)} />
+            <input type="date" id="data_coleta" name="data_coleta" defaultValue={hojeISO()} />
           </div>
           <div className="campo">
             <label htmlFor="profundidade">Profundidade <span className="un">cm</span></label>

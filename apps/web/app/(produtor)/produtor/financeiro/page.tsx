@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { criarClienteServidor, produtorAtual } from '@/lib/supabase/server';
-import { f, dataBR, moeda } from '@/lib/formato';
+import { f, dataBR, moeda, hojeISO as dataDeHoje } from '@/lib/formato';
 import { ROTULO_STATUS_LANCAMENTO, statusEfetivo, NOME_TIPO_CONTA, type StatusLancamento } from '@/lib/financeiro';
 import { temFeature } from '@/lib/planos';
 import { Cartao, Grade, Metrica, Tag, Vazio } from '@/components/ui';
@@ -75,7 +75,7 @@ export default async function FinanceiroProdutor() {
     : { data: [] as Array<{ path: string | null; signedUrl: string }> };
   const urlComprovante = new Map<string, string | null>((assinadas ?? []).map((a) => [a.path ?? '', a.signedUrl]));
 
-  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeISO = dataDeHoje();
   const mesAtual = hojeISO.slice(0, 7);
   const anoAtual = hojeISO.slice(0, 4);
 

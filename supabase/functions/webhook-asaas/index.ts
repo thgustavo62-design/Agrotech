@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('método', { status: 405 });
 
   // 1. autenticidade
-  if (!tokenEsperado || req.headers.get('asaas-access-token') !== tokenEsperado) {
+  if (!tokenEsperado || !iguaisEmTempoConstante(req.headers.get('asaas-access-token') ?? '', tokenEsperado)) {
     return new Response('não autorizado', { status: 401 });
   }
 
@@ -99,3 +99,12 @@ Deno.serve(async (req) => {
   // 3. só agora responde
   return new Response('ok', { status: 200 });
 });
+
+/** Compara sem sair no primeiro byte diferente (não vaza, pelo tempo, quantos bytes do token acertou). */
+function iguaisEmTempoConstante(a: string, b: string): boolean {
+  const ea = new TextEncoder().encode(a);
+  const eb = new TextEncoder().encode(b);
+  let diff = ea.length ^ eb.length;
+  for (let i = 0; i < Math.max(ea.length, eb.length); i++) diff |= (ea[i] ?? 0) ^ (eb[i] ?? 0);
+  return diff === 0;
+}

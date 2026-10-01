@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
-import { f, dataBR } from '@/lib/formato';
+import { f, dataBR, diasDepoisISO } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
 import { rotuloAtividade, linkAtividade, type AtividadeBruta } from '@/lib/atividade';
 import { pctTendencia } from '@/lib/tendencia';
@@ -46,7 +46,7 @@ export default async function PaginaPainel() {
   const sb = await criarClienteServidor();
   await sb.schema('agro').rpc('registrar_metricas_hoje');
 
-  const limite25dias = new Date(Date.now() - 25 * 86400000).toISOString().slice(0, 10);
+  const limite25dias = diasDepoisISO(-25);
   const [{ data }, { data: snapAnterior }] = await Promise.all([
     sb.schema('agro').rpc('painel_consultor'),
     sb.schema('agro').from('metricas_diarias')
