@@ -13,6 +13,7 @@ export { n, arred, limitar, div } from './num.js';
 export { f0, f1, f2 } from './formato.js';
 
 export { PADRAO, clonarPadrao } from './tabelas/index.js';
+export { validarCultura, type ResultadoValidacao } from './tabelas/validar.js';
 
 export {
   NOMES_CLASSE, NOMES_INV,

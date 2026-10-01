@@ -743,7 +743,7 @@ do Gustavo abrir no navegador dele.
       `@page` A4 + `.nao-imprime` já no `globals.css`). Conteúdo vem da recomendação
       (motor_versao), nada recalculado.
 - [ ] `gerar-laudo-pdf` na Edge Function (PDF server-side, hoje é impressão do navegador)
-- [ ] Editor visual das tabelas de referência por organização
+- [x] **Editor das tabelas de referência por organização (culturas)** — `/app/tabelas` mostra a cópia do escritório (`tabelasDaOrg`), edita ref/V%/m%/N/P₂O₅/K₂O por cultura e restaura a literatura. Validação no motor (`validarCultura`, 3 testes: erro bloqueia, dose que sobe em solo rico só avisa), versão incrementa, ação vai pro `audit_log`. Faltam editar faixas, fósforo, fertilizantes e pragas
 - [ ] Tela de conferência do laudo (Fase 3) reaproveitando `interpretacao-view`
 
 ## Fase 3 — Ingestão de PDF
