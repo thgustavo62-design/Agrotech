@@ -2,13 +2,14 @@
 
 import { redirect } from 'next/navigation';
 import { criarClienteServidor } from '@/lib/supabase/server';
+import { comAviso, ErroDeUsuario } from '@/lib/acao';
 
 /** Pede à Edge Function `gerar-laudo-pdf` o PDF da recomendação (gera na primeira vez,
  *  depois reaproveita) e redireciona para o link assinado. A função confere se o
  *  usuário é consultor da org dona do laudo ou o próprio produtor. */
-export async function baixarLaudoPdf(fd: FormData) {
+async function baixarLaudoPdfImpl(fd: FormData) {
   const recomendacao_id = String(fd.get('recomendacao_id') ?? '');
-  if (!recomendacao_id) throw new Error('laudo não informado');
+  if (!recomendacao_id) throw new ErroDeUsuario('laudo não informado');
 
   const sb = await criarClienteServidor();
   const { data, error } = await sb.functions.invoke<{ url?: string }>('gerar-laudo-pdf', {
@@ -22,7 +23,9 @@ export async function baixarLaudoPdf(fd: FormData) {
       const corpo = (await resposta.json().catch(() => null)) as { erro?: string } | null;
       if (corpo?.erro) motivo = corpo.erro;
     }
-    throw new Error(`Não foi possível gerar o PDF: ${motivo}`);
+    throw new ErroDeUsuario(`Não foi possível gerar o PDF: ${motivo}`);
   }
   redirect(data.url);
 }
+
+export const baixarLaudoPdf = comAviso(baixarLaudoPdfImpl);

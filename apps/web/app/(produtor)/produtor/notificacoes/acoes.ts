@@ -2,24 +2,28 @@
 
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor } from '@/lib/supabase/server';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
-export async function marcarNotificacaoLida(fd: FormData) {
+async function marcarNotificacaoLidaImpl(fd: FormData) {
   const id = String(fd.get('id') ?? '');
-  if (!id) throw new Error('Notificação não informada.');
+  if (!id) throw new ErroDeUsuario('Notificação não informada.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('notificacoes').update({ lida_em: new Date().toISOString() }).eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/notificacoes');
 }
 
-export async function marcarTodasLidas() {
+async function marcarTodasLidasImpl() {
   const sb = await criarClienteServidor();
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) throw new Error('Sessão inválida.');
+  if (!user) throw new ErroDeUsuario('Sessão inválida.');
   const { error } = await sb.schema('agro').from('notificacoes')
     .update({ lida_em: new Date().toISOString() })
     .eq('destinatario_user_id', user.id)
     .is('lida_em', null);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/notificacoes');
 }
+
+export const marcarNotificacaoLida = comAviso(marcarNotificacaoLidaImpl);
+export const marcarTodasLidas = comAviso(marcarTodasLidasImpl);

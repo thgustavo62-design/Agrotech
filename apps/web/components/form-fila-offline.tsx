@@ -12,7 +12,8 @@ import { enfileirar, ehErroDeRede } from '@/lib/fila-offline';
 export function FormFilaOffline({
   action, children, className, rotuloOk,
 }: {
-  action: (fd: FormData) => Promise<unknown>;
+  /** devolve se deu certo (não lança nem redireciona): ver registrarVisita */
+  action: (fd: FormData) => Promise<{ ok: boolean; mensagem?: string }>;
   children: ReactNode;
   className?: string;
   /** mensagem de sucesso, ex.: "Visita salva." */
@@ -31,8 +32,12 @@ export function FormFilaOffline({
     setBusy(true);
     setMsg(null);
     try {
-      await action(fd);
-      setMsg({ tom: 'ok', txt: rotuloOk });
+      const r = await action(fd);
+      if (!r.ok) {
+        setMsg({ tom: 'erro', txt: r.mensagem ?? 'Não foi possível salvar.' });
+        return;
+      }
+      setMsg({ tom: r.mensagem ? 'fila' : 'ok', txt: r.mensagem ?? rotuloOk });
       setGeracao((g) => g + 1);
     } catch (err) {
       if (ehErroDeRede(err)) {

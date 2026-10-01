@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor, produtorAtual } from '@/lib/supabase/server';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 const txt = (fd: FormData, k: string) => {
   const v = String(fd.get(k) ?? '').trim();
@@ -16,21 +17,21 @@ const num = (fd: FormData, k: string) => {
 
 async function exigirProdutor() {
   const produtor = await produtorAtual();
-  if (!produtor) throw new Error('Sessão sem produtor associado.');
+  if (!produtor) throw new ErroDeUsuario('Sessão sem produtor associado.');
   return produtor;
 }
 
 /** Cria um lançamento (receita ou despesa), com comprovante opcional. */
-export async function criarLancamento(fd: FormData) {
+async function criarLancamentoImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const tipo = String(fd.get('tipo') ?? '');
   const descricao = txt(fd, 'descricao');
   const valor = num(fd, 'valor');
   const data = txt(fd, 'data');
-  if (tipo !== 'receita' && tipo !== 'despesa') throw new Error('Selecione receita ou despesa.');
-  if (!descricao) throw new Error('Descreva o lançamento.');
-  if (valor == null || valor < 0) throw new Error('Informe um valor válido.');
-  if (!data) throw new Error('Informe a data.');
+  if (tipo !== 'receita' && tipo !== 'despesa') throw new ErroDeUsuario('Selecione receita ou despesa.');
+  if (!descricao) throw new ErroDeUsuario('Descreva o lançamento.');
+  if (valor == null || valor < 0) throw new ErroDeUsuario('Informe um valor válido.');
+  if (!data) throw new ErroDeUsuario('Informe a data.');
 
   const sb = await criarClienteServidor();
 
@@ -43,7 +44,7 @@ export async function criarLancamento(fd: FormData) {
     const { error } = await sb.storage.from('financeiro').upload(caminho, buf, {
       contentType: arquivo.type || undefined,
     });
-    if (error) throw new Error('Falha ao enviar o comprovante: ' + error.message);
+    if (error) throw new ErroDeUsuario('Falha ao enviar o comprovante: ' + error.message);
     comprovante_path = caminho;
   }
 
@@ -62,35 +63,35 @@ export async function criarLancamento(fd: FormData) {
     observacao: txt(fd, 'observacao'),
     comprovante_path,
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/financeiro');
 }
 
 /** Muda o status de um lançamento (pago / pendente / cancelado). */
-export async function mudarStatusLancamento(fd: FormData) {
+async function mudarStatusLancamentoImpl(fd: FormData) {
   await exigirProdutor();
   const id = String(fd.get('id') ?? '');
   const status = String(fd.get('status') ?? '');
   if (!id || !['pendente', 'pago', 'atrasado', 'cancelado'].includes(status)) {
-    throw new Error('Dados inválidos.');
+    throw new ErroDeUsuario('Dados inválidos.');
   }
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_lancamentos').update({ status }).eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/financeiro');
 }
 
-export async function excluirLancamento(fd: FormData) {
+async function excluirLancamentoImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const id = String(fd.get('id') ?? '');
-  if (!id) throw new Error('Lançamento não informado.');
+  if (!id) throw new ErroDeUsuario('Lançamento não informado.');
   const sb = await criarClienteServidor();
 
   const { data: lanc } = await sb.schema('agro').from('financeiro_lancamentos')
     .select('comprovante_path').eq('id', id).eq('produtor_id', produtor.id).maybeSingle();
 
   const { error } = await sb.schema('agro').from('financeiro_lancamentos').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
 
   if (lanc?.comprovante_path) {
     await sb.storage.from('financeiro').remove([lanc.comprovante_path]).catch(() => {});
@@ -98,10 +99,10 @@ export async function excluirLancamento(fd: FormData) {
   revalidatePath('/produtor/financeiro');
 }
 
-export async function criarConta(fd: FormData) {
+async function criarContaImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const nome = txt(fd, 'nome');
-  if (!nome) throw new Error('Informe o nome da conta.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome da conta.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_contas').insert({
     produtor_id: produtor.id,
@@ -109,30 +110,30 @@ export async function criarConta(fd: FormData) {
     tipo: txt(fd, 'tipo') ?? 'corrente',
     saldo_inicial: num(fd, 'saldo_inicial') ?? 0,
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/financeiro');
 }
 
-export async function criarCategoria(fd: FormData) {
+async function criarCategoriaImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const nome = txt(fd, 'nome');
   const tipo = String(fd.get('tipo') ?? '');
-  if (!nome) throw new Error('Informe o nome da categoria.');
-  if (tipo !== 'receita' && tipo !== 'despesa') throw new Error('Selecione receita ou despesa.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome da categoria.');
+  if (tipo !== 'receita' && tipo !== 'despesa') throw new ErroDeUsuario('Selecione receita ou despesa.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_categorias').insert({
     produtor_id: produtor.id,
     nome,
     tipo,
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/financeiro');
 }
 
-export async function criarCentroCusto(fd: FormData) {
+async function criarCentroCustoImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const nome = txt(fd, 'nome');
-  if (!nome) throw new Error('Informe o nome do centro de custo.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome do centro de custo.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_centros_custo').insert({
     produtor_id: produtor.id,
@@ -140,32 +141,41 @@ export async function criarCentroCusto(fd: FormData) {
     propriedade_id: txt(fd, 'propriedade_id'),
     talhao_id: txt(fd, 'talhao_id'),
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/financeiro');
 }
 
-export async function criarOrcamento(fd: FormData) {
+async function criarOrcamentoImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const categoria_id = txt(fd, 'categoria_id');
   const valor_planejado = num(fd, 'valor_planejado');
-  if (!categoria_id) throw new Error('Selecione a categoria.');
-  if (valor_planejado == null || valor_planejado <= 0) throw new Error('Informe um valor planejado válido.');
+  if (!categoria_id) throw new ErroDeUsuario('Selecione a categoria.');
+  if (valor_planejado == null || valor_planejado <= 0) throw new ErroDeUsuario('Informe um valor planejado válido.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_orcamentos').insert({
     produtor_id: produtor.id,
     categoria_id,
     valor_planejado,
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/financeiro');
 }
 
-export async function excluirOrcamento(fd: FormData) {
+async function excluirOrcamentoImpl(fd: FormData) {
   await exigirProdutor();
   const id = String(fd.get('id') ?? '');
-  if (!id) throw new Error('Orçamento não informado.');
+  if (!id) throw new ErroDeUsuario('Orçamento não informado.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_orcamentos').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/financeiro');
 }
+
+export const criarLancamento = comAviso(criarLancamentoImpl);
+export const mudarStatusLancamento = comAviso(mudarStatusLancamentoImpl);
+export const excluirLancamento = comAviso(excluirLancamentoImpl);
+export const criarConta = comAviso(criarContaImpl);
+export const criarCategoria = comAviso(criarCategoriaImpl);
+export const criarCentroCusto = comAviso(criarCentroCustoImpl);
+export const criarOrcamento = comAviso(criarOrcamentoImpl);
+export const excluirOrcamento = comAviso(excluirOrcamentoImpl);

@@ -6,6 +6,7 @@ import { extrairDeTexto } from '@agrotech/agro-core/parsers';
 import { processarLaudoEscaneado } from '@/lib/processar-laudo';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 async function sha256Hex(buf: ArrayBuffer): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', buf);
@@ -18,15 +19,15 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
  * duas chamam o mesmo parser de `@agrotech/agro-core/parsers`, então o
  * resultado é idêntico; aqui só não depende de webhook configurado.
  */
-export async function enviarLaudo(fd: FormData) {
+async function enviarLaudoImpl(fd: FormData) {
   const arquivo = fd.get('arquivo');
-  if (!(arquivo instanceof File) || arquivo.size === 0) throw new Error('Selecione um arquivo PDF.');
+  if (!(arquivo instanceof File) || arquivo.size === 0) throw new ErroDeUsuario('Selecione um arquivo PDF.');
   if (arquivo.type && arquivo.type !== 'application/pdf' && !arquivo.name.toLowerCase().endsWith('.pdf')) {
-    throw new Error('Envie um arquivo PDF.');
+    throw new ErroDeUsuario('Envie um arquivo PDF.');
   }
 
   const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new Error('Sessão sem organização.');
+  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem organização.');
 
   const arrayBuf = await arquivo.arrayBuffer();
   const buf = new Uint8Array(arrayBuf);
@@ -41,7 +42,7 @@ export async function enviarLaudo(fd: FormData) {
 
   const caminho = `${perfil.org_id}/_/${crypto.randomUUID()}.pdf`;
   const { error: eUpload } = await sb.storage.from('laudos').upload(caminho, buf, { contentType: 'application/pdf' });
-  if (eUpload) throw new Error('Falha no upload: ' + eUpload.message);
+  if (eUpload) throw new ErroDeUsuario('Falha no upload: ' + eUpload.message);
 
   const { data: doc, error: eInsert } = await sb
     .schema('agro').from('documentos')
@@ -54,7 +55,7 @@ export async function enviarLaudo(fd: FormData) {
       status: 'extraindo',
     })
     .select('id').single();
-  if (eInsert) throw new Error(eInsert.message);
+  if (eInsert) lancarDoBanco(eInsert);
 
   await registrar(sb, {
     acao: 'laudo.enviado', entidade: 'documentos', entidade_id: doc.id,
@@ -92,3 +93,5 @@ export async function enviarLaudo(fd: FormData) {
 
   redirect(`/app/laudos/${doc.id}`);
 }
+
+export const enviarLaudo = comAviso(enviarLaudoImpl);

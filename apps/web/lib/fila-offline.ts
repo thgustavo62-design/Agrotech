@@ -106,10 +106,15 @@ export interface ResultadoSync {
  * (o resto espera); erro do servidor marca o item e segue para o próximo.
  */
 export async function sincronizar(enviar: (fd: FormData) => Promise<unknown>): Promise<ResultadoSync> {
+  // a server action devolve { ok: false, mensagem } quando o servidor recusa; vira erro para cair na mesma via
+  const enviarOuFalhar = async (fd: FormData) => {
+    const r = (await enviar(fd)) as { ok?: boolean; mensagem?: string } | undefined;
+    if (r && r.ok === false) throw new Error(r.mensagem ?? 'O servidor recusou o envio.');
+  };
   const r: ResultadoSync = { enviadas: 0, recusadas: 0, semRede: false };
   for (const item of await listar()) {
     try {
-      await enviar(paraFormData(item));
+      await enviarOuFalhar(paraFormData(item));
       await remover(item.id);
       r.enviadas++;
     } catch (e) {

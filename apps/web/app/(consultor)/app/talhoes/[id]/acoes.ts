@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { ehControleDoNext, ErroDeUsuario, lancarDoBanco, MENSAGEM_GENERICA } from '@/lib/acao';
 
 const txt = (fd: FormData, k: string) => {
   const v = String(fd.get(k) ?? '').trim();
@@ -15,10 +16,10 @@ const txt = (fd: FormData, k: string) => {
  * Até 3 ocorrências fixas no mesmo form (sem lista dinâmica — simplificação
  * documentada em PROGRESSO.md; a maioria das visitas registra poucos alvos).
  */
-export async function registrarVisita(fd: FormData) {
+async function registrarVisitaImpl(fd: FormData): Promise<string | void> {
   const talhao_id = String(fd.get('talhao_id') ?? '');
   const data = txt(fd, 'data');
-  if (!talhao_id || !data) throw new Error('Talhão e data são obrigatórios.');
+  if (!talhao_id || !data) throw new ErroDeUsuario('Talhão e data são obrigatórios.');
 
   const chaveBruta = txt(fd, 'chave_cliente');
   const chave = chaveBruta && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(chaveBruta) ? chaveBruta : null;
@@ -42,7 +43,7 @@ export async function registrarVisita(fd: FormData) {
     revalidatePath(`/app/talhoes/${talhao_id}`);
     return;
   }
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
 
   const ocorrencias = [1, 2, 3]
     .map((i) => ({ alvo: txt(fd, `oc${i}_alvo`), valor: txt(fd, `oc${i}_valor`), acima_nivel: fd.get(`oc${i}_acima`) === 'on' }))
@@ -52,13 +53,32 @@ export async function registrarVisita(fd: FormData) {
     const { error: eOc } = await sb.schema('agro').from('visita_ocorrencias').insert(
       ocorrencias.map((o) => ({ visita_id: visita.id, alvo: o.alvo, valor: o.valor, acima_nivel: o.acima_nivel })),
     );
-    if (eOc) throw new Error(eOc.message);
+    if (eOc) lancarDoBanco(eOc);
   }
 
   const falhas = await enviarFotos(sb, perfil?.org_id ?? null, visita.id as string, fd);
 
   revalidatePath(`/app/talhoes/${talhao_id}`);
-  if (falhas > 0) throw new Error(`Visita salva, mas ${falhas} foto(s) não foram enviadas. Abra o talhão e confira.`);
+  // visita já gravada: foto que falhou é aviso, não erro (a fila offline não pode reenviar à toa)
+  if (falhas > 0) return `Visita salva, mas ${falhas} foto(s) não foram enviadas. Abra o talhão e confira.`;
+}
+
+export type ResultadoVisita = { ok: boolean; mensagem?: string };
+
+/**
+ * Esta ação é chamada direto pelo navegador e pela fila offline, que precisam SABER se deu certo:
+ * por isso devolve um resultado em vez de redirecionar com aviso (comAviso) como as demais.
+ */
+export async function registrarVisita(fd: FormData): Promise<ResultadoVisita> {
+  try {
+    const aviso = await registrarVisitaImpl(fd);
+    return aviso ? { ok: true, mensagem: aviso } : { ok: true };
+  } catch (e) {
+    if (ehControleDoNext(e)) throw e;
+    if (e instanceof ErroDeUsuario) return { ok: false, mensagem: e.message };
+    console.error('[registrarVisita]', e);
+    return { ok: false, mensagem: MENSAGEM_GENERICA };
+  }
 }
 
 const MAX_FOTOS = 6;

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import { RegistrarSW } from '@/components/registrar-sw';
+import { AvisoFlash } from '@/components/aviso-flash';
 import './globals.css';
 
 const archivo = Archivo({
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${archivo.variable} ${plexMono.variable}`}>
       <body>
         <RegistrarSW />
+        <AvisoFlash />
         {children}
       </body>
     </html>

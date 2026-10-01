@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 const txt = (fd: FormData, k: string) => {
   const v = String(fd.get(k) ?? '').trim();
@@ -17,10 +18,10 @@ const num = (fd: FormData, k: string) => {
 };
 
 /** Cria ou edita um produtor. `id` vazio = novo. */
-export async function salvarProdutor(fd: FormData) {
+async function salvarProdutorImpl(fd: FormData) {
   const id = txt(fd, 'id');
   const nome = txt(fd, 'nome');
-  if (!nome) throw new Error('Informe o nome do produtor.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome do produtor.');
 
   const sb = await criarClienteServidor();
   const dados = {
@@ -32,28 +33,28 @@ export async function salvarProdutor(fd: FormData) {
 
   if (id) {
     const { error } = await sb.schema('agro').from('produtores').update(dados).eq('id', id);
-    if (error) throw new Error(error.message);
+    if (error) lancarDoBanco(error);
     await registrar(sb, { acao: 'produtor.editado', entidade: 'produtores', entidade_id: id, dados });
     revalidatePath(`/app/produtores/${id}`);
     redirect(`/app/produtores/${id}`);
   }
 
   const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new Error('Sessão sem organização.');
+  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem organização.');
   const { data, error } = await sb
     .schema('agro').from('produtores')
     .insert({ ...dados, org_id: perfil.org_id, origem: 'manual' })
     .select('id').single();
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   await registrar(sb, { acao: 'produtor.criado', entidade: 'produtores', entidade_id: data.id, org_id: perfil.org_id, dados });
   redirect(`/app/produtores/${data.id}`);
 }
 
 /** Cria uma propriedade sob um produtor. */
-export async function salvarPropriedade(fd: FormData) {
+async function salvarPropriedadeImpl(fd: FormData) {
   const produtor_id = txt(fd, 'produtor_id');
   const nome = txt(fd, 'nome');
-  if (!produtor_id || !nome) throw new Error('Produtor e nome são obrigatórios.');
+  if (!produtor_id || !nome) throw new ErroDeUsuario('Produtor e nome são obrigatórios.');
 
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('propriedades').insert({
@@ -63,18 +64,18 @@ export async function salvarPropriedade(fd: FormData) {
     uf: txt(fd, 'uf') ?? 'ES',
     area_total: num(fd, 'area_total'),
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath(`/app/produtores/${produtor_id}`);
 }
 
 /** Cria ou edita um talhão. */
-export async function salvarTalhao(fd: FormData) {
+async function salvarTalhaoImpl(fd: FormData) {
   const id = txt(fd, 'id');
   const propriedade_id = txt(fd, 'propriedade_id');
   const nome = txt(fd, 'nome');
   const cultura = txt(fd, 'cultura');
   const produtor_id = txt(fd, 'produtor_id'); // só para revalidar
-  if (!nome || !cultura) throw new Error('Nome e cultura são obrigatórios.');
+  if (!nome || !cultura) throw new ErroDeUsuario('Nome e cultura são obrigatórios.');
 
   const sb = await criarClienteServidor();
   const dados = {
@@ -90,13 +91,13 @@ export async function salvarTalhao(fd: FormData) {
 
   if (id) {
     const { error } = await sb.schema('agro').from('talhoes').update(dados).eq('id', id);
-    if (error) throw new Error(error.message);
+    if (error) lancarDoBanco(error);
     await registrar(sb, { acao: 'talhao.editado', entidade: 'talhoes', entidade_id: id, dados });
   } else {
-    if (!propriedade_id) throw new Error('Selecione a propriedade.');
+    if (!propriedade_id) throw new ErroDeUsuario('Selecione a propriedade.');
     const { data: novo, error } = await sb.schema('agro').from('talhoes')
       .insert({ ...dados, propriedade_id }).select('id').single();
-    if (error) throw new Error(error.message);
+    if (error) lancarDoBanco(error);
     await registrar(sb, { acao: 'talhao.criado', entidade: 'talhoes', entidade_id: novo?.id ?? null, dados });
   }
   if (produtor_id) {
@@ -105,3 +106,7 @@ export async function salvarTalhao(fd: FormData) {
   }
   redirect('/app/talhoes');
 }
+
+export const salvarProdutor = comAviso(salvarProdutorImpl);
+export const salvarPropriedade = comAviso(salvarPropriedadeImpl);
+export const salvarTalhao = comAviso(salvarTalhaoImpl);

@@ -5,6 +5,7 @@ import { PADRAO, validarCultura, validarQuebras, type ChaveFaixa, type Cultura, 
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { registrar } from '@/lib/audit';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 const num = (v: FormDataEntryValue | null) => Number(String(v ?? '').trim().replace(',', '.'));
 const cinco = (fd: FormData, p: string) => [0, 1, 2, 3, 4].map((i) => num(fd.get(`${p}${i}`))) as Cultura['P'];
@@ -13,8 +14,8 @@ type TipoTabela = 'culturas' | 'faixas' | 'fosforo';
 
 async function gravarTabela(tipo: TipoTabela, conteudo: unknown, acao: string, dados: Record<string, unknown> = {}) {
   const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new Error('Sessão sem escritório associado.');
-  if (perfil.role !== 'consultor' && perfil.role !== 'admin') throw new Error('Sem permissão.');
+  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem escritório associado.');
+  if (perfil.role !== 'consultor' && perfil.role !== 'admin') throw new ErroDeUsuario('Sem permissão.');
 
   const sb = await criarClienteServidor();
   const { data: atual } = await sb.schema('agro').from('tabelas_referencia')
@@ -24,7 +25,7 @@ async function gravarTabela(tipo: TipoTabela, conteudo: unknown, acao: string, d
     { org_id: perfil.org_id, tipo, conteudo, versao: (atual?.versao ?? 0) + 1 },
     { onConflict: 'org_id,tipo' },
   );
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
 
   await registrar(sb, { acao, entidade: 'tabelas_referencia', org_id: perfil.org_id, dados: { tipo, ...dados } });
   revalidatePath('/app/tabelas');
@@ -35,10 +36,10 @@ const gravarCulturas = (culturas: Record<string, Cultura>, acao: string, chave: 
 
 /** Salva as doses de uma cultura na cópia do escritório. Recomendações já emitidas
  *  não mudam: carregam o próprio tabelas_snapshot. */
-export async function salvarCultura(fd: FormData) {
+async function salvarCulturaImpl(fd: FormData) {
   const chave = String(fd.get('chave') ?? '');
   const base = PADRAO.culturas[chave];
-  if (!base) throw new Error('Cultura desconhecida.');
+  if (!base) throw new ErroDeUsuario('Cultura desconhecida.');
 
   const editada: Cultura = {
     ...base,
@@ -58,10 +59,10 @@ export async function salvarCultura(fd: FormData) {
 }
 
 /** Volta uma cultura aos valores de literatura. */
-export async function restaurarCultura(fd: FormData) {
+async function restaurarCulturaImpl(fd: FormData) {
   const chave = String(fd.get('chave') ?? '');
   const base = PADRAO.culturas[chave];
-  if (!base) throw new Error('Cultura desconhecida.');
+  if (!base) throw new ErroDeUsuario('Cultura desconhecida.');
 
   const sb = await criarClienteServidor();
   const atuais = (await tabelasDaOrg(sb)).culturas;
@@ -72,7 +73,7 @@ const quatro = (fd: FormData, p: string) => [0, 1, 2, 3].map((i) => num(fd.get(`
 
 /** Salva os pontos de corte de todas as faixas de interpretação (campos `f_<chave>_0..3`).
  *  Muda a classificação de análises FUTURAS; laudos emitidos guardam o próprio snapshot. */
-export async function salvarFaixas(fd: FormData) {
+async function salvarFaixasImpl(fd: FormData) {
   const sb = await criarClienteServidor();
   const atuais = (await tabelasDaOrg(sb)).faixas;
   const novas = { ...atuais };
@@ -89,12 +90,12 @@ export async function salvarFaixas(fd: FormData) {
   await gravarTabela('faixas', novas, 'tabela.faixas_editadas');
 }
 
-export async function restaurarFaixas() {
+async function restaurarFaixasImpl() {
   await gravarTabela('faixas', PADRAO.faixas, 'tabela.faixas_restauradas');
 }
 
 /** Salva os pontos de corte do fósforo por classe de argila (campos `p_<i>_0..3`). */
-export async function salvarFosforo(fd: FormData) {
+async function salvarFosforoImpl(fd: FormData) {
   const erros: string[] = [];
   const nova = PADRAO.fosforo.map((linha, i) => {
     const q = quatro(fd, `p_${i}_`);
@@ -105,6 +106,13 @@ export async function salvarFosforo(fd: FormData) {
   await gravarTabela('fosforo', nova, 'tabela.fosforo_editado');
 }
 
-export async function restaurarFosforo() {
+async function restaurarFosforoImpl() {
   await gravarTabela('fosforo', PADRAO.fosforo, 'tabela.fosforo_restaurado');
 }
+
+export const salvarCultura = comAviso(salvarCulturaImpl);
+export const restaurarCultura = comAviso(restaurarCulturaImpl);
+export const salvarFaixas = comAviso(salvarFaixasImpl);
+export const restaurarFaixas = comAviso(restaurarFaixasImpl);
+export const salvarFosforo = comAviso(salvarFosforoImpl);
+export const restaurarFosforo = comAviso(restaurarFosforoImpl);

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor, produtorAtual } from '@/lib/supabase/server';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 const txt = (fd: FormData, k: string) => {
   const v = String(fd.get(k) ?? '').trim();
@@ -16,14 +17,14 @@ const num = (fd: FormData, k: string) => {
 
 async function exigirProdutor() {
   const produtor = await produtorAtual();
-  if (!produtor) throw new Error('Sessão sem produtor associado.');
+  if (!produtor) throw new ErroDeUsuario('Sessão sem produtor associado.');
   return produtor;
 }
 
-export async function criarSafra(fd: FormData) {
+async function criarSafraImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const nome = txt(fd, 'nome');
-  if (!nome) throw new Error('Informe o nome da safra.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome da safra.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('safras').insert({
     produtor_id: produtor.id,
@@ -31,14 +32,14 @@ export async function criarSafra(fd: FormData) {
     inicio: txt(fd, 'inicio'),
     fim: txt(fd, 'fim'),
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/producao');
 }
 
-export async function criarProducao(fd: FormData) {
+async function criarProducaoImpl(fd: FormData) {
   const produtor = await exigirProdutor();
   const talhao_id = txt(fd, 'talhao_id');
-  if (!talhao_id) throw new Error('Selecione o talhão.');
+  if (!talhao_id) throw new ErroDeUsuario('Selecione o talhão.');
   const sb = await criarClienteServidor();
 
   const { data: talhao } = await sb.schema('agro').from('talhoes')
@@ -62,16 +63,20 @@ export async function criarProducao(fd: FormData) {
     receita_obtida: receita,
     observacao: txt(fd, 'observacao'),
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/producao');
 }
 
-export async function excluirProducao(fd: FormData) {
+async function excluirProducaoImpl(fd: FormData) {
   await exigirProdutor();
   const id = String(fd.get('id') ?? '');
-  if (!id) throw new Error('Registro não informado.');
+  if (!id) throw new ErroDeUsuario('Registro não informado.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('producao_registros').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath('/produtor/producao');
 }
+
+export const criarSafra = comAviso(criarSafraImpl);
+export const criarProducao = comAviso(criarProducaoImpl);
+export const excluirProducao = comAviso(excluirProducaoImpl);

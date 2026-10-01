@@ -81,3 +81,21 @@ describe('ehErroDeRede', () => {
     expect(ehErroDeRede(new Error('boom'))).toBe(false);
   });
 });
+
+describe('sincronizar com ação que devolve resultado', () => {
+  it('{ ok: false } é recusa do servidor: o item fica na fila com a mensagem', async () => {
+    await enfileirar(formVisita({ obs: 'x' }));
+    const enviar = vi.fn(async (_fd: FormData) => ({ ok: false, mensagem: 'Talhão e data são obrigatórios.' }));
+    const r = await sincronizar(enviar);
+    expect(r).toEqual({ enviadas: 0, recusadas: 1, semRede: false });
+    const [item] = await listar();
+    expect(item!.erro).toBe('Talhão e data são obrigatórios.');
+  });
+
+  it('{ ok: true } remove o item (inclusive com aviso de foto)', async () => {
+    await enfileirar(formVisita({ obs: 'y' }));
+    const r = await sincronizar(async (_fd: FormData) => ({ ok: true, mensagem: 'Visita salva, mas 1 foto não foi enviada.' }));
+    expect(r.enviadas).toBe(1);
+    expect(await listar()).toHaveLength(0);
+  });
+});

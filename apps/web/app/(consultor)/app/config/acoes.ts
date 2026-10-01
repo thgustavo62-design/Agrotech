@@ -3,14 +3,15 @@
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 /** Edita o próprio perfil do consultor — coberto pela policy profiles_atualiza_proprio. */
-export async function salvarPerfilConsultor(fd: FormData) {
+async function salvarPerfilConsultorImpl(fd: FormData) {
   const perfil = await perfilAtual();
-  if (!perfil) throw new Error('sessão inválida');
+  if (!perfil) throw new ErroDeUsuario('sessão inválida');
 
   const nome = String(fd.get('nome') ?? '').trim();
-  if (!nome) throw new Error('Informe seu nome.');
+  if (!nome) throw new ErroDeUsuario('Informe seu nome.');
 
   const dados = {
     nome,
@@ -21,7 +22,7 @@ export async function salvarPerfilConsultor(fd: FormData) {
 
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('profiles').update(dados).eq('id', perfil.id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
 
   await registrar(sb, {
     acao: 'perfil.editado', entidade: 'profiles', entidade_id: perfil.id, org_id: perfil.org_id,
@@ -30,13 +31,13 @@ export async function salvarPerfilConsultor(fd: FormData) {
 }
 
 /** Edita o escritório (org) — coberto pela policy orgs_atualizar (0029). */
-export async function salvarEscritorio(fd: FormData) {
+async function salvarEscritorioImpl(fd: FormData) {
   const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new Error('Sessão sem escritório associado.');
-  if (perfil.role !== 'consultor' && perfil.role !== 'admin') throw new Error('Sem permissão.');
+  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem escritório associado.');
+  if (perfil.role !== 'consultor' && perfil.role !== 'admin') throw new ErroDeUsuario('Sem permissão.');
 
   const nome = String(fd.get('nome') ?? '').trim();
-  if (!nome) throw new Error('Informe o nome do escritório.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome do escritório.');
 
   const dados = {
     nome,
@@ -46,10 +47,13 @@ export async function salvarEscritorio(fd: FormData) {
 
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('orgs').update(dados).eq('id', perfil.org_id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
 
   await registrar(sb, {
     acao: 'escritorio.editado', entidade: 'orgs', entidade_id: perfil.org_id, org_id: perfil.org_id,
   });
   revalidatePath('/app/config');
 }
+
+export const salvarPerfilConsultor = comAviso(salvarPerfilConsultorImpl);
+export const salvarEscritorio = comAviso(salvarEscritorioImpl);

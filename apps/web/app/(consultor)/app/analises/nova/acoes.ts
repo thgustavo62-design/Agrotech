@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
 import { hojeISO } from '@/lib/formato';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 const NUM = (fd: FormData, k: string): number | null => {
   const v = String(fd.get(k) ?? '').trim().replace(',', '.');
@@ -12,12 +13,12 @@ const NUM = (fd: FormData, k: string): number | null => {
   return Number.isFinite(x) ? x : null;
 };
 
-export async function criarAnalise(fd: FormData) {
+async function criarAnaliseImpl(fd: FormData) {
   const sb = await criarClienteServidor();
 
   const talhao_id = String(fd.get('talhao_id') ?? '');
   const data_coleta = String(fd.get('data_coleta') ?? '') || hojeISO();
-  if (!talhao_id) throw new Error('Selecione um talhão.');
+  if (!talhao_id) throw new ErroDeUsuario('Selecione um talhão.');
 
   const { data, error } = await sb
     .schema('agro')
@@ -40,7 +41,7 @@ export async function criarAnalise(fd: FormData) {
     .select('id')
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
 
   const perfil = await perfilAtual();
   await registrar(sb, {
@@ -50,3 +51,5 @@ export async function criarAnalise(fd: FormData) {
 
   redirect(`/app/analises/${data.id}`);
 }
+
+export const criarAnalise = comAviso(criarAnaliseImpl);

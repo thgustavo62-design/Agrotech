@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 const txt = (fd: FormData, k: string) => {
   const v = String(fd.get(k) ?? '').trim();
@@ -16,23 +17,23 @@ const num = (fd: FormData, k: string) => {
 
 async function exigirOrg() {
   const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new Error('Sessão sem escritório associado.');
+  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem escritório associado.');
   return perfil;
 }
 
 const CAMINHO = '/app/financeiro-escritorio';
 
 /** Cria um lançamento (receita ou despesa) do escritório, com comprovante opcional. */
-export async function criarLancamentoEscritorio(fd: FormData) {
+async function criarLancamentoEscritorioImpl(fd: FormData) {
   const perfil = await exigirOrg();
   const tipo = String(fd.get('tipo') ?? '');
   const descricao = txt(fd, 'descricao');
   const valor = num(fd, 'valor');
   const data = txt(fd, 'data');
-  if (tipo !== 'receita' && tipo !== 'despesa') throw new Error('Selecione receita ou despesa.');
-  if (!descricao) throw new Error('Descreva o lançamento.');
-  if (valor == null || valor < 0) throw new Error('Informe um valor válido.');
-  if (!data) throw new Error('Informe a data.');
+  if (tipo !== 'receita' && tipo !== 'despesa') throw new ErroDeUsuario('Selecione receita ou despesa.');
+  if (!descricao) throw new ErroDeUsuario('Descreva o lançamento.');
+  if (valor == null || valor < 0) throw new ErroDeUsuario('Informe um valor válido.');
+  if (!data) throw new ErroDeUsuario('Informe a data.');
 
   const sb = await criarClienteServidor();
 
@@ -45,7 +46,7 @@ export async function criarLancamentoEscritorio(fd: FormData) {
     const { error } = await sb.storage.from('financeiro-escritorio').upload(caminho, buf, {
       contentType: arquivo.type || undefined,
     });
-    if (error) throw new Error('Falha ao enviar o comprovante: ' + error.message);
+    if (error) throw new ErroDeUsuario('Falha ao enviar o comprovante: ' + error.message);
     comprovante_path = caminho;
   }
 
@@ -63,34 +64,34 @@ export async function criarLancamentoEscritorio(fd: FormData) {
     observacao: txt(fd, 'observacao'),
     comprovante_path,
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath(CAMINHO);
 }
 
-export async function mudarStatusLancamentoEscritorio(fd: FormData) {
+async function mudarStatusLancamentoEscritorioImpl(fd: FormData) {
   await exigirOrg();
   const id = String(fd.get('id') ?? '');
   const status = String(fd.get('status') ?? '');
   if (!id || !['pendente', 'pago', 'atrasado', 'cancelado'].includes(status)) {
-    throw new Error('Dados inválidos.');
+    throw new ErroDeUsuario('Dados inválidos.');
   }
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_escrit_lancamentos').update({ status }).eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath(CAMINHO);
 }
 
-export async function excluirLancamentoEscritorio(fd: FormData) {
+async function excluirLancamentoEscritorioImpl(fd: FormData) {
   const perfil = await exigirOrg();
   const id = String(fd.get('id') ?? '');
-  if (!id) throw new Error('Lançamento não informado.');
+  if (!id) throw new ErroDeUsuario('Lançamento não informado.');
   const sb = await criarClienteServidor();
 
   const { data: lanc } = await sb.schema('agro').from('financeiro_escrit_lancamentos')
     .select('comprovante_path').eq('id', id).eq('org_id', perfil.org_id).maybeSingle();
 
   const { error } = await sb.schema('agro').from('financeiro_escrit_lancamentos').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
 
   if (lanc?.comprovante_path) {
     await sb.storage.from('financeiro-escritorio').remove([lanc.comprovante_path]).catch(() => {});
@@ -98,10 +99,10 @@ export async function excluirLancamentoEscritorio(fd: FormData) {
   revalidatePath(CAMINHO);
 }
 
-export async function criarContaEscritorio(fd: FormData) {
+async function criarContaEscritorioImpl(fd: FormData) {
   const perfil = await exigirOrg();
   const nome = txt(fd, 'nome');
-  if (!nome) throw new Error('Informe o nome da conta.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome da conta.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_escrit_contas').insert({
     org_id: perfil.org_id,
@@ -109,22 +110,28 @@ export async function criarContaEscritorio(fd: FormData) {
     tipo: txt(fd, 'tipo') ?? 'corrente',
     saldo_inicial: num(fd, 'saldo_inicial') ?? 0,
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath(CAMINHO);
 }
 
-export async function criarCategoriaEscritorio(fd: FormData) {
+async function criarCategoriaEscritorioImpl(fd: FormData) {
   const perfil = await exigirOrg();
   const nome = txt(fd, 'nome');
   const tipo = String(fd.get('tipo') ?? '');
-  if (!nome) throw new Error('Informe o nome da categoria.');
-  if (tipo !== 'receita' && tipo !== 'despesa') throw new Error('Selecione receita ou despesa.');
+  if (!nome) throw new ErroDeUsuario('Informe o nome da categoria.');
+  if (tipo !== 'receita' && tipo !== 'despesa') throw new ErroDeUsuario('Selecione receita ou despesa.');
   const sb = await criarClienteServidor();
   const { error } = await sb.schema('agro').from('financeiro_escrit_categorias').insert({
     org_id: perfil.org_id,
     nome,
     tipo,
   });
-  if (error) throw new Error(error.message);
+  if (error) lancarDoBanco(error);
   revalidatePath(CAMINHO);
 }
+
+export const criarLancamentoEscritorio = comAviso(criarLancamentoEscritorioImpl);
+export const mudarStatusLancamentoEscritorio = comAviso(mudarStatusLancamentoEscritorioImpl);
+export const excluirLancamentoEscritorio = comAviso(excluirLancamentoEscritorioImpl);
+export const criarContaEscritorio = comAviso(criarContaEscritorioImpl);
+export const criarCategoriaEscritorio = comAviso(criarCategoriaEscritorioImpl);

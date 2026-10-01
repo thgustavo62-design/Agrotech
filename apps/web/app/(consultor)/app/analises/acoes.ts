@@ -6,15 +6,16 @@ import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { paraAnalise } from '@/lib/culturas';
 import { registrar } from '@/lib/audit';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 /**
  * Emite (persiste) a recomendação de uma análise em agro.recomendacoes:
  * motor_versao + snapshot das tabelas + resultado completo. É o que o produtor
  * lê depois — nada é recalculado na leitura.
  */
-export async function emitirRecomendacao(fd: FormData) {
+async function emitirRecomendacaoImpl(fd: FormData) {
   const analiseId = String(fd.get('analise_id') ?? '');
-  if (!analiseId) throw new Error('análise não informada');
+  if (!analiseId) throw new ErroDeUsuario('análise não informada');
 
   const sb = await criarClienteServidor();
   const perfil = await perfilAtual();
@@ -30,7 +31,7 @@ export async function emitirRecomendacao(fd: FormData) {
     ).eq('id', analiseId).single(),
     tabelasDaOrg(sb),
   ]);
-  if (error || !data) throw new Error('análise não encontrada');
+  if (error || !data) throw new ErroDeUsuario('análise não encontrada');
 
   // deno-lint-ignore no-explicit-any
   const t = (data as any).talhao;
@@ -79,7 +80,7 @@ export async function emitirRecomendacao(fd: FormData) {
     resultado,
     emitida_por: perfil?.id ?? null,
   }).select('id').single();
-  if (eIns) throw new Error(eIns.message);
+  if (eIns) lancarDoBanco(eIns);
 
   await registrar(sb, {
     acao: 'recomendacao.emitida',
@@ -91,3 +92,5 @@ export async function emitirRecomendacao(fd: FormData) {
 
   redirect(`/app/analises/${analiseId}/laudo`);
 }
+
+export const emitirRecomendacao = comAviso(emitirRecomendacaoImpl);
