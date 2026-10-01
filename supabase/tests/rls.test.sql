@@ -61,6 +61,11 @@ begin
   )::text, true);
 end $$;
 
+-- depois do primeiro autenticar() a sessão já é `authenticated`; sem estes grants a
+-- chamada seguinte falha com "permission denied for schema tests"
+grant usage on schema tests to authenticated, anon;
+grant execute on function tests.autenticar(uuid) to authenticated, anon;
+
 -- ---------------------------------------------------------------------------
 -- produtor A
 -- ---------------------------------------------------------------------------
