@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { garantirEscritorio } from '@/lib/onboarding';
 import { contarNaoLidas } from '@/lib/notificacoes';
@@ -10,6 +9,7 @@ import { PaletaComandos } from '@/components/paleta-comandos';
 import { SinoNotificacoes } from '@/components/sino-notificacoes';
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { LogoIcone } from '@/components/logo';
+import { BotaoSair } from '@/components/botao-sair';
 import { SincronizadorOffline } from '@/components/sincronizador-offline';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +40,7 @@ export default async function LayoutConsultor({ children }: { children: React.Re
             <b>{perfil.nome ?? 'Consultor'}</b>
             {perfil.crea ? `CREA ${perfil.crea}` : 'defina seu CREA em Config.'}
             {' · '}
-            <Link href="/sair" style={{ color: '#7fc6a3' }}>sair</Link>
+            <BotaoSair />
           </span>
           <AvatarUsuario nome={perfil.nome} />
         </div>

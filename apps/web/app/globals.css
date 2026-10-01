@@ -557,3 +557,10 @@ textarea { min-height: 82px; resize: vertical; }
   main.vista { padding: 0; max-width: none; }
   .cartao, table, .regua-linha { break-inside: avoid; }
 }
+
+/* "sair" é um <button> dentro de <form method="post"> (ver components/botao-sair.tsx), com cara de link */
+.link-sair {
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; color: #7fc6a3; cursor: pointer; text-decoration: none;
+}
+.link-sair:hover { text-decoration: underline; }

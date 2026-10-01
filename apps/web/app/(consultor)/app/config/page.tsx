@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { Cartao } from '@/components/ui';
+import { BotaoSair } from '@/components/botao-sair';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { salvarPerfilConsultor, salvarEscritorio } from './acoes';
 
@@ -72,7 +72,7 @@ export default async function Config() {
         <p className="nota" style={{ margin: '0 0 14px' }}>
           Encerra o acesso deste dispositivo. Você pode entrar novamente a qualquer momento.
         </p>
-        <Link href="/sair" className="btn">Sair da conta</Link>
+        <BotaoSair className="btn" rotulo="Sair da conta" />
       </Cartao>
     </>
   );

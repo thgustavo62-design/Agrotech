@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { contarNaoLidas } from '@/lib/notificacoes';
 import { NavProdutor } from '@/components/nav-produtor';
 import { SinoNotificacoes } from '@/components/sino-notificacoes';
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { LogoIcone } from '@/components/logo';
+import { BotaoSair } from '@/components/botao-sair';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +26,7 @@ export default async function LayoutProdutor({ children }: { children: React.Rea
           <SinoNotificacoes href="/produtor/notificacoes" contagem={naoLidas} />
           <span>
             <b style={{ display: 'block' }}>{perfil.nome ?? 'Produtor'}</b>
-            <Link href="/produtor/sair" style={{ color: '#7fc6a3' }}>sair</Link>
+            <BotaoSair action="/produtor/sair" />
           </span>
           <AvatarUsuario nome={perfil.nome} />
         </div>
