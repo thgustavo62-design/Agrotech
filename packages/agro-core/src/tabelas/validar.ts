@@ -33,3 +33,15 @@ export function validarCultura(c: Cultura): ResultadoValidacao {
   }
   return { erros, avisos };
 }
+
+/**
+ * Pontos de corte de uma faixa de interpretação: 4 valores, não negativos e
+ * estritamente crescentes (definem as 5 classes). Devolve os erros; vazio = válido.
+ * Vale também para faixas "invertidas" (Al, H+Al, m%): a ordem dos cortes continua
+ * crescente, o que inverte é o significado das classes.
+ */
+export function validarQuebras(rotulo: string, q: readonly number[]): string[] {
+  if (q.length !== 4 || q.some((x) => !ok(x) || x < 0)) return [`${rotulo}: informe 4 valores, todos ≥ 0.`];
+  if (q.some((x, i) => i > 0 && x <= q[i - 1]!)) return [`${rotulo}: os 4 pontos de corte devem ser crescentes.`];
+  return [];
+}

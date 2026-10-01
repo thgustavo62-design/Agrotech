@@ -743,7 +743,7 @@ do Gustavo abrir no navegador dele.
       `@page` A4 + `.nao-imprime` já no `globals.css`). Conteúdo vem da recomendação
       (motor_versao), nada recalculado.
 - [x] **PDF do laudo no servidor** — `packages/laudo-pdf` (pdf-lib, A4, 5 testes: PDF válido, texto bate com o emitido, paginação, caracteres fora do WinAnsi) + Edge Function `gerar-laudo-pdf` reescrita: confere JWT (consultor da org dona ou o próprio produtor), gera uma vez, grava em `recomendacoes/` + `pdf_path`, devolve URL assinada de 5 min. Botão "Baixar PDF" nos laudos do consultor e do produtor. Validado em Deno (`deno check` + execução). **Ainda não deployada** — a função importa `agro-core/src` com extensão `.js`, que o Deno só resolve com `--sloppy-imports`; testar `supabase functions deploy gerar-laudo-pdf` antes de depender dela (se o bundler reclamar, apontar o import map pro `dist/`)
-- [x] **Editor das tabelas de referência por organização (culturas)** — `/app/tabelas` mostra a cópia do escritório (`tabelasDaOrg`), edita ref/V%/m%/N/P₂O₅/K₂O por cultura e restaura a literatura. Validação no motor (`validarCultura`, 3 testes: erro bloqueia, dose que sobe em solo rico só avisa), versão incrementa, ação vai pro `audit_log`. Faltam editar faixas, fósforo, fertilizantes e pragas
+- [x] **Editor das tabelas de referência por organização (culturas)** — `/app/tabelas` mostra a cópia do escritório (`tabelasDaOrg`), edita ref/V%/m%/N/P₂O₅/K₂O por cultura e restaura a literatura. Validação no motor (`validarCultura`, 3 testes: erro bloqueia, dose que sobe em solo rico só avisa), versão incrementa, ação vai pro `audit_log`. **Também editáveis agora: faixas de interpretação (19 parâmetros) e fósforo por argila** (`validarQuebras`: 4 cortes crescentes; restaurar literatura). Faltam fertilizantes e pragas (listas — precisam de adicionar/remover linha). **Lacuna conhecida:** o link público de resultados (`/r/[token]`) ainda calcula com a tabela PADRÃO, não com a calibrada do escritório — pode divergir do laudo emitido; o certo é exibir a recomendação persistida
 - [ ] Tela de conferência do laudo (Fase 3) reaproveitando `interpretacao-view`
 
 ## Fase 3 — Ingestão de PDF
@@ -792,6 +792,12 @@ O PDF real tinha **0 caracteres de texto** (página inteira desenhada como vetor
 
 - [ ] Preço da commodity no painel do produtor
 - [ ] Estimativa de receita e custo da recomendação com preço real de insumo
+
+---
+
+## Portal do produtor — Atividades
+
+- [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.
 
 ---
 

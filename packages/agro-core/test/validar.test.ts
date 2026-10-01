@@ -28,3 +28,23 @@ describe('validarCultura', () => {
     expect(r.avisos).toHaveLength(1);
   });
 });
+
+describe('validarQuebras', () => {
+  it('todas as faixas e a tabela de fósforo do padrão são válidas', async () => {
+    const { validarQuebras } = await import('../src/tabelas/validar.js');
+    for (const [chave, f] of Object.entries(PADRAO.faixas)) {
+      if (f.q) expect(validarQuebras(chave, f.q), chave).toEqual([]);
+    }
+    for (const x of PADRAO.fosforo) expect(validarQuebras(x.argila, x.q), x.argila).toEqual([]);
+  });
+
+  it('rejeita corte repetido, decrescente, negativo, NaN e quantidade errada', async () => {
+    const { validarQuebras } = await import('../src/tabelas/validar.js');
+    expect(validarQuebras('K', [15, 40, 40, 120])).toHaveLength(1);
+    expect(validarQuebras('K', [15, 40, 30, 120])).toHaveLength(1);
+    expect(validarQuebras('K', [-1, 40, 70, 120])).toHaveLength(1);
+    expect(validarQuebras('K', [15, Number.NaN, 70, 120])).toHaveLength(1);
+    expect(validarQuebras('K', [15, 40, 70])).toHaveLength(1);
+    expect(validarQuebras('K', [15, 40, 70, 120])).toEqual([]);
+  });
+});

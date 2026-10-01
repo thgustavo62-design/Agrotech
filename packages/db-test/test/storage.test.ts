@@ -53,6 +53,19 @@ describe('Storage — leitura (0032): produtor só lê o que é dele', () => {
   });
 });
 
+describe('Portal do produtor — visitas (página Atividades)', () => {
+  it('produtor lê visitas, ocorrências e fotos só do próprio talhão', async () => {
+    await db.exec(`insert into agro.visita_ocorrencias (visita_id, alvo, valor, acima_nivel) values ('${VISITA}','lagarta','3 por planta',true)`);
+    const conta = (t: string) => contar(db, `select count(*)::int n from agro.${t}`);
+    await como(db, ID.produtorA2, async () => {
+      expect([await conta('visitas'), await conta('visita_ocorrencias'), await conta('visita_fotos')]).toEqual([1, 1, 1]);
+    });
+    await como(db, ID.produtorA, async () => {
+      expect([await conta('visitas'), await conta('visita_ocorrencias'), await conta('visita_fotos')]).toEqual([0, 0, 0]);
+    });
+  });
+});
+
 describe('Storage — envio de fotos de visita', () => {
   it('consultor sobe na pasta da própria org, mas não na de outra', async () => {
     await como(db, ID.consultorA, async () => {

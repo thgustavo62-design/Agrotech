@@ -1,15 +1,17 @@
-import { PADRAO, f2, validarCultura } from '@agrotech/agro-core';
+import { PADRAO, validarCultura, type Faixa } from '@agrotech/agro-core';
 import { Cartao } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
-import { salvarCultura, restaurarCultura } from './acoes';
+import { salvarCultura, restaurarCultura, salvarFaixas, restaurarFaixas, salvarFosforo, restaurarFosforo } from './acoes';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TabelasConsultor() {
   const sb = await criarClienteServidor();
-  const { culturas, fosforo } = await tabelasDaOrg(sb);
+  const { culturas, fosforo, faixas } = await tabelasDaOrg(sb);
+  const fosforoAjustado = JSON.stringify(fosforo) !== JSON.stringify(PADRAO.fosforo);
+  const faixasAjustadas = JSON.stringify(faixas) !== JSON.stringify(PADRAO.faixas);
   return (
     <>
       <BannerHero imagem={FOTO_CONSULTOR}
@@ -62,21 +64,71 @@ export default async function TabelasConsultor() {
       </Cartao>
 
       <Cartao olho="Interpretação" titulo="Fósforo por classe de argila (Mehlich-1)">
-        <div className="rolagem">
-          <table>
-            <thead>
-              <tr><th>Argila</th><th className="num">MB até</th><th className="num">B até</th><th className="num">M até</th><th className="num">Bom até</th></tr>
-            </thead>
-            <tbody>
-              {fosforo.map((x) => (
-                <tr key={x.argila}>
-                  <td>{x.argila}</td>
-                  {x.q.map((q, i) => <td key={i} className="num">{f2(q)}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <p className="nota" style={{ marginTop: 0 }}>
+          Pontos de corte (mg/dm³) que separam muito baixo / baixo / médio / bom / muito bom. Devem ser crescentes.
+          {fosforoAjustado ? <span className="chip" style={{ marginLeft: 8 }}>ajustada</span> : null}
+        </p>
+        <form action={salvarFosforo}>
+          <div className="rolagem">
+            <table>
+              <thead>
+                <tr><th>Argila</th><th className="num">MB até</th><th className="num">B até</th><th className="num">M até</th><th className="num">Bom até</th></tr>
+              </thead>
+              <tbody>
+                {fosforo.map((x, i) => (
+                  <tr key={x.argila}>
+                    <td>{x.argila}</td>
+                    {x.q.map((q, j) => (
+                      <td key={j} className="num">
+                        <input name={`p_${i}_${j}`} type="number" step="any" min="0" defaultValue={q} required
+                          aria-label={`${x.argila}, corte ${j + 1}`} style={{ width: 74 }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button className="btn verde" type="submit">Salvar fósforo</button>
+            {fosforoAjustado ? <button className="btn sec" type="submit" formAction={restaurarFosforo} formNoValidate>Restaurar literatura</button> : null}
+          </div>
+        </form>
+      </Cartao>
+
+      <Cartao olho="Interpretação" titulo="Faixas de interpretação do solo">
+        <p className="nota" style={{ marginTop: 0 }}>
+          Pontos de corte das 5 classes de cada parâmetro. Valem para análises novas; laudos já emitidos não mudam.
+          Em Al, H+Al e m% o valor alto é o problema, mas os cortes continuam em ordem crescente.
+          {faixasAjustadas ? <span className="chip" style={{ marginLeft: 8 }}>ajustadas</span> : null}
+        </p>
+        <form action={salvarFaixas}>
+          <div className="rolagem">
+            <table>
+              <thead>
+                <tr><th>Parâmetro</th><th>Unidade</th><th className="num">Corte 1</th><th className="num">Corte 2</th><th className="num">Corte 3</th><th className="num">Corte 4</th></tr>
+              </thead>
+              <tbody>
+                {(Object.entries(faixas) as Array<[string, Faixa]>).filter(([, fx]) => fx.q).map(([chave, fx]) => (
+                  <tr key={chave}>
+                    <td>{fx.rot}{fx.inv ? <small className="nota"> (alto = ruim)</small> : null}</td>
+                    <td>{fx.un || '—'}</td>
+                    {fx.q!.map((q, j) => (
+                      <td key={j} className="num">
+                        <input name={`f_${chave}_${j}`} type="number" step="any" min="0" defaultValue={q} required
+                          aria-label={`${fx.rot}, corte ${j + 1}`} style={{ width: 74 }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button className="btn verde" type="submit">Salvar faixas</button>
+            {faixasAjustadas ? <button className="btn sec" type="submit" formAction={restaurarFaixas} formNoValidate>Restaurar literatura</button> : null}
+          </div>
+        </form>
       </Cartao>
     </>
   );
