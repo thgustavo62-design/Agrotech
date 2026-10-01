@@ -5,6 +5,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { LaudoView, type ContextoLaudo } from '@/components/laudo-view';
 import { BotaoImprimir } from '@/components/botao-imprimir';
+import { baixarLaudoPdf } from '@/lib/baixar-laudo-pdf';
 import { emitirRecomendacao } from '../../acoes';
 
 export const dynamic = 'force-dynamic';
@@ -60,9 +61,13 @@ export default async function LaudoAnalise({ params }: { params: Promise<{ id: s
       <div className="cabecalho-vista nao-imprime">
         <div>
           <h1>Laudo</h1>
-          <p>Emitido em {ctx.emitidaEm} · motor {resultado.motor_versao}. Imprima ou salve em PDF.</p>
+          <p>Emitido em {ctx.emitidaEm} · motor {resultado.motor_versao}. Baixe o PDF ou imprima.</p>
         </div>
         <div className="acoes">
+          <form action={baixarLaudoPdf}>
+            <input type="hidden" name="recomendacao_id" value={rec.id} />
+            <button className="btn verde" type="submit">Baixar PDF</button>
+          </form>
           <BotaoImprimir />
           <form action={emitirRecomendacao}>
             <input type="hidden" name="analise_id" value={id} />

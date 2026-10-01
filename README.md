@@ -12,7 +12,8 @@ adubação com respaldo, e caderno de campo por talhão.
 ## Estrutura
 
 ```
-packages/agro-core/   motor agronômico — TS puro, sem DOM/DB/rede, 45 testes
+packages/agro-core/   motor agronômico — TS puro, sem DOM/DB/rede, 48 testes
+packages/laudo-pdf/   renderiza o laudo A4 em PDF (pdf-lib) — Node e Deno, 5 testes
 apps/web/             Next.js 15 (App Router) — esqueleto
 supabase/             migrations (RLS em tudo), edge functions, testes pgTAP
 prototipo/            agrotech.html — protótipo de referência (congelado)

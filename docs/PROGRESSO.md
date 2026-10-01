@@ -742,7 +742,7 @@ do Gustavo abrir no navegador dele.
 - [x] **Laudo A4 imprimível** — `/app/analises/[id]/laudo` (`LaudoView` + `window.print()`,
       `@page` A4 + `.nao-imprime` já no `globals.css`). Conteúdo vem da recomendação
       (motor_versao), nada recalculado.
-- [ ] `gerar-laudo-pdf` na Edge Function (PDF server-side, hoje é impressão do navegador)
+- [x] **PDF do laudo no servidor** — `packages/laudo-pdf` (pdf-lib, A4, 5 testes: PDF válido, texto bate com o emitido, paginação, caracteres fora do WinAnsi) + Edge Function `gerar-laudo-pdf` reescrita: confere JWT (consultor da org dona ou o próprio produtor), gera uma vez, grava em `recomendacoes/` + `pdf_path`, devolve URL assinada de 5 min. Botão "Baixar PDF" nos laudos do consultor e do produtor. Validado em Deno (`deno check` + execução). **Ainda não deployada** — a função importa `agro-core/src` com extensão `.js`, que o Deno só resolve com `--sloppy-imports`; testar `supabase functions deploy gerar-laudo-pdf` antes de depender dela (se o bundler reclamar, apontar o import map pro `dist/`)
 - [x] **Editor das tabelas de referência por organização (culturas)** — `/app/tabelas` mostra a cópia do escritório (`tabelasDaOrg`), edita ref/V%/m%/N/P₂O₅/K₂O por cultura e restaura a literatura. Validação no motor (`validarCultura`, 3 testes: erro bloqueia, dose que sobe em solo rico só avisa), versão incrementa, ação vai pro `audit_log`. Faltam editar faixas, fósforo, fertilizantes e pragas
 - [ ] Tela de conferência do laudo (Fase 3) reaproveitando `interpretacao-view`
 

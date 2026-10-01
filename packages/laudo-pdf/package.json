@@ -1,0 +1,23 @@
+{
+  "name": "@agrotech/laudo-pdf",
+  "version": "0.1.0",
+  "description": "Renderiza o laudo A4 em PDF a partir de uma recomendação já gravada. Roda em Node (testes) e Deno (Edge Function).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agrotech/agro-core": "*",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "unpdf": "^0.12.1",
+    "vitest": "^2.1.8"
+  }
+}

@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   motor:
-    name: motor agronômico (agro-core)
+    name: motor agronômico e laudo PDF
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,9 +20,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm run test:core
+      # build antes: o typecheck dos pacotes lê os tipos de agro-core/dist
       - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
 
   web:
     name: build do app
