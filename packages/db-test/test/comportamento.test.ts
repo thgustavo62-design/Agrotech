@@ -110,6 +110,33 @@ describe('notificação de nova recomendação (0024)', () => {
   });
 });
 
+describe('laudo com várias amostras (0033)', () => {
+  const DOC = 'd0000000-0000-0000-0000-000000000001';
+  const analise = (indice: number | null) =>
+    `insert into agro.analises (talhao_id, documento_id, origem, data_coleta, amostra_indice)
+     values ('${ID.talhaoA2}','${DOC}','pdf','2026-06-10',${indice})`;
+
+  it('cada amostra do documento vira uma análise; a mesma amostra duas vezes é recusada (23505)', async () => {
+    await db.exec(
+      `insert into agro.documentos (id, org_id, storage_path, nome_arquivo, hash_sha256, status)
+       values ('${DOC}','${ID.orgA}','${ID.orgA}/_/x.pdf','x.pdf','abc','revisao')`,
+    );
+    await como(db, ID.consultorA, async () => {
+      expect(await codigoDeErro(db, analise(1))).toBeNull();
+      expect(await codigoDeErro(db, analise(2))).toBeNull();
+      expect(await codigoDeErro(db, analise(2))).toBe('23505');
+      expect(await contar(db, `select count(*)::int n from agro.analises where documento_id = '${DOC}'`)).toBe(2);
+    });
+  });
+
+  it('laudo de uma amostra só (índice nulo) não é afetado pelo índice único', async () => {
+    await como(db, ID.consultorA, async () => {
+      expect(await codigoDeErro(db, analise(null))).toBeNull();
+      expect(await codigoDeErro(db, analise(null))).toBeNull();
+    });
+  });
+});
+
 describe('exclusão LGPD', () => {
   it('apagar o produtor leva talhões e visitas; apagar a conta leva profile e notificações', async () => {
     await db.exec(`delete from agro.produtores where id = '${ID.cadA}'`);

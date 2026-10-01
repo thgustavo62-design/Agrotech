@@ -38,20 +38,36 @@ export async function confirmarLaudo(fd: FormData) {
     incorporacao: num(fd, 'incorporacao') ?? 20,
   };
 
-  const { data: analise, error } = await sb.schema('agro').from('analises').insert(dados).select('id').single();
+  // laudo com várias amostras (tabela por colunas): cada confirmação vira uma análise
+  const total = Math.max(1, Math.trunc(num(fd, 'total_amostras') ?? 1));
+  const indice = total > 1 ? Math.trunc(num(fd, 'amostra_indice') ?? 0) : null;
+  if (total > 1 && (!indice || indice < 1 || indice > total)) throw new Error('Amostra inválida.');
+
+  const { data: analise, error } = await sb.schema('agro').from('analises')
+    .insert({ ...dados, amostra_indice: indice }).select('id').single();
+  if (error?.code === '23505') throw new Error(`A amostra ${indice} deste laudo já foi confirmada.`);
   if (error) throw new Error(error.message);
 
-  await sb.schema('agro').from('documentos').update({ status: 'confirmado' }).eq('id', documento_id);
+  let faltam = 0;
+  if (total > 1) {
+    const { count } = await sb.schema('agro').from('analises')
+      .select('id', { count: 'exact', head: true }).eq('documento_id', documento_id);
+    faltam = Math.max(0, total - (count ?? 0));
+  }
+  if (faltam === 0) {
+    await sb.schema('agro').from('documentos').update({ status: 'confirmado' }).eq('id', documento_id);
+  }
 
   await registrar(sb, {
     acao: 'laudo.confirmado',
     entidade: 'analises',
     entidade_id: analise.id,
     org_id: perfil?.org_id ?? null,
-    dados: { documento_id, talhao_id },
+    dados: { documento_id, talhao_id, amostra_indice: indice, total_amostras: total },
   });
 
-  redirect(`/app/analises/${analise.id}`);
+  // ainda há amostras: volta à conferência para a próxima; senão abre a análise
+  redirect(faltam > 0 ? `/app/laudos/${documento_id}` : `/app/analises/${analise.id}`);
 }
 
 /** Descarta um laudo que não deu certo (duplicado, ilegível, amostra errada). */

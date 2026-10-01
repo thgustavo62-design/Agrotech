@@ -3,14 +3,24 @@ import Link from 'next/link';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { CabecalhoVista, Cartao, Grade, Tag, Vazio } from '@/components/ui';
+import { AtualizarAtePronto } from '@/components/atualizar-ate-pronto';
 import { confirmarLaudo, descartarLaudo } from './acoes';
 
 export const dynamic = 'force-dynamic';
 
 type CampoExtraido = { valor: number | null; confianca: number; origem: string; bruto?: string };
+type AmostraExtraida = {
+  indice: number;
+  numero_lab: string | null;
+  rotulo: string | null;
+  campos: Partial<Record<string, CampoExtraido>>;
+  extras: Record<string, CampoExtraido>;
+};
 type Extracao = {
   perfil: string | null;
   laboratorio: string | null;
+  fonte?: 'texto' | 'ocr';
+  amostras?: AmostraExtraida[];
   campos: Partial<Record<string, CampoExtraido>>;
   identificacao: Record<string, string | null>;
   confianca_media: number;
@@ -40,8 +50,14 @@ function paraDataInput(bruto: string | null | undefined): string {
   return iso ? iso[0] : '';
 }
 
-export default async function ConferenciaLaudo({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConferenciaLaudo({
+  params, searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ amostra?: string }>;
+}) {
   const { id } = await params;
+  const { amostra: amostraPedida } = await searchParams;
   const sb = await criarClienteServidor();
   const perfil = await perfilAtual();
 
@@ -49,17 +65,42 @@ export default async function ConferenciaLaudo({ params }: { params: Promise<{ i
   if (error || !doc) notFound();
 
   if (doc.status === 'confirmado') {
-    const { data: analise } = await sb.schema('agro').from('analises')
-      .select('id').eq('documento_id', id).maybeSingle();
+    const { data: geradas } = await sb.schema('agro').from('analises')
+      .select('id, amostra_indice').eq('documento_id', id).order('amostra_indice');
     return (
       <>
         <CabecalhoVista olho="Laudo" titulo={doc.nome_arquivo as string} descricao="Já conferido e confirmado." />
-        <Vazio titulo="Este laudo virou análise">
-          {analise ? (
-            <Link className="btn verde mini" href={`/app/analises/${analise.id}`} style={{ marginTop: 10 }}>
-              Abrir a análise
-            </Link>
-          ) : null}
+        <Vazio titulo={(geradas?.length ?? 0) > 1 ? 'Este laudo virou análises' : 'Este laudo virou análise'}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+            {(geradas ?? []).map((a) => (
+              <Link key={a.id as string} className="btn verde mini" href={`/app/analises/${a.id}`}>
+                {a.amostra_indice ? `Amostra ${a.amostra_indice}` : 'Abrir a análise'}
+              </Link>
+            ))}
+          </div>
+        </Vazio>
+      </>
+    );
+  }
+
+  // OCR em segundo plano: a página se atualiza sozinha até o resultado chegar
+  if (doc.status === 'extraindo') {
+    return (
+      <>
+        <CabecalhoVista
+          olho="Conferência"
+          titulo={doc.nome_arquivo as string}
+          descricao="Lendo o PDF escaneado (OCR)… leva cerca de 30 segundos. Esta página se atualiza sozinha."
+          acoes={
+            <form action={descartarLaudo}>
+              <input type="hidden" name="documento_id" value={id} />
+              <button className="btn perigo mini" type="submit">Descartar laudo</button>
+            </form>
+          }
+        />
+        <AtualizarAtePronto />
+        <Vazio titulo="Lendo o laudo…">
+          Se passar de 2 minutos, descarte e envie de novo — a leitura pode ter sido interrompida.
         </Vazio>
       </>
     );
@@ -83,7 +124,21 @@ export default async function ConferenciaLaudo({ params }: { params: Promise<{ i
   }
 
   const extracao = (doc.payload ?? null) as Extracao | null;
-  const campos = extracao?.campos ?? {};
+  const amostras = extracao?.amostras ?? [];
+  const multi = amostras.length > 1;
+
+  // amostras já viradas em análise (laudo em tabela confirma uma por vez)
+  const { data: jaFeitas } = multi
+    ? await sb.schema('agro').from('analises').select('amostra_indice').eq('documento_id', id)
+    : { data: [] as Array<{ amostra_indice: number | null }> };
+  const confirmadas = new Set((jaFeitas ?? []).map((a) => a.amostra_indice as number));
+  const pedida = Number(amostraPedida);
+  const atual: AmostraExtraida | undefined = multi
+    ? amostras.find((a) => a.indice === pedida) ?? amostras.find((a) => !confirmadas.has(a.indice)) ?? amostras[0]
+    : undefined;
+
+  const campos = (multi ? atual?.campos : extracao?.campos) ?? {};
+  const extras = atual?.extras ?? {};
   const ident = extracao?.identificacao ?? {};
 
   let candidatos: Array<{ id: string; nome: string; score: number }> = [];
@@ -114,8 +169,23 @@ export default async function ConferenciaLaudo({ params }: { params: Promise<{ i
           <div className="metrica"><span>Confiança média</span><b>{Math.round((extracao.confianca_media ?? 0) * 100)}%</b></div>
           <div className="metrica"><span>Laboratório</span><b style={{ fontSize: 15 }}>{extracao.laboratorio ?? '—'}</b></div>
           <div className="metrica"><span>Protocolo</span><b style={{ fontSize: 15 }}>{ident.protocolo ?? '—'}</b></div>
-          <div className="metrica"><span>Amostra</span><b style={{ fontSize: 15 }}>{ident.amostra ?? '—'}</b></div>
+          <div className="metrica"><span>Amostra</span><b style={{ fontSize: 15 }}>{atual?.rotulo ?? ident.amostra ?? '—'}</b></div>
         </Grade>
+      )}
+
+      {multi && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
+          <span className="nota">Este laudo tem {amostras.length} amostras — cada uma vira uma análise:</span>
+          {amostras.map((a) => (
+            <Link
+              key={a.indice}
+              href={`/app/laudos/${id}?amostra=${a.indice}`}
+              className={`btn mini ${a.indice === atual?.indice ? 'verde' : 'sec'}`}
+            >
+              {confirmadas.has(a.indice) ? '✓ ' : ''}{a.rotulo ?? `Amostra ${a.indice}`}
+            </Link>
+          ))}
+        </div>
       )}
 
       <div className="grade g2" style={{ alignItems: 'start' }}>
@@ -129,6 +199,8 @@ export default async function ConferenciaLaudo({ params }: { params: Promise<{ i
 
         <form action={confirmarLaudo}>
           <input type="hidden" name="documento_id" value={id} />
+          <input type="hidden" name="total_amostras" value={multi ? amostras.length : 1} />
+          {multi && atual ? <input type="hidden" name="amostra_indice" value={atual.indice} /> : null}
           <Cartao olho="Cadastro assistido" titulo="A quem pertence esta amostra">
             <div className="campo">
               <label htmlFor="talhao_id">
@@ -187,6 +259,16 @@ export default async function ConferenciaLaudo({ params }: { params: Promise<{ i
                 );
               })}
             </div>
+            {Object.keys(extras).length > 0 && (
+              <p className="nota" style={{ marginTop: 10 }}>
+                Impresso no laudo (o motor recalcula; serve para conferir):{' '}
+                {([['sb', 'SB'], ['t_ctc', 'CTC (T)'], ['v_pct', 'V%'], ['m_pct', 'm%'], ['ph_cacl2', 'pH CaCl₂']] as const)
+                  .filter(([k]) => extras[k]?.valor != null)
+                  .map(([k, r]) => `${r} ${String(extras[k]!.valor).replace('.', ',')}`)
+                  .join(' · ')}
+                . O motor usa pH em água.
+              </p>
+            )}
             <div className="campo" style={{ marginTop: 12, maxWidth: 220 }}>
               <label htmlFor="prnt">PRNT do calcário <span className="un">% (padrão 85)</span></label>
               <input className="mono" id="prnt" name="prnt" inputMode="decimal" autoComplete="off" />
@@ -200,7 +282,9 @@ export default async function ConferenciaLaudo({ params }: { params: Promise<{ i
           ) : null}
 
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn verde" type="submit">Confirmar e interpretar</button>
+            <button className="btn verde" type="submit">
+              {multi && atual ? `Confirmar amostra ${atual.indice} de ${amostras.length}` : 'Confirmar e interpretar'}
+            </button>
           </div>
         </form>
       </div>

@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { CabecalhoVista, Cartao } from '@/components/ui';
 import { enviarLaudo } from './acoes';
 
+// o OCR de laudo escaneado roda em segundo plano (`after`) dentro deste limite
+export const maxDuration = 60;
+
 export default function NovoLaudo() {
   return (
     <>

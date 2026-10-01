@@ -4,6 +4,7 @@ import type {
 import { PERFIS, detectarPerfil } from './perfis.js';
 import { parseNumeroBR, norm } from './numero.js';
 import { dentroDaFaixa } from './sanidade.js';
+import { ehLaudoEmTabela, extrairLote, extrairDeOcr } from './lote.js';
 
 /** Detecta a unidade impressa na linha, em forma canônica. */
 function unidadeNaLinha(linhaNorm: string): string {
@@ -112,6 +113,9 @@ export function extrairDeTexto(
   texto: string,
   perfis: PerfilLab[] = PERFIS,
 ): ExtracaoLaudo {
+  // laudos em tabela (várias amostras em colunas) têm leitor próprio
+  if (perfis === PERFIS && ehLaudoEmTabela(texto)) return extrairLote([texto], 'texto');
+
   const linhas = texto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const linhasNorm = linhas.map(norm);
   const avisos: string[] = [];
@@ -154,4 +158,9 @@ export function extrairDeTexto(
     confianca_media: Math.round(confianca_media * 1000) / 1000,
     avisos,
   };
+}
+
+/** PDF escaneado: uma ou mais leituras OCR da mesma página -> extração (ver `extrairDeOcr`). */
+export function extrairDeLeiturasOcr(leituras: string[]): ExtracaoLaudo {
+  return extrairDeOcr(leituras, (t) => extrairDeTexto(t));
 }

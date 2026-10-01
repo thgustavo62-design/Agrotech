@@ -32,10 +32,28 @@ export interface CampoExtraido {
   bruto?: string;
 }
 
+/** Uma amostra de um laudo em tabela (várias amostras em colunas). */
+export interface AmostraLaudo {
+  /** posição da coluna, a partir de 1 */
+  indice: number;
+  /** código do laboratório (ex.: SCP-1-291088-2) */
+  numero_lab: string | null;
+  /** identificação dada pelo cliente (ex.: "Amostra 02 - Setor II Café") */
+  rotulo: string | null;
+  campos: Partial<Record<ChaveCampoLaudo, CampoExtraido>>;
+  /** valores impressos que o motor recalcula (SB, T, V, m, pH CaCl2...) — só para conferência */
+  extras: Record<string, CampoExtraido>;
+}
+
 export interface ExtracaoLaudo {
   perfil: string | null;
   laboratorio: string | null;
+  /** 'texto' = texto nativo do PDF; 'ocr' = PDF escaneado lido por OCR */
+  fonte?: 'texto' | 'ocr';
+  /** campos da PRIMEIRA amostra (compatível com laudos de uma amostra só) */
   campos: Partial<Record<ChaveCampoLaudo, CampoExtraido>>;
+  /** presente nos laudos em tabela; uma entrada por coluna */
+  amostras?: AmostraLaudo[];
   identificacao: Record<string, string | null>;
   confianca_media: number;
   avisos: string[];

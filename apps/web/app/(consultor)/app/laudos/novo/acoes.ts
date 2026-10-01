@@ -1,7 +1,9 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 import { extrairDeTexto } from '@agrotech/agro-core/parsers';
+import { processarLaudoEscaneado } from '@/lib/processar-laudo';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
 
@@ -61,18 +63,16 @@ export async function enviarLaudo(fd: FormData) {
 
   try {
     const { getDocumentProxy, extractText } = await import('unpdf');
-    const pdf = await getDocumentProxy(buf);
+    // cópia: o pdf.js transfere (e esvazia) o buffer que recebe, e o OCR ainda precisa dele
+    const pdf = await getDocumentProxy(new Uint8Array(buf));
     const { text } = await extractText(pdf, { mergePages: true });
     const texto = Array.isArray(text) ? text.join('\n') : text;
 
     if (texto.trim().length < 200) {
-      // PDF sem texto nativo (provável digitalizado) — sem OCR configurado,
-      // cai para conferência manual (doc §8.2)
-      await sb.schema('agro').from('documentos').update({
-        status: 'revisao',
-        texto_extraido: texto,
-        erro: 'PDF digitalizado (sem texto nativo) — lance os valores manualmente na conferência.',
-      }).eq('id', doc.id);
+      // PDF escaneado (sem texto nativo): OCR leva ~25 s, então roda em segundo plano e a
+      // conferência mostra "lendo…" até terminar. Se falhar, cai para lançamento manual.
+      await sb.schema('agro').from('documentos').update({ texto_extraido: texto }).eq('id', doc.id);
+      after(() => processarLaudoEscaneado(sb, doc.id, buf));
     } else {
       const extracao = extrairDeTexto(texto);
       await sb.schema('agro').from('documentos').update({

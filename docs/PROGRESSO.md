@@ -748,12 +748,23 @@ do Gustavo abrir no navegador dele.
 
 ## Fase 3 — Ingestão de PDF
 
-- [ ] Upload + Storage + insert em `documentos` com hash
-- [ ] `processar-laudo`: `unpdf` + `extrairDeTexto` + (LLM opcional) → `revisao`
-- [ ] Tela de conferência lado a lado (PDF | formulário), campos por confiança
+- [x] Upload + Storage + insert em `documentos` com hash (já existia no app; PROGRESSO estava desatualizado)
+- [x] Extração: texto nativo (`extrairDeTexto`) **e PDF escaneado por OCR** (ver abaixo). LLM opcional segue pendente (`ANTHROPIC_API_KEY`). A Edge Function `processar-laudo` **não** faz OCR — quem faz é o server action `enviarLaudo` (Next)
+- [x] Tela de conferência lado a lado (PDF | formulário), campos por confiança — agora com abas por amostra
 - [ ] `casar_produtor` na UI (score ≥0,90 / 0,60–0,89 / <0,60)
-- [ ] Lote (várias amostras por PDF)
-- [ ] **5–10 laudos reais anonimizados → casos de teste + perfis**
+- [x] **Lote (várias amostras por PDF)** — laudo em tabela por colunas: `parsers/lote.ts` (`extrairLote`), cada coluna vira uma análise (`0033` `analises.amostra_indice` + índice único); o documento só vira `confirmado` quando todas as amostras foram confirmadas
+- [~] **5–10 laudos reais anonimizados → casos de teste + perfis** — **1 de 5–10**: Laboratório Água Limpa (Manhuaçu-MG, 3 amostras, PDF escaneado). Fixture em `packages/agro-core/test/fixtures/agua-limpa.ts` (saída crua do OCR, nomes anonimizados) + 14 testes. Faltam outros laboratórios
+
+### OCR de laudo escaneado (achado com o laudo real da Água Limpa)
+
+O PDF real tinha **0 caracteres de texto** (página inteira desenhada como vetor/imagem): o fluxo antigo caía sempre em "lance manualmente". Agora:
+
+- `apps/web/lib/ocr-pdf.ts` rasteriza a página (`unpdf` 1.x + `@napi-rs/canvas`) e lê com `tesseract.js` (idioma `por`) em **4 resoluções** (2×, 3×, 4×, 5×) — cada uma erra dígitos diferentes (`1,45`→`145`, `5,77`→`5,17`, `6,30`→`6,350`).
+- `parsers/lote.ts` **vota célula a célula** entre as leituras, reconstitui vírgula perdida (confiança ≤ 0,6) e **arbitra SB e T pela conta** (SB = Ca+Mg+K/391, T = SB+H+Al): leitura que fecha com a aritmética vence, e fecha também a confiança de Ca/Mg/K/H+Al (0,95); se não fecha, vira aviso.
+- No laudo real: **42 de 42 valores certos** (3 amostras × 14 parâmetros); nenhuma leitura isolada entrega valor errado com confiança ≥ 0,9. Pontos de divergência saem "CONFIRA" (pH em água, M.O., Al).
+- `enviarLaudo` roda o OCR em segundo plano (`after`, ~25 s) e a conferência mostra "lendo…" com atualização automática; se o OCR falhar, cai para lançamento manual.
+- `node apps/web/scripts/ler-laudo.mjs <pdf>` roda o mesmo caminho num PDF qualquer — usar para calibrar laboratório novo.
+- Limites conhecidos: (1) a assinatura do layout é estrutural (linhas `XXX-1-291088-2` + Mehlich), outro laboratório em tabela com rótulos diferentes precisa de perfil; (2) a data do laudo é a de **entrada** no laboratório, não a de coleta (conferir na tela); (3) pH em água às vezes sai com rótulo ilegível — o parser o acha pela posição com confiança 0,5; (4) OCR em serverless: ~25 s, binário nativo e download do modelo `por` na 1ª vez — **não testado no deploy real** (Vercel); `maxDuration = 60` na página de upload; (5) `tesseract.js` baixa o modelo de CDN — em ambiente sem internet, empacotar o `por.traineddata`.
 
 ## Fase 4 — Portal do produtor
 
