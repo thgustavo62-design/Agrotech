@@ -784,6 +784,13 @@ do Gustavo abrir no navegador dele.
 
 ---
 
+## Banco validado de verdade (PGlite)
+
+- [x] **`packages/db-test`** — sobe um Postgres em WASM, aplica as 32 migrations (com stubs de roles/auth/storage do Supabase em `bootstrap.sql`) e roda 15 testes: migrations aplicam, isolamento por org **e por produtor dentro da mesma org**, upsert do editor de tabelas, idempotência da visita (`0031`), gatilho de notificação, cascata da exclusão LGPD, envio de fotos. Roda em ~5 s, sem Docker, dentro do `npm test` e do CI. Não substitui o pgTAP real (`supabase test db`) nem um projeto Supabase — é o que dá pra validar sem eles.
+- [x] **Falha de segurança achada e corrigida (`0032`)** — as políticas de leitura de Storage (`0008`) liberavam a pasta da org inteira a qualquer usuário do escritório: um produtor lia laudos, PDFs de recomendação e fotos de visita **de outro produtor do mesmo escritório**. Agora consultor/admin lê a org; produtor só a pasta com o id dele (e as fotos das visitas dos talhões dele). Teste de regressão falha sem a migration. **A `0032` precisa ser aplicada no Supabase de produção** (`supabase db push`).
+
+---
+
 ## Como retomar
 
 ```bash

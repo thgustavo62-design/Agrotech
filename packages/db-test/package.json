@@ -1,0 +1,14 @@
+{
+  "name": "@agrotech/db-test",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aplica as migrations num Postgres em WASM (PGlite) e testa RLS e regras de banco sem Docker.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.0",
+    "vitest": "^2.1.8"
+  }
+}
