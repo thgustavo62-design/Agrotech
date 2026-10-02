@@ -47,11 +47,13 @@ export default async function Assinatura() {
     : ROTULO_STATUS[ass.status as string] ?? { txt: ass.status as string, tom: 'cinza' as const };
   const checkoutConfigurado = Boolean(process.env.ASAAS_API_KEY);
 
-  const Uso = ({ rot, usado, limite }: { rot: string; usado: number; limite?: number }) => {
+  // função comum (não componente): definir componente dentro do render recria o componente a cada render
+  const medidorDeUso = (rot: string, usado: number, limite?: number) => {
     const pct = limite ? Math.min(100, Math.round((100 * usado) / limite)) : 0;
     const perto = limite ? usado / limite >= 0.8 : false;
     return (
       <Metrica
+        key={rot}
         rotulo={rot}
         valor={limite ? `${usado} / ${limite}` : usado}
         detalhe={limite ? `${pct}% do plano` : undefined}
@@ -81,9 +83,9 @@ export default async function Assinatura() {
             )}
           </p>
           <Grade cols={3}>
-            <Uso rot="Produtores" usado={nProdutores ?? 0} limite={planoAtual?.lim_produtores} />
-            <Uso rot="Talhões" usado={nTalhoes ?? 0} limite={planoAtual?.lim_talhoes} />
-            <Uso rot="Laudos neste mês" usado={nLaudosMes ?? 0} limite={planoAtual?.lim_laudos_mes} />
+            {medidorDeUso('Produtores', nProdutores ?? 0, planoAtual?.lim_produtores)}
+            {medidorDeUso('Talhões', nTalhoes ?? 0, planoAtual?.lim_talhoes)}
+            {medidorDeUso('Laudos neste mês', nLaudosMes ?? 0, planoAtual?.lim_laudos_mes)}
           </Grade>
           {(ass.status === 'suspensa' || ass.status === 'cancelada' || trialExpirado) && (
             <div className="aviso" style={{ marginTop: 12 }}>

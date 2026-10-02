@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { atualizarSessao } from '@/lib/supabase/middleware';
 import { montarCsp, novoNonce } from '@/lib/csp';
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   // CSP com nonce por requisição: o Next lê o nonce do cabeçalho da REQUISIÇÃO e o põe nos próprios scripts;
   // o navegador recebe a mesma política no cabeçalho da RESPOSTA (lib/csp.ts).
   const nonce = novoNonce();

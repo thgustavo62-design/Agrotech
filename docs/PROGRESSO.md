@@ -873,6 +873,14 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## Next 16 e dependências sem vulnerabilidade (02/10/2026)
+
+- [x] **Next 15 → 16.3.8** (React 19.2, Turbopack no dev e no build). Mudanças necessárias: `middleware.ts` → **`proxy.ts`** (função `proxy`; a CSP e a sessão continuam lá), `next lint` removido → ESLint direto com `eslint.config.mjs` (core-web-vitals; a regra nova `react-hooks/set-state-in-effect` ficou desligada de propósito — os efeitos daqui leem estado só do navegador depois da hidratação), um componente definido dentro do render em `/app/assinatura` virou função. `tsconfig` ajustado pelo próprio Next (`jsx: react-jsx`).
+- [x] **vitest 2 → 4** nos 4 pacotes e `npm audit fix`: **0 vulnerabilidades** (antes: postcss do Next 15 + esbuild/vite do vitest 2). Em produção (`--omit=dev`) já eram 0 com o Next 16.
+- Reverificado num navegador depois da troca: CSP (14 rotas, 0 violações), server action, mapa, service worker, fila offline + cache pré-aquecido, senhas (link do proprietário, "esqueci", outro aparelho), cadastro e remoção de empregado. 92 testes web, 75 agro-core, 59 db-test.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.
