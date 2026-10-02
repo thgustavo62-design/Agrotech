@@ -830,7 +830,7 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ## Content-Security-Policy (02/10/2026)
 
-- [x] **CSP com nonce por requisição** (`lib/csp.ts` + `middleware.ts`): `script-src 'self' 'nonce-…' 'strict-dynamic'` (sem inline/eval em produção), `connect-src`/`img-src` só para o próprio site, o Supabase configurado e os mosaicos do OpenStreetMap, `frame-ancestors 'none'`, `object-src 'none'`, `base-uri`/`form-action 'self'`. O layout raiz chama `connection()` (renderização dinâmica): página pré-renderizada não tem nonce e teria os scripts bloqueados. Sem `upgrade-insecure-requests` (o HSTS já força https).
+- [x] **CSP com nonce por requisição** (`lib/csp.ts` + `proxy.ts` (era `middleware.ts` até o Next 16)): `script-src 'self' 'nonce-…' 'strict-dynamic'` (sem inline/eval em produção), `connect-src`/`img-src` só para o próprio site, o Supabase configurado e os mosaicos do OpenStreetMap, `frame-ancestors 'none'`, `object-src 'none'`, `base-uri`/`form-action 'self'`. O layout raiz chama `connection()` (renderização dinâmica): página pré-renderizada não tem nonce e teria os scripts bloqueados. Sem `upgrade-insecure-requests` (o HSTS já força https).
 - Provado num navegador (Playwright, `e2e/verificar-csp.mjs`): login, cadastro, páginas públicas, área do consultor, formulário com server action, botão copiar, paleta de comandos, mapa (marcadores + mosaicos), service worker ativo — 0 violações. Teste unitário da política: `lib/csp.test.ts`.
 - Não testado contra o Supabase real; se algum recurso novo vier de outra origem, ele aparece como "Refused to…" no console e a origem entra em `lib/csp.ts`.
 

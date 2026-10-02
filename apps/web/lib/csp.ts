@@ -6,7 +6,7 @@
  * Estilos ficam com 'unsafe-inline' (atributos `style` do React e o Leaflet precisam) — estilo não executa código.
  * Sem upgrade-insecure-requests de propósito: o HSTS (next.config.mjs) já força https e a diretiva quebra o teste local em http.
  *
- * Montada no middleware (middleware.ts) a cada requisição; o Next lê o nonce do cabeçalho da requisição e o
+ * Montada no proxy (proxy.ts, antigo middleware) a cada requisição; o Next lê o nonce do cabeçalho da requisição e o
  * coloca nos próprios scripts. Por isso o layout raiz força renderização dinâmica (página estática não tem nonce).
  */
 

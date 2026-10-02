@@ -31,7 +31,7 @@ O mapa Leaflet e as horas relativas do simulador são as únicas fontes de ruíd
 
 ## Conferir a CSP
 
-A Content-Security-Policy (nonce por requisição, `lib/csp.ts`, montada no `middleware.ts`) só se prova num navegador:
+A Content-Security-Policy (nonce por requisição, `lib/csp.ts`, montada no `proxy.ts` (antigo middleware)) só se prova num navegador:
 `node e2e/verificar-csp.mjs /login /app /app/config/equipe` lista violações ("Refused to…"), erros de JS e se cada página hidratou.
 Em http local o logout (`/sair`) só passa se você abrir o site pelo MESMO host que o servidor enxerga (use `localhost`, não `127.0.0.1`):
 o `form-action 'self'` também vale para o destino do redirect.
