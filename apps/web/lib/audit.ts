@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { lerSessao } from '@/lib/supabase/sessao';
 
 /**
  * Trilha de auditoria (LGPD — você é operador, ver PRODUTO-VENDAVEL §7).
@@ -19,10 +20,10 @@ export async function registrar(
   },
 ): Promise<void> {
   try {
-    const { data: { user } } = await sb.auth.getUser();
+    const { sessao } = await lerSessao(sb);
     await sb.schema('agro').from('audit_log').insert({
       org_id: entrada.org_id ?? null,
-      user_id: user?.id ?? null,
+      user_id: sessao?.id ?? null,
       acao: entrada.acao,
       entidade: entrada.entidade ?? null,
       entidade_id: entrada.entidade_id ?? null,

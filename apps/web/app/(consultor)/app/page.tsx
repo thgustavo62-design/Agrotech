@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { after } from 'next/server';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR, diasDepoisISO } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
@@ -44,7 +45,8 @@ const VAZIO: Painel = {
 
 export default async function PaginaPainel() {
   const sb = await criarClienteServidor();
-  await sb.schema('agro').rpc('registrar_metricas_hoje');
+  // escrita do snapshot diário: roda depois de enviar a página (antes era um `await` na frente de tudo)
+  after(async () => { await sb.schema('agro').rpc('registrar_metricas_hoje'); });
 
   const limite25dias = diasDepoisISO(-25);
   const [{ data }, { data: snapAnterior }] = await Promise.all([

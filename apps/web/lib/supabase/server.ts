@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { lerSessao } from './sessao';
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
@@ -35,32 +36,37 @@ export async function criarClienteServidor() {
  * `cache` memoiza por requisição: layout + página + ações chamavam isto várias vezes, e cada
  * chamada era uma ida ao Auth (getUser valida o token no servidor) mais uma consulta a profiles.
  */
-export const perfilAtual = cache(async () => {
+export const perfilAtual = cache(carregarPerfil);
+
+/** Igual a `perfilAtual`, mas ignora a memoização: use depois de mudar o perfil na MESMA requisição. */
+export const recarregarPerfil = carregarPerfil;
+
+async function carregarPerfil() {
   const sb = await criarClienteServidor();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return null;
+  const { sessao } = await lerSessao(sb);
+  if (!sessao) return null;
 
   const { data } = await sb
     .schema('agro')
     .from('profiles')
     .select('id, role, org_id, nome, crea')
-    .eq('id', user.id)
+    .eq('id', sessao.id)
     .single();
 
   return data;
-});
+}
 
 /** Linha de `agro.produtores` do usuário logado (quando ele é o próprio produtor). null caso contrário. */
 export const produtorAtual = cache(async () => {
   const sb = await criarClienteServidor();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return null;
+  const { sessao } = await lerSessao(sb);
+  if (!sessao) return null;
 
   const { data } = await sb
     .schema('agro')
     .from('produtores')
     .select('id, nome')
-    .eq('user_id', user.id)
+    .eq('user_id', sessao.id)
     .maybeSingle();
 
   return data;

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor } from '@/lib/supabase/server';
+import { lerSessao } from '@/lib/supabase/sessao';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 async function marcarNotificacaoLidaImpl(fd: FormData) {
@@ -17,11 +18,11 @@ async function marcarNotificacaoLidaImpl(fd: FormData) {
 async function marcarTodasLidasImpl(fd: FormData) {
   const voltar = String(fd.get('voltar') ?? '/app/notificacoes');
   const sb = await criarClienteServidor();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) throw new ErroDeUsuario('Sessão inválida.');
+  const { sessao } = await lerSessao(sb);
+  if (!sessao) throw new ErroDeUsuario('Sessão inválida.');
   const { error } = await sb.schema('agro').from('notificacoes')
     .update({ lida_em: new Date().toISOString() })
-    .eq('destinatario_user_id', user.id)
+    .eq('destinatario_user_id', sessao.id)
     .is('lida_em', null);
   if (error) lancarDoBanco(error);
   revalidatePath(voltar);

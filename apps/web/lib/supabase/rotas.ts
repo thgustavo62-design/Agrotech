@@ -63,6 +63,10 @@ export function decidirRota(caminho: string, logado: boolean, papel: Papel): str
   return null;
 }
 
+export function papelDeValor(valor: unknown): Papel {
+  return valor === 'consultor' || valor === 'admin' || valor === 'produtor' ? valor : null;
+}
+
 /** Lê o papel do claim `user_role` do access token (injetado por agro.custom_access_token_hook). */
 export function papelDoToken(accessToken: string | null | undefined): Papel {
   if (!accessToken) return null;
@@ -70,8 +74,7 @@ export function papelDoToken(accessToken: string | null | undefined): Papel {
     const carga = accessToken.split('.')[1];
     if (!carga) return null;
     const json = atob(carga.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(carga.length / 4) * 4, '='));
-    const papel = (JSON.parse(json) as { user_role?: string }).user_role;
-    return papel === 'consultor' || papel === 'admin' || papel === 'produtor' ? papel : null;
+    return papelDeValor((JSON.parse(json) as { user_role?: string }).user_role);
   } catch {
     return null;
   }

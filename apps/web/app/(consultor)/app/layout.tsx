@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { criarClienteServidor, perfilAtual, recarregarPerfil } from '@/lib/supabase/server';
 import { garantirEscritorio } from '@/lib/onboarding';
 import { contarNaoLidas } from '@/lib/notificacoes';
 import { LateralConsultor } from '@/components/lateral-consultor';
@@ -16,18 +16,19 @@ export const dynamic = 'force-dynamic';
 
 /** Guarda de rota da área do consultor. A barreira real continua sendo a RLS. */
 export default async function LayoutConsultor({ children }: { children: React.ReactNode }) {
-  let perfil = await perfilAtual();
+  // as duas consultas não dependem uma da outra: em paralelo (antes uma esperava a outra, ~100 ms cada)
+  const sb = await criarClienteServidor();
+  const [perfilInicial, naoLidas] = await Promise.all([perfilAtual(), contarNaoLidas(sb)]);
+  let perfil = perfilInicial;
   if (!perfil) redirect('/login');
   if (perfil.role !== 'consultor' && perfil.role !== 'admin') redirect('/produtor');
 
-  // primeiro acesso: cria a organização e semeia as tabelas de referência
+  // primeiro acesso: cria a organização e semeia as tabelas de referência. perfilAtual() é memoizado
+  // na requisição e devolveria o perfil velho (sem org) — por isso a releitura sem cache.
   if (!perfil.org_id) {
     await garantirEscritorio();
-    perfil = (await perfilAtual()) ?? perfil;
+    perfil = (await recarregarPerfil()) ?? perfil;
   }
-
-  const sb = await criarClienteServidor();
-  const naoLidas = await contarNaoLidas(sb);
 
   return (
     <div>

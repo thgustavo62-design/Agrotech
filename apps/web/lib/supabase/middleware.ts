@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { decidirRota, ehFalhaTransitoria, ehPublica, papelDoToken, type Papel } from './rotas';
+import { decidirRota, ehPublica, papelDeValor, type Papel } from './rotas';
+import { lerSessao, type SessaoLida } from './sessao';
 
 type CookieParaGravar = { name: string; value: string; options?: CookieOptions };
 
@@ -12,7 +13,8 @@ type CookieParaGravar = { name: string; value: string; options?: CookieOptions }
  *  - o redirect carrega os cookies que a renovação acabou de gravar; sem isso o refresh
  *    token antigo (já consumido) continua no navegador e a sessão morre;
  *  - falha momentânea do Auth (rede, 5xx, 429) não vira "sem sessão";
- *  - o papel vem do claim do token (sem consulta ao banco por requisição).
+ *  - quem está logado vem dos claims do token, validados localmente (lib/supabase/sessao.ts):
+ *    sem ida ao Auth por requisição nem por link pré-carregado.
  */
 export async function atualizarSessao(req: NextRequest) {
   let res = NextResponse.next({ request: req });
@@ -39,31 +41,24 @@ export async function atualizarSessao(req: NextRequest) {
   });
 
   // uma segunda tentativa cobre soluço de rede ao acordar a aba/aparelho
-  let user = null;
+  let sessao: SessaoLida | null = null;
   let transitoria = false;
   for (let tentativa = 0; tentativa < 2; tentativa++) {
-    const { data, error } = await sb.auth.getUser();
-    user = data.user;
-    transitoria = !user && ehFalhaTransitoria(error);
+    ({ sessao, transitoria } = await lerSessao(sb));
     if (!transitoria) break;
     await new Promise((ok) => setTimeout(ok, 250));
   }
   // Auth fora do ar não é "deslogado": segue; o guarda do layout e a RLS protegem de qualquer modo
   if (transitoria) return res;
 
-  let papel: Papel = null;
-  if (user) {
-    const { data: { session } } = await sb.auth.getSession();
-    papel = papelDoToken(session?.access_token);
-    if (!papel) {
-      // token antigo, sem o claim: cai para o perfil
-      const { data: perfil } = await sb.schema('agro').from('profiles').select('role').eq('id', user.id).maybeSingle();
-      const r = perfil?.role;
-      papel = r === 'consultor' || r === 'admin' || r === 'produtor' ? r : null;
-    }
+  let papel: Papel = sessao?.papel ?? null;
+  if (sessao && !papel) {
+    // token antigo, sem o claim: cai para o perfil
+    const { data: perfil } = await sb.schema('agro').from('profiles').select('role').eq('id', sessao.id).maybeSingle();
+    papel = papelDeValor(perfil?.role);
   }
 
-  const destino = decidirRota(caminho, Boolean(user), papel);
+  const destino = decidirRota(caminho, Boolean(sessao), papel);
   if (!destino) return res;
 
   const url = req.nextUrl.clone();

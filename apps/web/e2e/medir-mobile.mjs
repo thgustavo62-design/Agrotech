@@ -5,8 +5,8 @@ import { mkdirSync } from 'node:fs';
 // uso: node shot2.mjs <largura> <altura> <pasta> <modo: topo|cheia> <caminho>...
 const [w, h, pasta, modo, ...caminhos] = process.argv.slice(2);
 mkdirSync(pasta, { recursive: true });
-const sessao = { access_token: `x.${Buffer.from(JSON.stringify({ sub: 'u0000000-0000-0000-0000-000000000001', exp: 4102444800, role: 'authenticated', user_role: process.env.PAPEL ?? 'consultor', org_id: 'o0000000-0000-0000-0000-000000000001' })).toString('base64url')}.y`, token_type: 'bearer', expires_in: 3600, expires_at: 4102444800, refresh_token: 'r', user: { id: 'u0000000-0000-0000-0000-000000000001', email: 'maria@exemplo.com' } };
-const cookie = 'base64-' + Buffer.from(JSON.stringify(sessao)).toString('base64url');
+const papelCookie = process.env.PAPEL ?? 'consultor';
+const cookie = (await (await fetch(`http://127.0.0.1:54321/__sessao?papel=${papelCookie}`)).json()).cookie; // assinado pelo simulador
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: 2, isMobile: +w < 600, hasTouch: +w < 600 });

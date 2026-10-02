@@ -12,12 +12,10 @@ export const dynamic = 'force-dynamic';
 
 /** Guarda da área do produtor. A barreira real é a RLS (policies *_produtor). */
 export default async function LayoutProdutor({ children }: { children: React.ReactNode }) {
-  const perfil = await perfilAtual();
+  const sb = await criarClienteServidor();
+  const [perfil, naoLidas] = await Promise.all([perfilAtual(), contarNaoLidas(sb)]);
   if (!perfil) redirect('/produtor/login');
   if (perfil.role !== 'produtor') redirect('/app');
-
-  const sb = await criarClienteServidor();
-  const naoLidas = await contarNaoLidas(sb);
 
   return (
     <div>

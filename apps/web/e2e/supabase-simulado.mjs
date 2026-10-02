@@ -2,6 +2,22 @@
 // Não valida nada e não substitui teste contra o Supabase de verdade. Uso (ver e2e/LEIA-ME.md):
 //   PAPEL=consultor|produtor node e2e/supabase-simulado.mjs
 import http from 'node:http';
+import crypto from 'node:crypto';
+
+// Chaves ASSIMÉTRICAS (ES256) como nos projetos novos do Supabase: o app valida o token localmente com o JWKS.
+// SIMETRICO=1 emite tokens HS256 (projeto antigo): aí o app cai na validação pela rede (getUser).
+const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const SIMETRICO = process.env.SIMETRICO === '1';
+const KID = 'chave-simulada-1';
+const b64 = (x) => Buffer.from(typeof x === 'string' ? x : JSON.stringify(x)).toString('base64url');
+function assinar(corpo) {
+  const cab = SIMETRICO ? { alg: 'HS256', typ: 'JWT' } : { alg: 'ES256', typ: 'JWT', kid: KID };
+  const dados = b64(cab) + '.' + b64(corpo);
+  const sig = SIMETRICO
+    ? crypto.createHmac('sha256', 'segredo-simulado').update(dados).digest()
+    : crypto.sign('sha256', Buffer.from(dados), { key: privateKey, dsaEncoding: 'ieee-p1363' });
+  return dados + '.' + sig.toString('base64url');
+}
 
 const hoje = new Date();
 const dia = (n) => new Date(hoje.getTime() + n * 86400000).toISOString().slice(0, 10);
@@ -93,14 +109,30 @@ const painel = {
   atividade_recente: [],
 };
 
-const jwt = (corpo) => `x.${Buffer.from(JSON.stringify(corpo)).toString('base64url')}.y`;
+const jwt = assinar;
 
-http.createServer((req, res) => {
+// LATENCIA_MS simula a ida e volta até o Supabase (ex.: 80); LOG=1 imprime cada chamada com o instante.
+const LATENCIA = Number(process.env.LATENCIA_MS ?? 0);
+const t0 = Date.now();
+http.createServer((req0, res0) => {
+  const rotulo = new URL(req0.url, 'http://x').pathname.replace('/rest/v1/', '').replace('/auth/v1/', 'auth:');
+  if (process.env.LOG) console.log(`${Date.now() - t0}	${req0.method}	${rotulo}`);
+  setTimeout(() => atender(req0, res0), LATENCIA);
+}).listen(54321, '127.0.0.1', () => console.log('supabase simulado em :54321'));
+
+function atender(req, res) {
   const url = new URL(req.url, 'http://x');
   const json = (obj, status = 200, extra = {}) => { res.writeHead(status, { 'content-type': 'application/json', ...extra }); res.end(JSON.stringify(obj)); };
 
+  if (url.pathname === '/auth/v1/.well-known/jwks.json') return json({ keys: [{ ...publicKey.export({ format: 'jwk' }), kid: KID, alg: 'ES256', use: 'sig' }] });
+  if (url.pathname === '/__sessao') { // valor do cookie de sessão para os scripts de teste
+    const papel = url.searchParams.get('papel') ?? 'consultor';
+    const exp = Math.floor(Date.now() / 1000) + 7 * 86400;
+    const sessao = { access_token: jwt({ sub: U, exp, iat: exp - 3600, aud: 'authenticated', role: 'authenticated', user_role: papel, org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } };
+    return json({ cookie: 'base64-' + Buffer.from(JSON.stringify(sessao)).toString('base64url') });
+  }
   if (url.pathname === '/auth/v1/user') return json({ id: U, aud: 'authenticated', role: 'authenticated', email: 'maria@exemplo.com', user_metadata: {}, app_metadata: {} });
-  if (url.pathname === '/auth/v1/token') return json({ access_token: jwt({ sub: U, exp: 4102444800, role: 'authenticated', user_role: 'consultor', org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: 4102444800, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } });
+  if (url.pathname === '/auth/v1/token') return json({ access_token: jwt({ sub: U, exp: Math.floor(Date.now() / 1000) + 3600, aud: 'authenticated', role: 'authenticated', user_role: process.env.PAPEL ?? 'consultor', org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } });
   if (url.pathname === '/auth/v1/logout') { res.writeHead(204); return res.end(); }
 
   if (url.pathname.startsWith('/rest/v1/rpc/')) {
@@ -132,4 +164,4 @@ http.createServer((req, res) => {
     return json(montadas, 200, extra);
   }
   json({}, 404);
-}).listen(54321, '127.0.0.1', () => console.log('mock supabase em :54321'));
+}
