@@ -11,6 +11,7 @@ import { AvatarUsuario } from '@/components/avatar-usuario';
 import { LogoIcone } from '@/components/logo';
 import { BotaoSair } from '@/components/botao-sair';
 import { SincronizadorOffline } from '@/components/sincronizador-offline';
+import { AcessoRemovido } from '@/components/acesso-removido';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,9 @@ export default async function LayoutConsultor({ children }: { children: React.Re
   let perfil = perfilInicial;
   if (!perfil) redirect('/login');
   if (perfil.role !== 'consultor' && perfil.role !== 'admin') redirect('/produtor');
+
+  // conta desativada pelo proprietário: nunca abre escritório de teste nem mostra dados
+  if (perfil.desativado_em) return <AcessoRemovido />;
 
   // primeiro acesso: cria a organização e semeia as tabelas de referência. perfilAtual() é memoizado
   // na requisição e devolveria o perfil velho (sem org) — por isso a releitura sem cache.

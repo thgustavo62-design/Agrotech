@@ -110,7 +110,13 @@ async function alterarPerfisImpl(fd: FormData) {
   revalidatePath(CAMINHO);
 }
 
-/** Tira um colega do escritório: ele perde o acesso aos dados (zera escritório, título e perfis). */
+/**
+ * Remove um colega: a conta é DESATIVADA (não só desvinculada). Sem isso a pessoa entrava de novo e ganhava um
+ * escritório de teste vazio. Ordem: 1) bane o login no Auth e libera o e-mail (renomeia para um endereço morto,
+ * assim dá para cadastrar outra pessoa — ou a mesma — com ele); 2) zera escritório/perfis e marca `desativado_em`
+ * (migration 0039: o banco recusa qualquer escrita com o token antigo; a leitura cai quando o token expira, ≤ 1 h).
+ * A conta NÃO é apagada: laudos e recomendações guardam quem os emitiu (as chaves viram null ao excluir).
+ */
 async function removerDaEquipeImpl(fd: FormData) {
   const perfil = await exigir('equipe.gerenciar');
   const id = String(fd.get('id') ?? '');
@@ -118,13 +124,37 @@ async function removerDaEquipeImpl(fd: FormData) {
   if (id === perfil.id) throw new ErroDeUsuario('Você não pode se remover da própria equipe por aqui.');
 
   const sb = await criarClienteServidor();
-  const { data, error } = await sb.schema('agro').from('profiles')
-    .update({ org_id: null, titulo: null, perfis: [] }).eq('id', id).eq('org_id', perfil.org_id).select('nome').maybeSingle();
-  if (error) lancarDoBanco(error);
-  if (!data) throw new ErroDeUsuario('Integrante não encontrado neste escritório.');
+  const { data: alvo } = await sb.schema('agro').from('profiles')
+    .select('id, nome, role, perfis').eq('id', id).eq('org_id', perfil.org_id).maybeSingle();
+  if (!alvo || (alvo.role !== 'consultor' && alvo.role !== 'admin')) throw new ErroDeUsuario('Integrante não encontrado neste escritório.');
+  const eraProprietario = (alvo.perfis as string[] | null)?.includes('proprietario');
+  if (eraProprietario) {
+    // antes de banir: se for o último proprietário o banco recusa depois e a conta ficaria banida à toa
+    const { count } = await sb.schema('agro').from('profiles').select('*', { count: 'exact', head: true })
+      .eq('org_id', perfil.org_id).contains('perfis', ['proprietario']).neq('id', id);
+    if (!count) throw new ErroDeUsuario('O escritório precisa de pelo menos um proprietário.');
+  }
+
+  const admin = adminOuErro();
+  const { error: eBan } = await admin.auth.admin.updateUserById(id, {
+    ban_duration: '876000h', // ~100 anos: o login e a renovação da sessão deixam de funcionar
+    email: `removido-${id}@removido.invalid`,
+    email_confirm: true,
+  });
+  if (eBan) {
+    console.error('[removerDaEquipe] ban', eBan);
+    throw new ErroDeUsuario('Não foi possível desativar o acesso agora. Nada foi alterado; tente de novo.');
+  }
+
+  const { error: ePerfil } = await admin.schema('agro').from('profiles')
+    .update({ org_id: null, titulo: null, perfis: [], desativado_em: new Date().toISOString() }).eq('id', id);
+  if (ePerfil) {
+    console.error('[removerDaEquipe] perfil', ePerfil);
+    throw new ErroDeUsuario('O acesso foi bloqueado, mas não consegui tirar a pessoa do escritório. Tente remover de novo.');
+  }
 
   await registrar(sb, {
-    acao: 'equipe.removido', entidade: 'profiles', entidade_id: id, org_id: perfil.org_id, dados: { nome: data.nome },
+    acao: 'equipe.removido', entidade: 'profiles', entidade_id: id, org_id: perfil.org_id, dados: { nome: alvo.nome },
   });
   revalidatePath(CAMINHO);
 }

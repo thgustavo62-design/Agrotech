@@ -265,3 +265,50 @@ describe('convite de equipe com perfis e limite do plano', () => {
     expect((await db.query<{ org_id: string | null }>(`select org_id from agro.profiles where id = '${id}'`)).rows[0]!.org_id).toBeNull();
   });
 });
+
+describe('remover alguém da equipe: conta desativada (0039)', () => {
+  const ID_X = '61111111-0000-0000-0000-0000000000c1';
+  const novoProdutor = `insert into agro.produtores (org_id, nome) values ('${ID.orgA}', 'por removido')`;
+
+  beforeAll(async () => {
+    await db.exec(`
+      insert into auth.users (id, email) values ('${ID_X}','x@t');
+      update agro.profiles set org_id='${ID.orgA}', role='consultor', perfis=array['agronomico','campo'] where id='${ID_X}'`);
+  });
+
+  it('antes: grava normalmente', async () => {
+    await como(db, ID_X, async () => expect(await tenta(novoProdutor)).toBeNull());
+  });
+
+  it('depois de desativado (como o servidor faz), o token antigo já não grava nada', async () => {
+    // o servidor (service role / dono da conexão) desativa e desvincula
+    await db.exec(`update agro.profiles set org_id = null, perfis = '{}', desativado_em = now() where id = '${ID_X}'`);
+    // o JWT antigo ainda leva org_id (vale até expirar): por isso a prova usa o claim do escritório antigo
+    await db.query("select set_config('request.jwt.claims', $1, false), set_config('request.jwt.claim.sub', $2, false)", [
+      JSON.stringify({ sub: ID_X, role: 'authenticated', org_id: ID.orgA, user_role: 'consultor' }), ID_X,
+    ]);
+    await db.exec('set role authenticated');
+    try {
+      expect(await tenta(novoProdutor)).not.toBeNull();
+      const { rows } = await db.query<{ ok: boolean }>("select agro.pode('carteira.editar') as ok");
+      expect(rows[0]!.ok).toBe(false);
+    } finally {
+      await db.exec('reset role');
+    }
+  });
+
+  it('o cliente não reativa a própria conta nem abre escritório de teste', async () => {
+    await como(db, ID_X, async () => {
+      expect(await tenta(`update agro.profiles set desativado_em = null where id = '${ID_X}'`)).toBe('42501');
+      expect(await tenta(`select agro.criar_escritorio('Volta')`)).toBe('42501');
+    });
+    const { rows } = await db.query<{ org_id: string | null; off: boolean }>(`select org_id, desativado_em is not null as off from agro.profiles where id = '${ID_X}'`);
+    expect(rows[0]).toEqual({ org_id: null, off: true });
+  });
+
+  it('proprietário não (des)ativa conta pelo cliente: só o servidor', async () => {
+    await como(db, dono(), async () => {
+      expect(await tenta(`update agro.profiles set desativado_em = now() where id = '${U.campo}'`)).toBe('42501');
+    });
+  });
+});
