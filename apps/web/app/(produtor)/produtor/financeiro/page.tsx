@@ -47,6 +47,7 @@ export default async function FinanceiroProdutor() {
     },
   ];
 
+
   return (
     <>
       <div style={{ marginBottom: 12 }}>

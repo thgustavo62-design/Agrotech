@@ -39,6 +39,7 @@ export default async function FinanceiroEscritorio() {
     },
   ];
 
+
   return (
     <>
       <BannerHero imagem={FOTO_CONSULTOR}

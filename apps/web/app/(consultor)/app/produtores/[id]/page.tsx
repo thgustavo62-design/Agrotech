@@ -75,6 +75,7 @@ export default async function PaginaProdutor({ params }: { params: Promise<{ id:
     },
   ];
 
+
   return (
     <>
       <div style={{ marginBottom: 12 }}>

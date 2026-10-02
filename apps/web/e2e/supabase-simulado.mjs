@@ -156,7 +156,7 @@ function atender(req, res) {
     const tabela = url.pathname.split('/').pop();
     let linhas = [...(T[tabela] ?? [])];
     for (const [k, v] of url.searchParams) {
-      if (['select', 'order', 'limit', 'offset', 'on_conflict', 'columns'].includes(k)) continue;
+      if (['select', 'order', 'limit', 'offset', 'on_conflict', 'columns'].includes(k) || k.includes('.')) continue; // filtros em recurso aninhado: depois de montar
       const m = /^eq\.(.*)$/.exec(v); if (m) linhas = linhas.filter((r) => String(r[k]) === m[1]);
       const i = /^in\.\((.*)\)$/.exec(v); if (i) { const lista = i[1].split(',').map((x) => x.replace(/"/g, '')); linhas = linhas.filter((r) => lista.includes(String(r[k]))); }
     }
@@ -165,7 +165,12 @@ function atender(req, res) {
     const extra = { 'content-range': total ? `0-${total - 1}/${total}` : '*/0' };
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(201, { 'content-type': 'application/json' }); return res.end('[]'); }
     if (req.method === 'HEAD') { res.writeHead(200, extra); return res.end(); }
-    const montadas = linhas.map((r) => montar(r, url.searchParams.get('select')));
+    let montadas = linhas.map((r) => montar(r, url.searchParams.get('select')));
+    // filtro em recurso aninhado (ex.: analise.talhao_id=eq.X, com !inner no select)
+    for (const [k, v] of url.searchParams) {
+      const m = k.includes('.') ? /^eq.(.*)$/.exec(v) : null;
+      if (m) montadas = montadas.filter((r) => String(k.split('.').reduce((o, p) => o?.[p], r)) === m[1]);
+    }
     if ((req.headers.accept ?? '').includes('vnd.pgrst.object')) {
       if (!montadas.length) return json({ code: 'PGRST116', message: 'The result contains 0 rows', details: null, hint: null }, 406, extra);
       return json(montadas[0], 200, extra);

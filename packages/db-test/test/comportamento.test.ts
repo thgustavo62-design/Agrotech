@@ -34,6 +34,21 @@ describe('isolamento por organização e por produtor', () => {
   });
 });
 
+describe('filtro por produtor (painel do produtor)', () => {
+  it('talhões, propriedades e visitas têm produtor_id e o filtro isola cada produtor do escritório', async () => {
+    await db.exec(`insert into agro.visitas (id, talhao_id, data) values ('a4000000-0000-0000-0000-0000000000a1','${ID.talhaoA2}','2026-09-01')`);
+    await como(db, ID.consultorA, async () => {
+      const por = (tabela: string, cad: string) => contar(db, `select count(*)::int n from agro.${tabela} where produtor_id = '${cad}'`);
+      // o consultor A enxerga os dois produtores, mas cada filtro devolve só os do produtor pedido
+      expect(await por('talhoes', ID.cadA)).toBe(1);
+      expect(await por('talhoes', ID.cadA2)).toBe(1);
+      expect(await por('propriedades', ID.cadA)).toBe(1);
+      expect(await por('visitas', ID.cadA2)).toBe(1);
+      expect(await por('visitas', ID.cadA)).toBe(0);
+    });
+  });
+});
+
 describe('visita — idempotência do reenvio offline (0031)', () => {
   const chave = 'cccccccc-0000-0000-0000-000000000001';
   const inserir = `insert into agro.visitas (talhao_id, data, chave_cliente) values ('${ID.talhaoA}','2026-09-30',$1)`;

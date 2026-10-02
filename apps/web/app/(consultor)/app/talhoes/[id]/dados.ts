@@ -28,10 +28,11 @@ export const SITUACAO: Record<string, { txt: string; tom: 'ok' | 'alerta' | 'rui
 
 export async function carregarTalhao({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-
   const sb = await criarClienteServidor();
 
-  const [{ data: talhao, error }, { data: analisesRaw }, { data: visitasRaw }, tabelas] = await Promise.all([
+  // Tudo que só depende do id do talhão sai numa rodada só (antes eram 3 rodadas em fila: talhão/análises/visitas,
+  // depois recomendações, depois produção). Só as URLs das fotos dependem do resultado das visitas.
+  const [{ data: talhao, error }, { data: analisesRaw }, { data: visitasRaw }, tabelas, { data: recsRaw }, { data: producaoRaw }] = await Promise.all([
     sb.schema('agro').from('talhoes').select(
       `id, nome, cultura, variedade, area_ha, prod_esperada, espacamento, ano_implantacao, obs,
        propriedade:propriedade_id ( id, nome, municipio, produtor:produtor_id ( id, nome ) )`,
@@ -44,49 +45,38 @@ export async function carregarTalhao({ params }: { params: Promise<{ id: string 
       .select('id, data, fenologia, condicao, observacoes, recomendacao, proxima_visita, ocorrencias:visita_ocorrencias(alvo, valor, acima_nivel), fotos:visita_fotos(id, storage_path, legenda, lat, lng)')
       .eq('talhao_id', id).order('data', { ascending: false }),
     tabelasDaOrg(sb),
+    // recomendações das análises (não arquivadas) deste talhão, por junção — sem esperar a lista de análises
+    sb.schema('agro').from('recomendacoes')
+      .select('id, analise_id, emitida_em, resultado, analise:analise_id!inner(talhao_id, arquivado_em)')
+      .eq('analise.talhao_id', id).is('analise.arquivado_em', null).is('arquivada_em', null)
+      .order('emitida_em', { ascending: false }),
+    // Produção: só os campos agronômicos (agro.producao_visivel_consultor nunca
+    // seleciona preço/receita/observação — ver DATABASE_CHANGES.md §0022).
+    sb.schema('agro').rpc('producao_visivel_consultor'),
   ]);
 
   if (error || !talhao) notFound();
-
+  // deno-lint-ignore no-explicit-any
   const propriedade = (talhao as any).propriedade;
-
   const produtor = propriedade?.produtor;
 
   const analises = (analisesRaw ?? []) as unknown as LinhaAnalise[];
-
   const visitas = (visitasRaw ?? []) as unknown as LinhaVisita[];
-
   const ultima = analises[0];
-
   const cultura = talhao.cultura ? tabelas.culturas[talhao.cultura as string] : undefined;
 
   const calc = ultima ? calcular(paraAnalise(ultima), tabelas) : null;
-
   const V2 = cultura?.V2 ?? 60;
-
   const mMax = cultura?.m_max ?? 20;
-
   const situacaoChave = !ultima ? 'sem_analise'
-  : (calc!.V < V2 - 10 || calc!.m > mMax) ? 'precisa_correcao'
-  : calc!.classeP <= 1 ? 'atencao' : 'em_ordem';
-
+    : (calc!.V < V2 - 10 || calc!.m > mMax) ? 'precisa_correcao'
+    : calc!.classeP <= 1 ? 'atencao' : 'em_ordem';
   const situacao = SITUACAO[situacaoChave]!;
-
-  const idsAnalises = analises.map((a) => a.id);
-
-  const { data: recsRaw } = idsAnalises.length
-  ? await sb.schema('agro').from('recomendacoes')
-      .select('id, analise_id, emitida_em, resultado')
-      .in('analise_id', idsAnalises).is('arquivada_em', null)
-      .order('emitida_em', { ascending: false })
-  : { data: [] as LinhaRecomendacao[] };
 
   const recomendacoes = (recsRaw ?? []) as unknown as LinhaRecomendacao[];
 
   const todasFotos = visitas.flatMap((v) => v.fotos ?? []);
-
   let urlsFotos = new Map<string, string | null>();
-
   if (todasFotos.length) {
     const { data: assinadas } = await sb.storage.from('visitas')
       .createSignedUrls(todasFotos.map((ft) => ft.storage_path), 3600);
@@ -95,15 +85,13 @@ export async function carregarTalhao({ params }: { params: Promise<{ id: string 
 
   const proximaVisita = visitas.find((v) => v.proxima_visita)?.proxima_visita ?? null;
 
-  const { data: producaoRaw } = await sb.schema('agro').rpc('producao_visivel_consultor');
-
   const producao = ((producaoRaw ?? []) as Array<{
     id: string; talhao_id: string | null; safra_id: string | null;
     producao_prevista: number | null; producao_realizada: number | null; unidade: string; criado_em: string;
   }>).filter((p) => p.talhao_id === id);
 
+  // ---- linha do tempo (prontuário) — análises + recomendações + visitas, uma só ordem ----
   type Evento = { data: string; tipo: string; rotulo: string; href?: string };
-
   const timeline: Evento[] = [
     ...analises.map((a): Evento => ({ data: a.data_coleta, tipo: 'análise', rotulo: `Análise de solo recebida (${a.laboratorio ?? 'laboratório não informado'})`, href: `/app/analises/${a.id}` })),
     ...recomendacoes.map((r): Evento => ({ data: r.emitida_em.slice(0, 10), tipo: 'recomendação', rotulo: 'Recomendação emitida', href: `/app/analises/${r.analise_id}/laudo` })),

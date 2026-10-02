@@ -26,20 +26,20 @@ export const SITUACAO: Record<Situacao, { txt: string; tom: 'ok' | 'alerta' | 'r
 
 export async function carregarProdutor({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-
   const sb = await criarClienteServidor();
 
   const [
     { data: prod, error }, { data: talhoesRaw }, { data: propriedadesRaw }, { data: comps },
-    { data: convites }, tabelas, { data: recsRaw }, { data: docsRaw },
+    { data: convites }, tabelas, { data: recsRaw }, { data: docsRaw }, { data: visitasRaw },
   ] = await Promise.all([
     sb.schema('agro').from('produtores').select('id, nome, email, fone, cpf_cnpj, user_id').eq('id', id).single(),
     sb.schema('agro').from('talhoes')
       .select(`id, nome, cultura, area_ha, prod_esperada,
                propriedade:propriedade_id(id, nome),
                analises:analises(id, data_coleta, argila, ph, mo, p, k, na, ca, mg, al, h_al, s)`)
+      .eq('produtor_id', id)
       .order('nome'),
-    sb.schema('agro').from('propriedades').select('id, nome, municipio, area_total').order('nome'),
+    sb.schema('agro').from('propriedades').select('id, nome, municipio, area_total').eq('produtor_id', id).order('nome'),
     sb.schema('agro').from('compartilhamentos')
       .select('id, cultura, rotulo, token, ativo, acessos')
       .eq('produtor_id', id).order('criado_em', { ascending: false }),
@@ -53,27 +53,24 @@ export async function carregarProdutor({ params }: { params: Promise<{ id: strin
     sb.schema('agro').from('documentos')
       .select('id, nome_arquivo, laboratorio, status, confianca_media, criado_em')
       .eq('produtor_id', id).order('criado_em', { ascending: false }),
+    // visitas dos talhões deste produtor (visitas.produtor_id vem do talhão): na mesma rodada, sem esperar a lista de talhões
+    sb.schema('agro').from('visitas')
+      .select('id, talhao_id, data, fenologia, condicao, proxima_visita, ocorrencias:visita_ocorrencias(acima_nivel)')
+      .eq('produtor_id', id).order('data', { ascending: false }),
   ]);
 
   if (error || !prod) notFound();
 
   const talhoes = (talhoesRaw ?? []) as unknown as TalhaoRow[];
-
   const propriedades = (propriedadesRaw ?? []) as Array<{ id: string; nome: string; municipio: string | null; area_total: number | null }>;
-
   const talhaoIds = talhoes.map((t) => t.id);
-
-  const { data: visitasRaw } = talhaoIds.length
-  ? await sb.schema('agro').from('visitas')
-      .select('id, talhao_id, data, fenologia, condicao, proxima_visita, ocorrencias:visita_ocorrencias(acima_nivel)')
-      .in('talhao_id', talhaoIds).order('data', { ascending: false })
-  : { data: [] as never[] };
 
   const visitas = (visitasRaw ?? []) as unknown as Array<{
     id: string; talhao_id: string; data: string; fenologia: string | null; condicao: string | null;
     proxima_visita: string | null; ocorrencias: Array<{ acima_nivel: boolean }>;
   }>;
 
+  // ---- resumo por talhão (V/m/situação), calculado uma vez, reaproveitado no resto da página ----
   const resumos = talhoes.map((t) => {
     const ordenadas = [...(t.analises ?? [])].sort((a, b) => b.data_coleta.localeCompare(a.data_coleta));
     const ultima = ordenadas[0];
@@ -89,44 +86,36 @@ export async function carregarProdutor({ params }: { params: Promise<{ id: strin
   });
 
   const porCultura = new Map<string, typeof resumos>();
-
   for (const x of resumos) {
     const chave = x.talhao.cultura ?? '__sem';
     if (!porCultura.has(chave)) porCultura.set(chave, []);
     porCultura.get(chave)!.push(x);
   }
-
   const culturasOrdenadas = [...porCultura.keys()].sort((a, b) => nomeCultura(a).localeCompare(nomeCultura(b)));
 
   const areaTotal = talhoes.reduce((s, t) => s + Number(t.area_ha ?? 0), 0);
-
   const totalAnalises = talhoes.reduce((s, t) => s + (t.analises?.length ?? 0), 0);
-
   const nCritico = resumos.filter((x) => x.situacao === 'precisa_correcao').length;
-
   const nAtencao = resumos.filter((x) => x.situacao === 'atencao').length;
-
   const situacaoGeral: { txt: string; tom: 'ok' | 'alerta' | 'ruim' | 'cinza' } =
-  nCritico > 0 ? { txt: `${nCritico} talhão(ões) precisando de correção`, tom: 'ruim' }
-  : nAtencao > 0 ? { txt: `${nAtencao} talhão(ões) com fósforo baixo`, tom: 'alerta' }
-  : resumos.some((x) => x.situacao === 'em_ordem') ? { txt: 'solo em ordem', tom: 'ok' }
-  : { txt: 'sem análise lançada', tom: 'cinza' };
+    nCritico > 0 ? { txt: `${nCritico} talhão(ões) precisando de correção`, tom: 'ruim' }
+    : nAtencao > 0 ? { txt: `${nAtencao} talhão(ões) com fósforo baixo`, tom: 'alerta' }
+    : resumos.some((x) => x.situacao === 'em_ordem') ? { txt: 'solo em ordem', tom: 'ok' }
+    : { txt: 'sem análise lançada', tom: 'cinza' };
 
   const hojeISO = dataDeHoje();
-
   const ultimaVisita = [...visitas].sort((a, b) => b.data.localeCompare(a.data))[0];
-
   const proximaVisita = visitas.map((v) => v.proxima_visita).filter((d): d is string => d != null && d >= hojeISO).sort()[0];
 
   const recomendacoes = (recsRaw ?? []) as unknown as Array<{
     id: string; analise_id: string; emitida_em: string; motor_versao: string; resultado: Record<string, unknown>;
     analise: { talhao: { nome: string; cultura: string | null } | null } | null;
   }>;
-
   const documentos = (docsRaw ?? []) as Array<{
     id: string; nome_arquivo: string | null; laboratorio: string | null; status: string; confianca_media: number | null; criado_em: string;
   }>;
 
+  // ---- linha do tempo: audit_log de tudo que pertence a este produtor ----
   const idsRelevantes = [
     id,
     ...talhaoIds,
@@ -135,17 +124,14 @@ export async function carregarProdutor({ params }: { params: Promise<{ id: strin
     ...documentos.map((d) => d.id),
     ...visitas.map((v) => v.id),
   ];
-
   const { data: atividadeRaw } = idsRelevantes.length
-  ? await sb.schema('agro').from('audit_log')
-      .select('acao, entidade, entidade_id, dados, criado_em')
-      .in('entidade_id', idsRelevantes).order('criado_em', { ascending: false }).limit(30)
-  : { data: [] as AtividadeBruta[] };
-
+    ? await sb.schema('agro').from('audit_log')
+        .select('acao, entidade, entidade_id, dados, criado_em')
+        .in('entidade_id', idsRelevantes).order('criado_em', { ascending: false }).limit(30)
+    : { data: [] as AtividadeBruta[] };
   const atividade = (atividadeRaw ?? []) as AtividadeBruta[];
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
-
   const seta = (atual: number, anterior: number | undefined) => {
     if (anterior == null) return '';
     if (atual > anterior + 0.5) return ' ▲';

@@ -16,7 +16,6 @@ export type Orcamento = { id: string; categoria_id: string | null; valor_planeja
 
 export async function carregarFinanceiro() {
   const produtor = await produtorAtual();
-
   if (!produtor) notFound();
 
   const sb = await criarClienteServidor();
@@ -24,10 +23,8 @@ export async function carregarFinanceiro() {
   // plano sem financeiro: quem chama decide o que mostrar (aqui só o motivo)
   if (!(await temFeature(sb, 'financeiro'))) return { bloqueado: true as const };
 
-  await sb.schema('agro').rpc('semear_categorias_financeiras', { p_produtor: produtor.id });
-
   const [
-    { data: categoriasRaw }, { data: centrosRaw }, { data: contasRaw }, { data: lancamentosRaw },
+    { data: categoriasLidas }, { data: centrosRaw }, { data: contasRaw }, { data: lancamentosRaw },
     { data: orcamentosRaw }, { data: propriedadesRaw }, { data: talhoesRaw },
   ] = await Promise.all([
     sb.schema('agro').from('financeiro_categorias').select('id, nome, tipo, padrao').order('nome'),
@@ -42,46 +39,39 @@ export async function carregarFinanceiro() {
     sb.schema('agro').from('talhoes').select('id, nome, propriedade_id').order('nome'),
   ]);
 
+  // categorias padrão: semeadas só na 1ª visita. Antes o RPC rodava em TODA visita, em fila na frente das consultas.
+  let categoriasRaw = categoriasLidas;
+  if (!categoriasLidas?.length) {
+    await sb.schema('agro').rpc('semear_categorias_financeiras', { p_produtor: produtor.id });
+    ({ data: categoriasRaw } = await sb.schema('agro').from('financeiro_categorias').select('id, nome, tipo, padrao').order('nome'));
+  }
+
   const categorias = (categoriasRaw ?? []) as Categoria[];
-
   const centros = (centrosRaw ?? []) as CentroCusto[];
-
   const contas = (contasRaw ?? []) as Conta[];
-
   const lancamentos = (lancamentosRaw ?? []) as Lancamento[];
-
   const orcamentos = (orcamentosRaw ?? []) as Orcamento[];
-
   const propriedades = (propriedadesRaw ?? []) as Array<{ id: string; nome: string }>;
-
   const talhoes = (talhoesRaw ?? []) as Array<{ id: string; nome: string; propriedade_id: string }>;
 
   const nomeCategoria = (id: string | null) => categorias.find((c) => c.id === id)?.nome ?? '—';
-
   const nomeConta = (id: string | null) => contas.find((c) => c.id === id)?.nome ?? '—';
 
   const comprovantes = lancamentos.filter((l) => l.comprovante_path).map((l) => l.comprovante_path!) as string[];
-
   const { data: assinadas } = comprovantes.length
-  ? await sb.storage.from('financeiro').createSignedUrls(comprovantes, 3600)
-  : { data: [] as Array<{ path: string | null; signedUrl: string }> };
-
+    ? await sb.storage.from('financeiro').createSignedUrls(comprovantes, 3600)
+    : { data: [] as Array<{ path: string | null; signedUrl: string }> };
   const urlComprovante = new Map<string, string | null>((assinadas ?? []).map((a) => [a.path ?? '', a.signedUrl]));
 
   const hojeISO = dataDeHoje();
-
   const mesAtual = hojeISO.slice(0, 7);
-
   const anoAtual = hojeISO.slice(0, 4);
 
   const comStatus = lancamentos.map((l) => ({ ...l, statusEf: statusEfetivo(l.status, l.vencimento, hojeISO) }));
 
   const totalContas = contas.reduce((s, c) => s + Number(c.saldo_inicial), 0);
-
   const totalReceitasPagas = lancamentos.filter((l) => l.tipo === 'receita' && l.status === 'pago').reduce((s, l) => s + Number(l.valor), 0);
-
   const totalDespesasPagas = lancamentos.filter((l) => l.tipo === 'despesa' && l.status === 'pago').reduce((s, l) => s + Number(l.valor), 0);
-
   const saldoGeral = totalContas + totalReceitasPagas - totalDespesasPagas;
 
   const saldoConta = (contaId: string, saldoInicial: number) => {
@@ -91,32 +81,25 @@ export async function carregarFinanceiro() {
   };
 
   const doMes = lancamentos.filter((l) => l.data.slice(0, 7) === mesAtual);
-
   const receitasMes = doMes.filter((l) => l.tipo === 'receita' && l.status === 'pago').reduce((s, l) => s + Number(l.valor), 0);
-
   const despesasMes = doMes.filter((l) => l.tipo === 'despesa' && l.status === 'pago').reduce((s, l) => s + Number(l.valor), 0);
 
   const despesaPorCategoriaMes = new Map<string, number>();
-
   for (const l of doMes) {
     if (l.tipo !== 'despesa' || l.status !== 'pago') continue;
     const chave = l.categoria_id ?? '__sem';
     despesaPorCategoriaMes.set(chave, (despesaPorCategoriaMes.get(chave) ?? 0) + Number(l.valor));
   }
-
   const despesasCategoriaOrdenadas = [...despesaPorCategoriaMes.entries()].sort((a, b) => b[1] - a[1]);
 
   const atrasados = comStatus.filter((l) => l.statusEf === 'atrasado').sort((a, b) => (a.vencimento ?? '').localeCompare(b.vencimento ?? ''));
-
   const proximosVencimentos = comStatus
-  .filter((l) => l.status === 'pendente' && l.vencimento && l.vencimento >= hojeISO)
-  .sort((a, b) => a.vencimento!.localeCompare(b.vencimento!))
-  .slice(0, 5);
-
+    .filter((l) => l.status === 'pendente' && l.vencimento && l.vencimento >= hojeISO)
+    .sort((a, b) => a.vencimento!.localeCompare(b.vencimento!))
+    .slice(0, 5);
   const pendenciasTotal = comStatus.filter((l) => l.statusEf === 'pendente' || l.statusEf === 'atrasado').length;
 
   const categoriasReceita = categorias.filter((c) => c.tipo === 'receita');
-
   const categoriasDespesa = categorias.filter((c) => c.tipo === 'despesa');
 
   return {
