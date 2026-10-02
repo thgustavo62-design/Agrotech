@@ -120,8 +120,17 @@ http.createServer((req0, res0) => {
   setTimeout(() => atender(req0, res0), LATENCIA);
 }).listen(54321, '127.0.0.1', () => console.log('supabase simulado em :54321'));
 
+// o papel (consultor|produtor) vem do token da requisição: uma instância atende os dois portais
+function papelDaRequisicao(req) {
+  try {
+    const carga = (req.headers.authorization ?? '').split('.')[1];
+    return JSON.parse(Buffer.from(carga, 'base64url').toString()).user_role ?? process.env.PAPEL ?? 'consultor';
+  } catch { return process.env.PAPEL ?? 'consultor'; }
+}
 function atender(req, res) {
   const url = new URL(req.url, 'http://x');
+  const papel = papelDaRequisicao(req);
+  T.profiles = [{ id: U, org_id: O, role: papel, nome: papel === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }];
   const json = (obj, status = 200, extra = {}) => { res.writeHead(status, { 'content-type': 'application/json', ...extra }); res.end(JSON.stringify(obj)); };
 
   if (url.pathname === '/auth/v1/.well-known/jwks.json') return json({ keys: [{ ...publicKey.export({ format: 'jwk' }), kid: KID, alg: 'ES256', use: 'sig' }] });
