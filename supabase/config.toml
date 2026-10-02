@@ -50,9 +50,11 @@ max_enrolled_factors = 3
 enroll_enabled = true
 verify_enabled = true
 
-# aperta o brute force no endpoint de token (login)
+# aperta o brute force no login (por IP, a cada 5 min). token_refresh NÃO deve ser baixo: a renovação de
+# sessão também roda no servidor do Vercel (middleware), cujo IP é compartilhado por todos os usuários.
+# O projeto real é configurado no painel (Authentication > Rate Limits), não por este arquivo.
 [auth.rate_limit]
-token_refresh = 30
+token_refresh = 150
 sign_in_sign_ups = 10
 token_verifications = 30
 
