@@ -20,8 +20,9 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      # build antes: o typecheck dos pacotes lê os tipos de agro-core/dist
-      - run: npm run build
+      # só os pacotes: o typecheck lê os tipos de agro-core/dist. O app web tem o job próprio abaixo;
+      # buildá-lo aqui também dependia de baixar fontes do Google (flaky) e dobrava o tempo.
+      - run: npm run build --workspace @agrotech/agro-core --workspace @agrotech/laudo-pdf
       - run: npm run typecheck
       - run: npm test
 
