@@ -35,3 +35,8 @@ A Content-Security-Policy (nonce por requisição, `lib/csp.ts`, montada no `mid
 `node e2e/verificar-csp.mjs /login /app /app/config/equipe` lista violações ("Refused to…"), erros de JS e se cada página hidratou.
 Em http local o logout (`/sair`) só passa se você abrir o site pelo MESMO host que o servidor enxerga (use `localhost`, não `127.0.0.1`):
 o `form-action 'self'` também vale para o destino do redirect.
+
+## Funcionar sem sinal
+
+- `node e2e/verificar-fila-offline.mjs` — visita registrada offline vai para a fila (IndexedDB) e é enviada sozinha quando o sinal volta (`LOG_SIM` = arquivo do simulador iniciado com `LOG=1`).
+- `node e2e/verificar-cache-offline.mjs` — a agenda guarda no aparelho os talhões das visitas dos próximos 7 dias (HTML **e** os arquivos JS da rota); offline eles abrem inteiros. O que não foi guardado cai em "Sem conexão".

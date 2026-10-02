@@ -836,6 +836,14 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## Campo sem sinal — fila offline provada e cache pré-aquecido (02/10/2026)
+
+- [x] **Fila de escrita offline validada num navegador** (Playwright, perfil Campo, com a CSP nova): visita salva sem sinal → vai para o IndexedDB → ao voltar o sinal o envio é automático, 1 POST no servidor, fila zera. (Antes estava marcada "não testada em navegador".)
+- [x] **Achado e corrigido:** offline só abria talhão já visitado, e mesmo uma página guardada dava erro ("Não deu certo") se o *chunk* de JavaScript da rota nunca tivesse sido baixado. Novo `PreAquecerOffline` na Agenda: com sinal, guarda no aparelho os talhões das visitas de hoje até 7 dias — o HTML **e** os `/_next/static/*.js|css` que ele cita; respeita economia de dados e só roda com o service worker ativo. Provado: talhões nunca abertos abrem inteiros offline; os não guardados caem em "Sem conexão".
+- Continua valendo: sem Background Sync (Safari não tem) — o reenvio acontece com o app aberto; só visitas entram na fila. Scripts: `e2e/verificar-fila-offline.mjs`, `e2e/verificar-cache-offline.mjs`.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

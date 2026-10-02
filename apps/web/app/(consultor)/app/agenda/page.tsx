@@ -3,6 +3,7 @@ import { dataBR, diasDepoisISO } from '@/lib/formato';
 import { Cartao, Tag, Vazio } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
+import { PreAquecerOffline } from '@/components/preaquecer-offline';
 import { KanbanAgenda, type ColunaKanban } from '@/components/kanban-agenda';
 import { criarEvento, mudarStatusEvento } from './acoes';
 
@@ -14,7 +15,7 @@ const ROTULO_TIPO: Record<string, string> = {
 };
 
 type Evento = {
-  id: string; tipo: string; titulo: string; data: string; hora: string | null; status: string; observacao: string | null;
+  id: string; tipo: string; titulo: string; data: string; hora: string | null; status: string; observacao: string | null; talhao_id: string | null;
   produtor: { nome: string } | null; talhao: { nome: string } | null;
 };
 
@@ -23,7 +24,7 @@ export default async function Agenda() {
 
   const [{ data: eventosRaw }, { data: produtoresRaw }, { data: talhoesRaw }] = await Promise.all([
     sb.schema('agro').from('agenda_eventos')
-      .select('id, tipo, titulo, data, hora, status, observacao, produtor:produtor_id(nome), talhao:talhao_id(nome)')
+      .select('id, tipo, titulo, data, hora, status, observacao, talhao_id, produtor:produtor_id(nome), talhao:talhao_id(nome)')
       .order('data', { ascending: true }).order('hora', { ascending: true }),
     sb.schema('agro').from('produtores').select('id, nome').order('nome'),
     sb.schema('agro').from('talhoes').select('id, nome, propriedade:propriedade_id(produtor:produtor_id(nome))').order('nome'),
@@ -44,6 +45,9 @@ export default async function Agenda() {
   const proximos7 = planejados.filter((e) => e.data > hojeISO && e.data <= em7dias);
   const depois = planejados.filter((e) => e.data > em7dias);
   const historico = eventos.filter((e) => e.status !== 'planejado').slice(0, 10);
+
+  // talhões das visitas de hoje até 7 dias: ficam salvos no aparelho para o campo sem sinal
+  const paraOffline = [...atrasados, ...hoje, ...proximos7].map((e) => e.talhao_id).filter((t): t is string => Boolean(t)).map((t) => `/app/talhoes/${t}`);
 
   const subtituloKanban = (e: Evento) =>
     `${dataBR(e.data)}${e.hora ? ` · ${e.hora.slice(0, 5)}` : ''} · ${ROTULO_TIPO[e.tipo] ?? e.tipo}${e.produtor ? ` · ${e.produtor.nome}` : ''}`;
@@ -166,6 +170,7 @@ export default async function Agenda() {
         descricao="Visitas, coletas de solo, retornos e aplicações — o que vem por aí."
         tags={['Rotina', 'Campo', 'Visitas']}
       />
+      <PreAquecerOffline hrefs={paraOffline} />
       <AbasPaineis paineis={paineis} />
     </>
   );
