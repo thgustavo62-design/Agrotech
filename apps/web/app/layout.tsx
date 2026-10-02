@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { connection } from 'next/server';
 import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import { RegistrarSW } from '@/components/registrar-sw';
 import { AvisoFlash } from '@/components/aviso-flash';
@@ -38,7 +39,10 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // a CSP usa um nonce novo a cada requisição (middleware.ts): página pré-renderizada não teria nonce e
+  // teria os scripts bloqueados. Renderização dinâmica no app todo — o custo é mínimo (páginas leves).
+  await connection();
   return (
     <html lang="pt-BR" className={`${archivo.variable} ${plexMono.variable}`}>
       <body>

@@ -28,3 +28,10 @@ node e2e/comparar-pixels.mjs  /tmp/px-depois 390 && for f in /tmp/px-antes/*.png
 Capturas do mesmo código duas vezes seguidas precisam sair idênticas (confira antes de confiar na comparação).
 O mapa Leaflet e as horas relativas do simulador são as únicas fontes de ruído conhecidas.
 `medir-tempo.mjs` (com `LATENCIA_MS=100 LOG=1` no simulador) mede o início da resposta e as chamadas ao banco por página.
+
+## Conferir a CSP
+
+A Content-Security-Policy (nonce por requisição, `lib/csp.ts`, montada no `middleware.ts`) só se prova num navegador:
+`node e2e/verificar-csp.mjs /login /app /app/config/equipe` lista violações ("Refused to…"), erros de JS e se cada página hidratou.
+Em http local o logout (`/sair`) só passa se você abrir o site pelo MESMO host que o servidor enxerga (use `localhost`, não `127.0.0.1`):
+o `form-action 'self'` também vale para o destino do redirect.

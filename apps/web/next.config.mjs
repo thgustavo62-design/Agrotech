@@ -10,8 +10,8 @@ const nextConfig = {
 };
 
 /**
- * Cabeçalhos de segurança. Sem CSP de propósito: o Next injeta scripts inline e uma CSP sem
- * nonce quebraria a hidratação; a CSP entra numa rodada própria, testada num navegador.
+ * Cabeçalhos de segurança estáticos. A Content-Security-Policy NÃO fica aqui: ela leva um nonce novo por
+ * requisição e é montada no middleware (lib/csp.ts).
  */
 const cabecalhos = [
   { key: 'X-Frame-Options', value: 'DENY' }, // ninguém embute o app em iframe (clickjacking)
