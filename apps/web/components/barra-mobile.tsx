@@ -1,30 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type ComponentType, type SVGProps } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAVEGACAO_CONSULTOR, NAVEGACAO_MOBILE_PRINCIPAL, rotaAtiva } from '@/lib/navegacao';
 import { IconeMais, IconeFechar } from './icones';
+import { BotaoSair } from './botao-sair';
 
-/** Barra inferior (mobile, <960px): os 5 itens mais usados + "Mais" abre a gaveta com o resto. */
-export function BarraMobile() {
+export interface ItemBarra {
+  href: string;
+  rotulo: string;
+  icone: ComponentType<SVGProps<SVGSVGElement>>;
+  embreve?: boolean;
+}
+export interface GrupoBarra {
+  titulo?: string;
+  itens: ItemBarra[];
+}
+
+/**
+ * Barra inferior (celular, <960px): os itens principais + "Mais", que abre a gaveta com o resto,
+ * o nome da pessoa e o botão de sair (o cabeçalho do celular não tem espaço para eles).
+ * Usada pelo consultor e pelo produtor.
+ */
+export function BarraInferior({
+  grupos, principais, nome, subtitulo, sairAction,
+}: {
+  grupos: GrupoBarra[];
+  /** `href` dos itens fixos na barra (os demais ficam em "Mais") */
+  principais: string[];
+  nome?: string | null;
+  subtitulo?: string | null;
+  sairAction?: string;
+}) {
   const path = usePathname();
   const [aberta, setAberta] = useState(false);
 
-  const todosItens = NAVEGACAO_CONSULTOR.flatMap((g) => g.itens);
-  const principais = NAVEGACAO_MOBILE_PRINCIPAL
-    .map((href) => todosItens.find((i) => i.href === href))
-    .filter((i): i is NonNullable<typeof i> => Boolean(i));
-  const ativaEmAlgumPrincipal = principais.some((i) => rotaAtiva(path, i.href));
+  const todos = grupos.flatMap((g) => g.itens);
+  const fixos = principais.map((href) => todos.find((i) => i.href === href)).filter((i): i is ItemBarra => Boolean(i));
+  const ativaEmFixo = fixos.some((i) => rotaAtiva(path, i.href));
+
+  // a gaveta fecha ao navegar e com a tecla Esc; e a página de trás não rola enquanto ela está aberta
+  useEffect(() => setAberta(false), [path]);
+  useEffect(() => {
+    if (!aberta) return;
+    const aoTeclar = (e: KeyboardEvent) => { if (e.key === 'Escape') setAberta(false); };
+    window.addEventListener('keydown', aoTeclar);
+    const anterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', aoTeclar); document.body.style.overflow = anterior; };
+  }, [aberta]);
 
   return (
     <>
       <nav className="barra-mobile nao-imprime" aria-label="Navegação principal">
-        {principais.map((item) => {
+        {fixos.map((item) => {
           const ativa = rotaAtiva(path, item.href);
           const Icone = item.icone;
           return (
-            <Link key={item.href} href={item.href} className="barra-mobile-item" data-ativa={ativa}>
+            <Link key={item.href} href={item.href} className="barra-mobile-item" data-ativa={ativa} aria-current={ativa ? 'page' : undefined}>
               <Icone />
               {item.rotulo}
             </Link>
@@ -33,8 +67,10 @@ export function BarraMobile() {
         <button
           type="button"
           className="barra-mobile-item"
-          data-ativa={!ativaEmAlgumPrincipal}
+          data-ativa={!ativaEmFixo}
           onClick={() => setAberta(true)}
+          aria-haspopup="dialog"
+          aria-expanded={aberta}
         >
           <IconeMais />
           Mais
@@ -50,9 +86,9 @@ export function BarraMobile() {
                 <IconeFechar width={16} height={16} />
               </button>
             </div>
-            {NAVEGACAO_CONSULTOR.map((grupo) => (
-              <div className="lateral-grupo" key={grupo.titulo}>
-                <div className="lateral-grupo-titulo">{grupo.titulo}</div>
+            {grupos.map((grupo, gi) => (
+              <div className="lateral-grupo" key={grupo.titulo ?? gi}>
+                {grupo.titulo ? <div className="lateral-grupo-titulo">{grupo.titulo}</div> : null}
                 {grupo.itens.map((item) => {
                   const ativa = rotaAtiva(path, item.href);
                   const Icone = item.icone;
@@ -72,9 +108,28 @@ export function BarraMobile() {
                 })}
               </div>
             ))}
+            <div className="gaveta-conta">
+              <div>
+                <b>{nome ?? 'Minha conta'}</b>
+                {subtitulo ? <small>{subtitulo}</small> : null}
+              </div>
+              <BotaoSair action={sairAction} className="btn sec" rotulo="Sair da conta" />
+            </div>
           </div>
         </div>
       )}
     </>
+  );
+}
+
+/** Barra do consultor: itens e ordem vêm de NAVEGACAO_CONSULTOR (mesma fonte da sidebar). */
+export function BarraMobile({ nome, crea }: { nome?: string | null; crea?: string | null }) {
+  return (
+    <BarraInferior
+      grupos={NAVEGACAO_CONSULTOR}
+      principais={NAVEGACAO_MOBILE_PRINCIPAL}
+      nome={nome}
+      subtitulo={crea ? `CREA ${crea}` : 'Defina seu CREA em Configurações'}
+    />
   );
 }

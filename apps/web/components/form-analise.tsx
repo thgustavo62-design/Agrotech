@@ -88,7 +88,7 @@ export function FormAnalise({ talhoes }: { talhoes: Talhao[] }) {
           <CampoNum id="prod_esperada" rot="Produtividade esperada" un="sobrescreve o talhão" />
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+        <div className="barra-acao" style={{ marginTop: 16 }}>
           <Enviar />
           <Link className="btn sec" href="/app/analises">Cancelar</Link>
         </div>

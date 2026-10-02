@@ -16,11 +16,15 @@ export function KanbanAgenda({ colunas }: { colunas: ColunaKanban[] }) {
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [, iniciarTransicao] = useTransition();
 
+  function mover(id: string, dataAlvo: string) {
+    iniciarTransicao(() => { void moverEvento(id, dataAlvo); });
+  }
+
   function soltar(dataAlvo: string | null) {
     if (!arrastando || !dataAlvo) { setArrastando(null); return; }
     const id = arrastando;
     setArrastando(null);
-    iniciarTransicao(() => { void moverEvento(id, dataAlvo); });
+    mover(id, dataAlvo);
   }
 
   return (
@@ -59,6 +63,21 @@ export function KanbanAgenda({ colunas }: { colunas: ColunaKanban[] }) {
               >
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{ev.titulo}</div>
                 <div className="nota" style={{ marginTop: 2 }}>{ev.subtitulo}</div>
+                {/* celular/toque não tem arrastar-e-soltar: o mesmo reagendamento por seleção */}
+                <select
+                  className="kanban-mover"
+                  aria-label={`Mover "${ev.titulo}" para outra data`}
+                  value=""
+                  onChange={(e) => {
+                    const alvo = colunas.find((c) => c.id === e.target.value);
+                    if (alvo?.dataAlvo) mover(ev.id, alvo.dataAlvo);
+                  }}
+                >
+                  <option value="">Mover para…</option>
+                  {colunas.filter((c) => c.dataAlvo && c.id !== col.id).map((c) => (
+                    <option key={c.id} value={c.id}>{c.titulo}</option>
+                  ))}
+                </select>
               </div>
             ))}
             {col.eventos.length === 0 && (

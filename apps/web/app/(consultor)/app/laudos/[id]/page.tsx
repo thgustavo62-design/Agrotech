@@ -191,7 +191,11 @@ export default async function ConferenciaLaudo({
       <div className="grade g2" style={{ alignItems: 'start' }}>
         <Cartao olho="Laudo original" titulo="PDF enviado">
           {urlPdf ? (
-            <iframe src={urlPdf} title="Laudo em PDF" style={{ width: '100%', height: 640, border: '1px solid var(--linha)', borderRadius: 8 }} />
+            <>
+              {/* no celular o PDF embutido não rola nem dá zoom direito: o botão abre no leitor do aparelho */}
+              <a className="btn sec pdf-abrir" href={urlPdf} target="_blank" rel="noopener noreferrer" style={{ marginBottom: 10 }}>Abrir o PDF em tela cheia</a>
+              <iframe className="pdf-quadro" src={urlPdf} title="Laudo em PDF" style={{ width: '100%', height: 640, border: '1px solid var(--linha)', borderRadius: 8 }} />
+            </>
           ) : (
             <p className="nota">Não foi possível carregar o PDF.</p>
           )}
@@ -281,7 +285,7 @@ export default async function ConferenciaLaudo({
             </div>
           ) : null}
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="barra-acao">
             <button className="btn verde" type="submit">
               {multi && atual ? `Confirmar amostra ${atual.indice} de ${amostras.length}` : 'Confirmar e interpretar'}
             </button>

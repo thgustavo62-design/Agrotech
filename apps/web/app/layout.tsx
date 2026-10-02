@@ -3,6 +3,7 @@ import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import { RegistrarSW } from '@/components/registrar-sw';
 import { AvisoFlash } from '@/components/aviso-flash';
 import './globals.css';
+import './mobile.css';
 
 const archivo = Archivo({
   subsets: ['latin'],
@@ -33,6 +34,8 @@ export const viewport: Viewport = {
   themeColor: '#0f5c43',
   width: 'device-width',
   initialScale: 1,
+  // ocupa a tela toda no iPhone com notch; as áreas seguras (env(safe-area-inset-*)) são tratadas no CSS
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

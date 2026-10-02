@@ -16,6 +16,15 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#0f5c43',
     orientation: 'portrait-primary',
     lang: 'pt-BR',
+    id: '/',
+    scope: '/',
+    categories: ['business', 'productivity'],
+    // atalhos ao segurar o ícone do app no celular
+    shortcuts: [
+      { name: 'Lançar análise', short_name: 'Análise', url: '/app/analises/nova' },
+      { name: 'Enviar laudo (PDF)', short_name: 'Laudo', url: '/app/laudos/novo' },
+      { name: 'Agenda de campo', short_name: 'Agenda', url: '/app/agenda' },
+    ],
     icons: [
       { src: '/icones-pwa/192', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/icones-pwa/512', sizes: '512x512', type: 'image/png', purpose: 'any' },

@@ -36,7 +36,7 @@ export default async function LayoutConsultor({ children }: { children: React.Re
         <PaletaComandos />
         <SinoNotificacoes href="/app/notificacoes" contagem={naoLidas} />
         <div className="quem" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span>
+          <span className="quem-texto">
             <b>{perfil.nome ?? 'Consultor'}</b>
             {perfil.crea ? `CREA ${perfil.crea}` : 'defina seu CREA em Config.'}
             {' · '}
@@ -54,7 +54,7 @@ export default async function LayoutConsultor({ children }: { children: React.Re
           </main>
         </div>
       </div>
-      <BarraMobile />
+      <BarraMobile nome={perfil.nome} crea={perfil.crea} />
       <SincronizadorOffline />
     </div>
   );

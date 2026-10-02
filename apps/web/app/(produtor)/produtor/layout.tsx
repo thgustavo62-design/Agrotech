@@ -6,6 +6,7 @@ import { SinoNotificacoes } from '@/components/sino-notificacoes';
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { LogoIcone } from '@/components/logo';
 import { BotaoSair } from '@/components/botao-sair';
+import { BarraProdutor } from '@/components/barra-produtor';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,17 +25,19 @@ export default async function LayoutProdutor({ children }: { children: React.Rea
         <div className="marca"><LogoIcone />AgroTech <span>Sua lavoura</span></div>
         <div className="quem" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <SinoNotificacoes href="/produtor/notificacoes" contagem={naoLidas} />
-          <span>
+          <span className="quem-texto">
             <b style={{ display: 'block' }}>{perfil.nome ?? 'Produtor'}</b>
             <BotaoSair action="/produtor/sair" />
           </span>
           <AvatarUsuario nome={perfil.nome} />
         </div>
-        <div style={{ flexBasis: '100%', order: 3 }}>
+        {/* no celular o menu vai para a barra inferior (BarraProdutor) */}
+        <div className="nav-produtor-topo" style={{ flexBasis: '100%', order: 3 }}>
           <NavProdutor />
         </div>
       </header>
       <main className="vista">{children}</main>
+      <BarraProdutor nome={perfil.nome} />
     </div>
   );
 }

@@ -1,0 +1,230 @@
+/*
+ * Camada de celular. Carregada depois de globals.css para só SOBRESCREVER, nunca redefinir.
+ * Princípios: alvo de toque ≥ 44px, campos com 16px (o iOS dá zoom em campo menor que isso),
+ * nada de rolagem horizontal da página, navegação ao alcance do polegar (barra inferior),
+ * áreas seguras do iPhone (env(safe-area-inset-*)) e densidade pensada para tela pequena.
+ */
+
+:root {
+  --seguro-topo: env(safe-area-inset-top, 0px);
+  --seguro-base: env(safe-area-inset-bottom, 0px);
+  --altura-barra: 62px;
+}
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+img, svg, video, canvas { max-width: 100%; }
+
+/* botões de envio de formulário longo: no desktop ficam em linha, no celular fixos acima da barra inferior */
+.barra-acao { display: flex; gap: 8px; }
+
+/* seletor "Mover para…" do Kanban: só onde não há arrastar-e-soltar */
+.kanban-mover { display: none; margin-top: 8px; min-height: 40px; font-size: 14px; }
+@media (max-width: 959px), (hover: none) { .kanban-mover { display: block; } }
+
+/* ============ celular e tablet pequeno ============ */
+@media (max-width: 959px) {
+  /* abas rolam na horizontal: o esmaecido à direita avisa que há mais */
+  .abas { -webkit-mask-image: linear-gradient(to right, #000 88%, transparent); mask-image: linear-gradient(to right, #000 88%, transparent); scroll-padding: 0 24px; }
+  /* a barra inferior é fixa: o conteúdo precisa de folga para não ficar atrás dela */
+  main.vista { padding: 16px 14px calc(var(--altura-barra) + 22px + var(--seguro-base)); }
+  .nav-produtor-topo { display: none; }
+
+  /* ---- cabeçalho compacto: marca à esquerda; busca, sino e avatar à direita ---- */
+  .topo {
+    gap: 6px; padding: calc(8px + var(--seguro-topo)) 12px 8px;
+    min-height: 56px;
+  }
+  .marca { flex: 1; min-width: 0; font-size: 17px; gap: 8px; }
+  .marca span { display: none; }
+  .topo .quem { margin-left: 0; flex: none; }
+  .topo .quem-texto { display: none; }
+  .topo .quem > .sino { display: inline-flex; }
+
+  .busca-gatilho {
+    width: 40px; height: 40px; padding: 0; justify-content: center; flex: none;
+    border-radius: 99px;
+  }
+  .busca-texto, .busca-atalho { display: none; }
+  .sino { width: 40px; height: 40px; align-items: center; justify-content: center; }
+  .sino > span { top: 3px !important; right: 2px !important; }
+
+  /* abas fixas abaixo do cabeçalho */
+  .abas { top: calc(56px + var(--seguro-topo)); }
+
+  /* ---- barra inferior ---- */
+  .barra-mobile {
+    padding: 4px 4px calc(4px + var(--seguro-base));
+    box-shadow: 0 -4px 16px rgba(17, 26, 20, .06);
+  }
+  .barra-mobile-item {
+    /* larguras iguais, mesmo com rótulo longo ("Recomendações"): sem isso um item alarga e empurra os outros */
+    flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-height: 50px; justify-content: center; font-size: 10px; gap: 3px; line-height: 1.1; padding-left: 0; padding-right: 0;
+    border: 0; background: none; font-family: inherit; cursor: pointer; text-align: center;
+  }
+  .barra-mobile-item[data-ativa="true"] { background: var(--folha-clara); }
+  .barra-mobile-item svg { width: 22px; height: 22px; }
+
+  /* ---- gaveta "Mais" ---- */
+  .gaveta { max-height: 86vh; max-height: 86dvh; border-radius: 20px 20px 0 0; }
+  .gaveta::before {
+    content: ""; display: block; width: 38px; height: 4px; border-radius: 99px;
+    background: var(--linha-forte); margin: -6px auto 10px;
+  }
+  .gaveta .lateral-item { min-height: 46px; font-size: 15px; padding: 10px 12px; }
+  .gaveta-fechar { width: 40px; height: 40px; }
+  /* conta e "Sair" sempre à vista no rodapé da gaveta, sem rolar a lista inteira */
+  .gaveta-conta {
+    position: sticky; bottom: 0; background: var(--papel); z-index: 1;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-top: 8px; padding: 12px 0 2px; border-top: 1px solid var(--linha);
+  }
+  .gaveta-conta b { display: block; font-size: 14.5px; }
+  .gaveta-conta small { color: var(--grafite-2); font-size: 12px; }
+
+  /* ---- avisos e fila offline acima da barra inferior ---- */
+  [role="alert"].aviso { top: calc(10px + var(--seguro-topo)) !important; }
+}
+
+/* ============ celular ============ */
+@media (max-width: 640px) {
+  h1 { font-size: 23px; }
+  h2 { font-size: 17px; }
+
+  /* ---- grades: formulários em 1 coluna; indicadores em 2 ---- */
+  /* campos de formulário em coluna única; grades de 3/4 (valores de análise, fotos) em 2 colunas */
+  .g2 { grid-template-columns: 1fr; }
+  .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grade:has(> .metrica) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .grade { gap: 10px; }
+
+  /* ---- cartões e indicadores mais densos ---- */
+  .cartao { padding: 14px; border-radius: 14px; }
+  .cartao + .cartao { margin-top: 12px; }
+  .metrica { padding: 12px 12px; border-radius: 12px; }
+  .metrica span { font-size: 9.5px; letter-spacing: .08em; }
+  .metrica b { font-size: 21px; }
+  .metrica[data-rico="true"] { padding-right: 46px; padding-top: 12px; }
+  .metrica-icone { width: 28px; height: 28px; top: 10px; right: 10px; border-radius: 8px; }
+  .metrica-icone svg { width: 16px; height: 16px; }
+  .metrica-tendencia { font-size: 10.5px; }
+
+  /* ---- hero ---- */
+  .banner-hero { padding: 18px 16px; border-radius: 14px; margin-bottom: 14px; }
+  .banner-hero h1 { font-size: 24px; }
+  .banner-hero p { font-size: 13px; }
+  .banner-hero-corpo { gap: 14px; }
+  .banner-hero-acoes { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .banner-hero-acoes .btn { width: 100%; text-align: center; }
+  /* etiquetas dentro das ações (ex.: "5 talhões precisando de correção") ocupam a linha toda e quebram */
+  .banner-hero-acoes .tag { grid-column: 1 / -1; white-space: normal; text-align: center; padding: 7px 12px; line-height: 1.3; }
+
+  /* ---- cabeçalho de página: ações em largura total ---- */
+  .cabecalho-vista { align-items: stretch; gap: 10px; margin-bottom: 14px; }
+  .cabecalho-vista .acoes { margin-left: 0; width: 100%; }
+  .cabecalho-vista .acoes > .btn, .cabecalho-vista .acoes > form { flex: 1 1 140px; }
+  .cabecalho-vista .acoes > form .btn { width: 100%; }
+
+  /* ---- listas: o conteúdo quebra linha em vez de estourar ---- */
+  .item { flex-wrap: wrap; padding: 12px; gap: 8px 10px; }
+  .item .cresce { flex: 1 1 60%; }
+  .item h3 { font-size: 15px; overflow-wrap: anywhere; }
+
+  /* ---- tabelas: rolam por dentro do cartão, sem alargar a página ---- */
+  .cartao table:not(.sem-rolagem), .rolagem > table { min-width: 100%; }
+  .cartao table:not(.sem-rolagem) { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  th, td { padding: 9px 8px; }
+
+  /* ---- migalhas: uma linha com rolagem, sem ocupar a tela ---- */
+  .migalhas { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; scrollbar-width: none; margin-bottom: 10px; }
+  .migalhas::-webkit-scrollbar { display: none; }
+
+  /* ---- ação principal do formulário sempre ao alcance do polegar ---- */
+  .barra-acao {
+    position: sticky; bottom: calc(var(--altura-barra) + var(--seguro-base) + 6px); z-index: 20;
+    margin: 14px -14px 0; padding: 10px 14px;
+    background: linear-gradient(to top, var(--papel) 70%, rgba(238, 241, 236, 0));
+  }
+  .barra-acao .btn { flex: 1; }
+
+  /* ---- PDF: embutido é ruim no celular; fica só o botão "Abrir o PDF" ---- */
+  .pdf-quadro { display: none; }
+  .pdf-abrir { width: 100%; }
+
+  /* ---- laudo ---- */
+  .folha-a4 { padding: 16px; border-radius: 12px; }
+  .folha-a4 .cabecalho { flex-wrap: wrap; }
+  .assina hr { width: 70%; }
+  iframe { max-width: 100%; }
+
+  /* ---- busca em tela cheia ---- */
+  .paleta-fundo { padding: 0; align-items: stretch; }
+  .paleta { max-width: none; border-radius: 0; border: 0; display: flex; flex-direction: column; height: 100%; }
+  .paleta input { font-size: 16px; padding: 16px; min-height: 56px; }
+  .paleta-fechar { display: block; min-height: 56px; font-size: 15px; }
+  .paleta-topo { padding-top: var(--seguro-topo); }
+  .paleta-lista { flex: 1; max-height: none; padding: 6px 8px calc(12px + var(--seguro-base)); }
+
+  /* ---- login ---- */
+  .tela-auth-lado { padding: 24px 18px calc(24px + var(--seguro-base)); align-items: flex-start; }
+  .tela-auth-aba { padding: 12px 0; font-size: 14.5px; }
+  .campo-auth-alterna { padding: 10px; right: 2px; }
+  .btn-google { min-height: 46px; font-size: 14.5px; }
+  .tela-auth-termos input { margin-top: 0; }
+}
+
+/* ============ celular pequeno (≤ 380px) ============ */
+@media (max-width: 380px) {
+  main.vista { padding-left: 12px; padding-right: 12px; }
+  .metrica b { font-size: 19px; }
+  .topo .quem .avatar { width: 32px; height: 32px; }
+}
+
+
+/* ============ aparelhos de toque (celular e tablet): alvos grandes, sem zoom no iOS ============ */
+@media (pointer: coarse), (max-width: 640px) {
+  /* ---- campos: 16px evita o zoom do iOS; altura confortável para o dedo ---- */
+  input, select, textarea { font-size: 16px; min-height: 46px; padding: 10px 12px; }
+  input[type="checkbox"], input[type="radio"] { min-height: 0; width: 20px; height: 20px; }
+  input[type="file"] { min-height: 0; padding: 10px; }
+  input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; }
+  textarea { min-height: 96px; }
+  label { font-size: 12px; margin-bottom: 6px; }
+
+  /* ---- botões ---- */
+  .btn { min-height: 44px; padding: 11px 16px; font-size: 14px; justify-content: center; }
+  .btn.mini { min-height: 40px; padding: 8px 12px; font-size: 13px; }
+  .aba { padding: 10px 15px; font-size: 14px; }
+  .paleta-item { min-height: 46px; font-size: 15px; }
+
+
+  /* a linha inteira da lista é o alvo do toque (o link do título se estende por ela); botões ficam por cima */
+  .item { position: relative; }
+  .item h3 a::after { content: ""; position: absolute; inset: 0; }
+  .item .btn, .item select, .item form, .item .tag { position: relative; z-index: 1; }
+  .item h3 a { display: block; padding: 4px 0; }
+
+  /* migalhas: área de toque maior sem mexer no desenho */
+  .migalhas a { display: inline-block; padding: 11px 4px; margin: -11px -4px; }
+}
+
+/* ============ aparelhos sem hover ============ */
+@media (hover: none) {
+  .busca-atalho { display: none; }
+  /* hover "gruda" no toque: tira o realce de linha de tabela e de item */
+  tbody tr:hover td, table tr:hover td { background: none; }
+  .item:hover { border-color: var(--linha); }
+}
+
+/* ============ paisagem curta (celular deitado) ============ */
+@media (max-height: 480px) and (orientation: landscape) {
+  .topo { min-height: 46px; padding-top: 4px; padding-bottom: 4px; }
+  .abas { top: 46px; }
+  .gaveta { max-height: 92vh; }
+}
+
+/* ============ movimento reduzido ============ */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}

@@ -3,7 +3,7 @@ import Link from 'next/link';
 /** Sino de notificações — link simples pro centro de notificações, com contagem de não lidas. Sem popover: revalida no carregamento de página (PRODUCT_V2.md §2.6). */
 export function SinoNotificacoes({ href, contagem }: { href: string; contagem: number }) {
   return (
-    <Link href={href} style={{ position: 'relative', color: 'inherit', fontSize: 17, lineHeight: 1, display: 'inline-flex' }}>
+    <Link href={href} className="sino" aria-label={contagem > 0 ? `Notificações: ${contagem} não lida(s)` : 'Notificações'} style={{ position: 'relative', color: 'inherit', fontSize: 17, lineHeight: 1, display: 'inline-flex' }}>
       🔔
       {contagem > 0 && (
         <span

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { buscarGlobal, type ResultadoBusca } from '@/app/(consultor)/app/busca-acoes';
 import { IconeBusca, IconeFechar } from './icones';
@@ -27,6 +28,9 @@ export function PaletaComandos() {
   const [carregando, setCarregando] = useState(false);
   const [realce, setRealce] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  // lido depois da hidratação: navigator.platform no render dava texto diferente no servidor e no navegador
+  const [atalho, setAtalho] = useState('Ctrl K');
+  useEffect(() => { if (/Mac/.test(navigator.platform)) setAtalho('⌘K'); }, []);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -91,23 +95,28 @@ export function PaletaComandos() {
 
   return (
     <>
-      <button type="button" className="busca-gatilho" onClick={() => setAberta(true)}>
+      <button type="button" className="busca-gatilho" onClick={() => setAberta(true)} aria-label="Buscar produtor, propriedade ou talhão">
         <IconeBusca width={15} height={15} />
-        Buscar produtor, talhão…
-        <kbd>{typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘K' : 'Ctrl K'}</kbd>
+        <span className="busca-texto">Buscar produtor, talhão…</span>
+        <kbd className="busca-atalho">{atalho}</kbd>
       </button>
 
-      {aberta && (
+      {aberta && createPortal(
         <div className="paleta-fundo" onClick={(e) => { if (e.target === e.currentTarget) setAberta(false); }}>
           <div className="paleta" role="dialog" aria-modal="true" aria-label="Busca">
-            <input
-              ref={inputRef}
-              value={termo}
-              onChange={(e) => aoDigitar(e.target.value)}
-              onKeyDown={aoTeclarLista}
-              placeholder="Buscar produtor, propriedade, talhão… ou uma ação"
-              autoComplete="off"
-            />
+            <div className="paleta-topo">
+              <input
+                ref={inputRef}
+                value={termo}
+                onChange={(e) => aoDigitar(e.target.value)}
+                onKeyDown={aoTeclarLista}
+                placeholder="Buscar produtor, propriedade, talhão… ou uma ação"
+                autoComplete="off"
+                enterKeyHint="search"
+              />
+              {/* sem teclado físico não há Esc: no celular este é o jeito de fechar */}
+              <button type="button" className="paleta-fechar" onClick={() => setAberta(false)}>Cancelar</button>
+            </div>
             <div className="paleta-lista">
               {carregando && termo.trim().length >= 2 ? <div className="paleta-vazio">Buscando…</div> : null}
               {!carregando && termo.trim().length >= 2 && resultados.length === 0 && listaAcoes.length === 0 ? (
@@ -136,7 +145,8 @@ export function PaletaComandos() {
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

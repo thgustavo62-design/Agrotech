@@ -795,6 +795,21 @@ O PDF real tinha **0 caracteres de texto** (página inteira desenhada como vetor
 
 ---
 
+## Visual e uso no celular (02/10/2026)
+
+Medido num Chromium de verdade (Playwright) contra um Supabase simulado (`apps/web/e2e/`, ver `LEIA-ME.md`), em 360×740, 390×844 e 768×1024, consultor e produtor: **nenhuma tela rola na horizontal** e os alvos de toque têm ≥ 40 px. Antes, o cabeçalho quebrava em 3 linhas e empurrava sino/avatar para fora da tela (página com 524 px num celular de 390).
+
+- **`app/mobile.css`** (camada própria, carregada depois de `globals.css`): cabeçalho compacto (busca vira ícone, sino e avatar sempre visíveis), indicadores em 2 colunas, campos com 16 px (iOS não dá zoom), botões/campos ≥ 44 px por **tipo de ponteiro** (vale também em tablet), áreas seguras do iPhone (`viewport-fit=cover`), tabelas rolam dentro do cartão, grades de valores em 2 colunas, hero e ações em largura total, movimento reduzido.
+- **Barra inferior genérica** (`BarraInferior`) usada pelo consultor e agora pelo **produtor** (antes só tinha menu horizontal no topo); a gaveta "Mais" traz nome, CREA e **"Sair da conta"** fixos no rodapé (o cabeçalho do celular não tem espaço).
+- **Busca** em tela cheia, via portal (ficava *abaixo* da barra inferior), com botão **Cancelar** (não há tecla Esc no celular) e sem o atalho "Ctrl K"; também corrigido o texto do atalho que divergia entre servidor e navegador na hidratação.
+- **Listas**: a linha inteira é o alvo do toque (antes só o título, com 16 px de altura); migalhas com área de toque maior.
+- **Kanban da agenda**: arrastar-e-soltar não existe em toque — cada cartão ganhou "Mover para…".
+- **Formulários longos**: o botão principal (confirmar laudo, interpretar análise) fica fixo acima da barra inferior; PDF do laudo abre em tela cheia no leitor do aparelho (iframe de PDF não funciona bem em celular).
+- **App instalável**: atalhos ao segurar o ícone (Lançar análise, Enviar laudo, Agenda).
+- Não coberto: teste em aparelho físico (iOS Safari tem particularidades próprias), modo escuro, e as telas de erro/vazio em todas as larguras.
+
+---
+
 ## Auditoria 03 (01/10/2026)
 
 Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas graves de segurança no banco (`0032` leitura entre produtores, `0034` RPCs públicas), mensagens de erro invisíveis em produção, datas em UTC, link público com tabela errada, índices e uploads. Detalhe, gravidade, testes e **o que ficou sem resolver** em [AUDITORIA-03.md](AUDITORIA-03.md). Migrations `0034`–`0036`.
