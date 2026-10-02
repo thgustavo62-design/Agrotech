@@ -864,6 +864,15 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## Leitor de laudos testado com PDFs reais da internet (02/10/2026)
+
+- **O que se achou:** laudos de laboratório de verdade não estão publicados na internet (só guias, artigos, teses e relatórios). Foram baixados 10 PDFs técnicos reais (Embrapa, Incaper, EPAMIG, SENAR, Agrolink, Redalyc, tese da UFES, relatório de impacto, termo de referência de análise de solo) e passados pelo MESMO caminho do app como controle negativo — **nenhum é um laudo e todos devem ser recusados**.
+- **Falha grave encontrada:** o leitor "inventava" valores desses documentos (p. ex. `al=3`, `p=11`, `s=500` de frases de livro e tabelas de métodos) com **confiança média 0,85–0,88**. Corrigido em `agro-core/src/parsers/extrair.ts`: a linha precisa ter rótulo + (guia pontilhada) + no máximo UMA unidade + número; ≥ 3 parâmetros do núcleo (pH, M.O., P, K, Ca, Mg, Al, H+Al) com valor plausível e ≥ 4 reconhecidos; texto > 80 mil caracteres não é laudo. Resultado: 10/10 recusados ("Este PDF não parece um laudo…"), laudo real (Água Limpa) e fixtures continuam passando.
+- **Lacuna de cobertura corrigida:** o leitor só entendia "Rótulo ..... valor" (vertical) e a tabela do Água Limpa. Novo `parsers/horizontal.ts`: **tabela horizontal** (cabeçalho com as determinações + uma linha por amostra — IAC/ESALQ, universidades etc.), com conversão por unidade (mmolc→cmolc, K carga→mg/dm³, M.O. g/dm³→dag/kg) decidida pela conta SB = Ca+Mg+K do próprio laudo; avisos para pH em CaCl₂ e P por resina (as faixas do app são de água/Mehlich-1); nada é corrigido em silêncio. 75 testes no agro-core.
+- **Limite honesto:** o leitor horizontal foi validado com textos sintéticos fiéis a layouts conhecidos (SP em mmolc/resina e MG em cmolc/Mehlich), **não** com um PDF real de laboratório. Pedir ao usuário PDFs reais de 2–3 laboratórios diferentes continua sendo o teste que falta. Script: `packages/agro-core/test/verificar-pdfs.mjs`.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

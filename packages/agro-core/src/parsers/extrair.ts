@@ -5,6 +5,26 @@ import { PERFIS, detectarPerfil } from './perfis.js';
 import { parseNumeroBR, norm } from './numero.js';
 import { dentroDaFaixa } from './sanidade.js';
 import { ehLaudoEmTabela, extrairLote, extrairDeOcr } from './lote/index.js';
+import { extrairTabelaHorizontal } from './horizontal.js';
+
+/**
+ * Depois do rótulo, uma linha de laudo traz só: separadores/guia pontilhada, no máximo UMA unidade conhecida e
+ * então o número. Qualquer outra palavra no meio é texto corrido ou tabela de métodos, não um resultado.
+ */
+const SEP = '[\\s.·_:|=\\-–—~\'‘’]*'; // inclui o que o OCR devolve no lugar da guia pontilhada
+const UNIDADE = '(?:\\(?\\s*(?:mg|cmolc|mmolc|dag|g)\\s*\\/\\s*(?:dm\\s*[³3]|kg|l)\\s*\\)?|ppm|%)';
+const NUMERO_LOGO_APOS_ROTULO = new RegExp(`^${SEP}(?:${UNIDADE}${SEP})?-?\\d`, 'i');
+const GUIA = /[.·_:|\-–—\s]{2,}/g;
+const LINHA_MAX = 70;
+/** Um laudo de análise não passa disso (livros e artigos passam muito). */
+const TEXTO_MAX = 80_000;
+/** Parâmetros "de fertilidade" que um laudo de rotina sempre traz. */
+const NUCLEO: ChaveCampoLaudo[] = ['ph', 'mo', 'p', 'k', 'ca', 'mg', 'al', 'h_al'];
+/** Para ser laudo: ao menos 3 destes com valor plausível e 4 reconhecidos (os de valor absurdo contam: viram aviso). */
+const MINIMO_VALIDOS = 3;
+const MINIMO_RECONHECIDOS = 4;
+
+const NAO_E_LAUDO = 'Este PDF não parece um laudo de análise de solo (texto longo demais ou poucos parâmetros reconhecidos). Lance os valores manualmente na conferência.';
 
 /** Detecta a unidade impressa na linha, em forma canônica. */
 function unidadeNaLinha(linhaNorm: string): string {
@@ -47,6 +67,10 @@ function extrairCampo(
       if (!linhaComecaCom(ln, rotuloNorm)) continue;
 
       const resto = (linhas[li] as string).slice(rotulo.length);
+      // Linha de laudo: rótulo, (guia pontilhada), no máximo UMA unidade e o número. Qualquer outra palavra no
+      // meio ("K é absorvido ... em 2003", "K+ e Na+ Mehlich 1", "Al3+ KCl 1 mol/L") é texto corrido ou tabela de
+      // métodos — e virava valor de análise com confiança alta.
+      if (!NUMERO_LOGO_APOS_ROTULO.test(resto) || resto.replace(GUIA, ' ').length > LINHA_MAX) continue;
       const bruto = parseNumeroBR(resto);
       if (bruto == null) continue;
 
@@ -120,6 +144,17 @@ export function extrairDeTexto(
   const linhasNorm = linhas.map(norm);
   const avisos: string[] = [];
 
+  if (texto.length > TEXTO_MAX) {
+    return { perfil: null, laboratorio: null, campos: {}, identificacao: {}, confianca_media: 0, avisos: [NAO_E_LAUDO] };
+  }
+
+  // tabela horizontal (cabeçalho com as determinações + uma linha por amostra). Só vale se parecer laudo.
+  if (perfis === PERFIS) {
+    const h = extrairTabelaHorizontal(texto);
+    const plaus = h ? NUCLEO.filter((k) => h.campos[k]?.valor != null).length : 0;
+    if (h && plaus >= MINIMO_VALIDOS) return h;
+  }
+
   const perfil = detectarPerfil(texto, perfis);
   if (!perfil) {
     return {
@@ -142,6 +177,11 @@ export function extrairDeTexto(
   }
 
   const validos = Object.values(campos).filter((c) => c.valor !== null);
+  const reconhecidos = NUCLEO.filter((k) => campos[k] != null).length;
+  const plausiveis = NUCLEO.filter((k) => campos[k]?.valor != null).length;
+  if (plausiveis < MINIMO_VALIDOS || reconhecidos < MINIMO_RECONHECIDOS) {
+    return { perfil: null, laboratorio: null, campos: {}, identificacao: {}, confianca_media: 0, avisos: [NAO_E_LAUDO] };
+  }
   const confianca_media = validos.length
     ? validos.reduce((s, c) => s + c.confianca, 0) / validos.length
     : 0;
