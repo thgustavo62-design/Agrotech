@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { NAVEGACAO_CONSULTOR, rotaAtiva } from '@/lib/navegacao';
+import { hrefAtivo, navegacaoPara } from '@/lib/navegacao';
 
 const CHAVE_COLAPSADA = 'agrotech.lateral.colapsada';
 
@@ -13,8 +13,10 @@ const CHAVE_COLAPSADA = 'agrotech.lateral.colapsada';
  * mesmo os marcados "em breve": a página de destino explica o que falta, em
  * vez de um item de menu morto.
  */
-export function LateralConsultor() {
+export function LateralConsultor({ perfis }: { perfis?: string[] | null }) {
   const path = usePathname();
+  const grupos = navegacaoPara(perfis);
+  const atual = hrefAtivo(path, grupos.flatMap((g) => g.itens.map((i) => i.href)));
   const [colapsada, setColapsada] = useState(false);
 
   useEffect(() => {
@@ -35,11 +37,11 @@ export function LateralConsultor() {
 
   return (
     <aside className="lateral nao-imprime" data-colapsada={colapsada} aria-label="Navegação principal">
-      {NAVEGACAO_CONSULTOR.map((grupo) => (
+      {grupos.map((grupo) => (
         <div className="lateral-grupo" key={grupo.titulo}>
           <div className="lateral-grupo-titulo">{grupo.titulo}</div>
           {grupo.itens.map((item) => {
-            const ativa = rotaAtiva(path, item.href);
+            const ativa = item.href === atual;
             const Icone = item.icone;
             return (
               <Link

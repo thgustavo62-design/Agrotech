@@ -22,15 +22,16 @@ export async function garantirEscritorio(): Promise<void> {
   const meta = (user.user_metadata ?? {}) as Record<string, string>;
   const nomeEscritorio = meta.escritorio?.trim() || `Escritório de ${meta.nome ?? 'AgroTech'}`;
 
-  const { data: org, error: eOrg } = await sb
-    .schema('agro').from('orgs')
-    .insert({ nome: nomeEscritorio, uf: 'ES' })
-    .select('id').single();
-  if (eOrg || !org) return;
+  // o escritório nasce no servidor (migration 0037): o cliente não pode mais gravar org_id no próprio
+  // perfil, e quem cria vira proprietário na mesma transação.
+  const { data: orgId, error: eOrg } = await sb
+    .schema('agro').rpc('criar_escritorio', { p_nome: nomeEscritorio, p_municipio: null, p_uf: 'ES' });
+  if (eOrg || !orgId) return;
+  const org = { id: orgId as string };
 
-  const patch: Record<string, string> = { org_id: org.id };
-  if (!perfil.crea && meta.crea?.trim()) patch.crea = meta.crea.trim();
-  await sb.schema('agro').from('profiles').update(patch).eq('id', user.id);
+  if (!perfil.crea && meta.crea?.trim()) {
+    await sb.schema('agro').from('profiles').update({ crea: meta.crea.trim() }).eq('id', user.id);
+  }
 
   const padrao = clonarPadrao();
   await sb.schema('agro').from('tabelas_referencia').insert([

@@ -1,34 +1,34 @@
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { PERFIS, perfisValidos } from '@/lib/permissoes';
 import { Cartao } from '@/components/ui';
 import { BotaoSair } from '@/components/botao-sair';
-import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
-import { salvarPerfilConsultor, salvarEscritorio } from './acoes';
+import { ChipsPerfis } from '@/components/chips-perfis';
+import { salvarPerfilConsultor } from './acoes';
+import { FormSenha } from './form-senha';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Config() {
+/** Seção "Meu perfil": quem assina os laudos, o acesso desta pessoa, a senha e a saída. */
+export default async function ConfigPerfil() {
   const sb = await criarClienteServidor();
   const perfil = await perfilAtual();
-  const { data: org } = perfil?.org_id
-    ? await sb.schema('agro').from('orgs').select('nome, municipio, uf').eq('id', perfil.org_id).maybeSingle()
-    : { data: null };
   const { data: completo } = perfil
-    ? await sb.schema('agro').from('profiles').select('nome, crea, art, fone').eq('id', perfil.id).single()
+    ? await sb.schema('agro').from('profiles').select('nome, titulo, crea, art, fone').eq('id', perfil.id).single()
     : { data: null };
+  const meus = perfisValidos(perfil?.perfis);
 
   return (
     <>
-      <BannerHero imagem={FOTO_CONSULTOR}
-        olho="Configurações"
-        titulo="Seus dados"
-        descricao="Nome, CREA e ART assinam todo laudo emitido pelo app."
-        tags={['Perfil', 'Identidade', 'Assinatura']}
-      />
-      <Cartao olho="Responsável técnico" titulo="Perfil">
+      <Cartao olho="Responsável técnico" titulo="Seus dados">
+        <p className="nota" style={{ margin: '0 0 14px' }}>Nome, CREA e ART assinam todo laudo emitido por você.</p>
         <form action={salvarPerfilConsultor} className="grade g2">
           <div className="campo">
             <label htmlFor="nome">Nome</label>
-            <input id="nome" name="nome" defaultValue={completo?.nome ?? ''} required autoComplete="off" />
+            <input id="nome" name="nome" defaultValue={completo?.nome ?? ''} required autoComplete="name" />
+          </div>
+          <div className="campo">
+            <label htmlFor="titulo">Cargo <span className="un">(opcional)</span></label>
+            <input id="titulo" name="titulo" defaultValue={completo?.titulo ?? ''} placeholder="Engenheiro agrônomo, técnico…" maxLength={60} autoComplete="organization-title" />
           </div>
           <div className="campo">
             <label htmlFor="crea">CREA</label>
@@ -40,7 +40,7 @@ export default async function Config() {
           </div>
           <div className="campo">
             <label htmlFor="fone">Telefone</label>
-            <input id="fone" name="fone" defaultValue={completo?.fone ?? ''} autoComplete="off" />
+            <input id="fone" name="fone" type="tel" defaultValue={completo?.fone ?? ''} autoComplete="tel" />
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
             <button className="btn verde" type="submit">Salvar</button>
@@ -48,24 +48,18 @@ export default async function Config() {
         </form>
       </Cartao>
 
-      <Cartao olho="Escritório" titulo={org?.nome ?? 'Sem organização'}>
-        <form action={salvarEscritorio} className="grade g2">
-          <div className="campo">
-            <label htmlFor="org_nome">Nome do escritório</label>
-            <input id="org_nome" name="nome" defaultValue={org?.nome ?? ''} required autoComplete="off" />
-          </div>
-          <div className="campo">
-            <label htmlFor="org_municipio">Município</label>
-            <input id="org_municipio" name="municipio" defaultValue={org?.municipio ?? ''} autoComplete="off" />
-          </div>
-          <div className="campo">
-            <label htmlFor="org_uf">UF</label>
-            <input id="org_uf" name="uf" defaultValue={org?.uf ?? ''} maxLength={2} style={{ textTransform: 'uppercase' }} autoComplete="off" />
-          </div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <button className="btn verde" type="submit">Salvar escritório</button>
-          </div>
-        </form>
+      <Cartao olho="Seu acesso" titulo="O que você pode fazer aqui">
+        <ChipsPerfis perfis={meus} />
+        <ul className="nota" style={{ margin: '12px 0 0', paddingLeft: 18 }}>
+          {meus.flatMap((id) => PERFIS[id].pode).filter((t, i, a) => a.indexOf(t) === i).map((t) => <li key={t}>{t}</li>)}
+        </ul>
+        <p className="nota" style={{ margin: '12px 0 0' }}>
+          Quem define o acesso é o proprietário do escritório, em <b>Equipe e permissões</b>.
+        </p>
+      </Cartao>
+
+      <Cartao olho="Segurança" titulo="Trocar a senha">
+        <FormSenha />
       </Cartao>
 
       <Cartao olho="Sessão" titulo="Sair da conta">

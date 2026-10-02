@@ -1,4 +1,5 @@
 import type { ComponentType, SVGProps } from 'react';
+import { pode, type Permissao } from './permissoes';
 import {
   IconeInicio, IconePendencia, IconeAgenda, IconeProdutores, IconePropriedades,
   IconeTalhoes, IconeAnalises, IconeLaudos, IconeRecomendacoes, IconeMonitoramento,
@@ -17,12 +18,19 @@ export function rotaAtiva(path: string, href: string): boolean {
   return path === href || path.startsWith(`${href}/`);
 }
 
+/** Dentre os itens do menu, o mais específico que contém a rota (Equipe, em /app/config/equipe, não acende "Configurações"). */
+export function hrefAtivo(path: string, hrefs: readonly string[]): string | undefined {
+  return hrefs.filter((h) => rotaAtiva(path, h)).sort((a, b) => b.length - a.length)[0];
+}
+
 export interface ItemNav {
   href: string;
   rotulo: string;
   icone: ComponentType<SVGProps<SVGSVGElement>>;
   /** true = rota ainda não tem tela própria (mostra "em breve" no lugar de navegar) */
   embreve?: boolean;
+  /** permissão (lib/permissoes.ts) para o item aparecer; sem ela, todo mundo da equipe vê */
+  permissao?: Permissao;
 }
 
 export interface GrupoNav {
@@ -60,20 +68,27 @@ export const NAVEGACAO_CONSULTOR: GrupoNav[] = [
     titulo: 'Inteligência',
     itens: [
       { href: '/app/inteligencia', rotulo: 'Indicadores', icone: IconeInteligencia },
-      { href: '/app/relatorios', rotulo: 'Relatórios', icone: IconeRelatorios },
+      { href: '/app/relatorios', rotulo: 'Relatórios', icone: IconeRelatorios, permissao: 'relatorios.ver' },
     ],
   },
   {
     titulo: 'Gestão',
     itens: [
-      { href: '/app/financeiro-escritorio', rotulo: 'Financeiro do escritório', icone: IconeFinanceiro },
-      { href: '/app/equipe', rotulo: 'Equipe', icone: IconeEquipe },
+      { href: '/app/financeiro-escritorio', rotulo: 'Financeiro do escritório', icone: IconeFinanceiro, permissao: 'financeiro' },
+      { href: '/app/config/equipe', rotulo: 'Equipe', icone: IconeEquipe },
       { href: '/app/tabelas', rotulo: 'Tabelas técnicas', icone: IconeTabelas },
-      { href: '/app/assinatura', rotulo: 'Assinatura', icone: IconeAssinatura },
+      { href: '/app/assinatura', rotulo: 'Assinatura', icone: IconeAssinatura, permissao: 'plano.gerenciar' },
       { href: '/app/config', rotulo: 'Configurações', icone: IconeConfig },
     ],
   },
 ];
+
+/** O menu que ESTA pessoa vê: itens sem permissão para ela somem (o banco barra de qualquer jeito — RLS). */
+export function navegacaoPara(perfis: readonly string[] | null | undefined): GrupoNav[] {
+  return NAVEGACAO_CONSULTOR
+    .map((g) => ({ ...g, itens: g.itens.filter((i) => !i.permissao || pode(perfis, i.permissao)) }))
+    .filter((g) => g.itens.length > 0);
+}
 
 /** Os 5 mais usados, para a barra inferior no mobile (o resto vai no drawer "Mais"). */
 export const NAVEGACAO_MOBILE_PRINCIPAL = ['/app', '/app/produtores', '/app/talhoes', '/app/analises', '/app/laudos'];
@@ -93,7 +108,9 @@ export const ROTULOS_SEGMENTO: Record<string, string> = {
   inteligencia: 'Indicadores',
   relatorios: 'Relatórios',
   'financeiro-escritorio': 'Financeiro do escritório',
-  equipe: 'Equipe',
+  equipe: 'Equipe e permissões',
+  escritorio: 'Escritório',
+  privacidade: 'Privacidade e dados',
   tabelas: 'Tabelas técnicas',
   assinatura: 'Assinatura',
   config: 'Configurações',

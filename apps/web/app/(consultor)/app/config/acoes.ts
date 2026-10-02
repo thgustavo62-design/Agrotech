@@ -2,10 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { exigir } from '@/lib/permissoes-servidor';
 import { registrar } from '@/lib/audit';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
-/** Edita o próprio perfil do consultor — coberto pela policy profiles_atualiza_proprio. */
+/** Edita o próprio perfil — coberto pela policy profiles_atualiza_proprio; o gatilho (0037) impede mexer em papel/perfis/escritório. */
 async function salvarPerfilConsultorImpl(fd: FormData) {
   const perfil = await perfilAtual();
   if (!perfil) throw new ErroDeUsuario('sessão inválida');
@@ -15,6 +16,7 @@ async function salvarPerfilConsultorImpl(fd: FormData) {
 
   const dados = {
     nome,
+    titulo: String(fd.get('titulo') ?? '').trim().slice(0, 60) || null,
     crea: String(fd.get('crea') ?? '').trim() || null,
     art: String(fd.get('art') ?? '').trim() || null,
     fone: String(fd.get('fone') ?? '').trim() || null,
@@ -27,14 +29,12 @@ async function salvarPerfilConsultorImpl(fd: FormData) {
   await registrar(sb, {
     acao: 'perfil.editado', entidade: 'profiles', entidade_id: perfil.id, org_id: perfil.org_id,
   });
-  revalidatePath('/app/config');
+  revalidatePath('/app/config', 'layout');
 }
 
-/** Edita o escritório (org) — coberto pela policy orgs_atualizar (0029). */
+/** Edita o escritório (org) — só quem tem `escritorio.editar` (proprietário); a RLS restritiva de 0038 confere de novo. */
 async function salvarEscritorioImpl(fd: FormData) {
-  const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem escritório associado.');
-  if (perfil.role !== 'consultor' && perfil.role !== 'admin') throw new ErroDeUsuario('Sem permissão.');
+  const perfil = await exigir('escritorio.editar');
 
   const nome = String(fd.get('nome') ?? '').trim();
   if (!nome) throw new ErroDeUsuario('Informe o nome do escritório.');
@@ -52,7 +52,7 @@ async function salvarEscritorioImpl(fd: FormData) {
   await registrar(sb, {
     acao: 'escritorio.editado', entidade: 'orgs', entidade_id: perfil.org_id, org_id: perfil.org_id,
   });
-  revalidatePath('/app/config');
+  revalidatePath('/app/config', 'layout');
 }
 
 export const salvarPerfilConsultor = comAviso(salvarPerfilConsultorImpl);

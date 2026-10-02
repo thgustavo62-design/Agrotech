@@ -47,7 +47,7 @@ export default async function LayoutConsultor({ children }: { children: React.Re
         </div>
       </header>
       <div className="app-corpo">
-        <LateralConsultor />
+        <LateralConsultor perfis={perfil.perfis} />
         <div className="app-conteudo">
           <main className="vista">
             <Breadcrumbs />
@@ -55,7 +55,7 @@ export default async function LayoutConsultor({ children }: { children: React.Re
           </main>
         </div>
       </div>
-      <BarraMobile nome={perfil.nome} crea={perfil.crea} />
+      <BarraMobile nome={perfil.nome} crea={perfil.crea} perfis={perfil.perfis} />
       <SincronizadorOffline />
     </div>
   );

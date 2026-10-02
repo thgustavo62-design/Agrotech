@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
-import { criarClienteServidor } from '@/lib/supabase/server';
+import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { pode } from '@/lib/permissoes';
 import { nomeCultura } from '@/lib/culturas';
 import { temFeature } from '@/lib/planos';
 import { hojeISO } from '@/lib/formato';
 
 /** Exporta a carteira inteira (situação por talhão) em CSV — mesma fonte de agro.vw_talhao_situacao. */
 export async function GET() {
+  const perfil = await perfilAtual();
+  if (!pode(perfil?.perfis, 'relatorios.ver') || !pode(perfil?.perfis, 'dados.exportar')) {
+    return new NextResponse('Seu perfil não permite exportar a carteira.', { status: 403 });
+  }
   const sb = await criarClienteServidor();
 
   if (!(await temFeature(sb, 'relatorios_avancados'))) {

@@ -1,3 +1,4 @@
+import { AcessoNegado } from '@/components/acesso-negado';
 import { PrecisaUpgrade } from '@/components/precisa-upgrade';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { AbasPaineis, type Painel } from '@/components/abas-paineis';
@@ -10,6 +11,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function FinanceiroEscritorio() {
   const ctx = await carregarFinanceiroEscritorio();
+  if (ctx.bloqueado && ctx.motivo === 'permissao') {
+    return <AcessoNegado titulo="Financeiro do escritório" o_que="Cobrança dos clientes e despesas do próprio negócio — visível só para quem cuida do dinheiro do escritório." />;
+  }
   if (ctx.bloqueado) {
     return (
     <PrecisaUpgrade

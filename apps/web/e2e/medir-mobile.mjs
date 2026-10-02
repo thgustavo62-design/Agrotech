@@ -6,7 +6,7 @@ import { mkdirSync } from 'node:fs';
 const [w, h, pasta, modo, ...caminhos] = process.argv.slice(2);
 mkdirSync(pasta, { recursive: true });
 const papelCookie = process.env.PAPEL ?? 'consultor';
-const cookie = (await (await fetch(`http://127.0.0.1:54321/__sessao?papel=${papelCookie}`)).json()).cookie; // assinado pelo simulador
+const cookie = (await (await fetch(`http://127.0.0.1:54321/__sessao?papel=${papelCookie}&perfis=${process.env.PERFIS ?? ""}`)).json()).cookie; // assinado pelo simulador
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: 2, isMobile: +w < 600, hasTouch: +w < 600 });

@@ -15,3 +15,5 @@
 @import './estilos/laudo.css';
 /* Botão "sair" com cara de link e esqueleto de carregamento. */
 @import './estilos/complementos.css';
+/* Central de configurações: menu de seções, equipe e permissões, seletor de perfis, matriz. */
+@import './estilos/configuracoes.css';

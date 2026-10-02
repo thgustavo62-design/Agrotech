@@ -816,6 +816,18 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## Central de configurações, equipe e perfis de acesso (02/10/2026)
+
+- [x] **FALHA CRÍTICA corrigida (`0037`)** — `profiles_atualiza_proprio` (0007) só conferia `id = auth.uid()`, sem limitar colunas: qualquer usuário logado, **inclusive um produtor**, podia mandar `update agro.profiles set role='consultor', org_id='<outro escritório>'` pela API REST e virar consultor de OUTRO escritório (lendo todos os dados dele). Além disso `handle_new_user` gravava `role` direto dos metadados do cadastro (`role=admin` valia). Reproduzido no db-test antes da correção. Agora um gatilho (`agro.proteger_perfil`) impede o cliente de mudar papel/escritório/perfis, o cadastro só aceita `consultor|produtor`, e o escritório novo nasce pela função `agro.criar_escritorio()` (`lib/onboarding.ts` usa `rpc`). **Regra nova: toda migration que cria função repete a varredura de `revoke execute ... from public, anon`** (o `alter default privileges` de 0034 não cobre o EXECUTE padrão de PUBLIC); o db-test falha se sobrar função executável por anon.
+- [x] **Perfis de acesso combináveis** (modelo do Aegro): Proprietário, Agronômico, Campo, Financeiro, Consulta. `agro.pode(permissão)` no banco (`0037`) + RLS **restritiva** por tabela (`0038`) — a regra vale mesmo chamando a API direto. Espelho em `apps/web/lib/permissoes.ts`; o db-test confere as 32 combinações × todas as permissões contra o banco. Quem já era consultor virou Proprietário (nada muda para quem já usa).
+- [x] **`/app/config` virou uma central**: menu de seções (coluna no computador, abas no celular) — Meu perfil (dados, cargo, **troca de senha com regras e medidor**, saída), Escritório, **Equipe e permissões**, Plano e cobrança (só proprietário), Privacidade e dados (LGPD + auditoria recente).
+- [x] **Equipe e permissões** (`/app/config/equipe`, `/app/equipe` redireciona): uso do plano ("3 de 5"), membros com perfis, alterar acesso/remover (trava: não sai o último proprietário nem a própria edição), convite com e-mail + perfis, link pronto para copiar/WhatsApp, convites pendentes, matriz "o que cada perfil pode" gerada da mesma regra, movimentação recente. Convite respeita `usuarios_max` do plano (aceite também).
+- [x] Menu esconde o que o perfil não alcança; páginas sem permissão mostram "acesso restrito" dizendo quem libera; server actions usam `exigir(permissão)`.
+- Refatoração: `/r/[token]` perdeu o `<style>` embutido (`publico.css`).
+- Simulador de e2e: equipe, convites e `perfis` por sessão (`/__sessao?perfis=campo`). db-test: 34 → 55 testes; web: 80.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

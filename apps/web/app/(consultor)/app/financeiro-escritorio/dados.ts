@@ -2,6 +2,7 @@ import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { hojeISO as dataDeHoje } from '@/lib/formato';
 import { statusEfetivo } from '@/lib/financeiro';
 import { temFeature } from '@/lib/planos';
+import { pode } from '@/lib/permissoes';
 
 export type Categoria = { id: string; nome: string; tipo: 'receita' | 'despesa'; padrao: boolean };
 export type Conta = { id: string; nome: string; tipo: string; saldo_inicial: number };
@@ -16,7 +17,9 @@ export async function carregarFinanceiroEscritorio() {
   const sb = await criarClienteServidor();
 
   // plano sem financeiro: quem chama decide o que mostrar (aqui só o motivo)
-  if (!perfil?.org_id || !(await temFeature(sb, 'financeiro'))) return { bloqueado: true as const };
+  if (!perfil?.org_id) return { bloqueado: true as const, motivo: 'plano' as const };
+  if (!pode(perfil.perfis, 'financeiro')) return { bloqueado: true as const, motivo: 'permissao' as const };
+  if (!(await temFeature(sb, 'financeiro'))) return { bloqueado: true as const, motivo: 'plano' as const };
 
   const [
     { data: categoriasLidas }, { data: contasRaw }, { data: lancamentosRaw }, { data: produtoresRaw },

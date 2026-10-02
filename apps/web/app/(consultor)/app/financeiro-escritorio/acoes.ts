@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { criarClienteServidor } from '@/lib/supabase/server';
+import { exigir } from '@/lib/permissoes-servidor';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 const txt = (fd: FormData, k: string) => {
@@ -15,11 +16,7 @@ const num = (fd: FormData, k: string) => {
   return Number.isFinite(x) ? x : null;
 };
 
-async function exigirOrg() {
-  const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem escritório associado.');
-  return perfil;
-}
+const exigirOrg = () => exigir('financeiro');
 
 const CAMINHO = '/app/financeiro-escritorio';
 

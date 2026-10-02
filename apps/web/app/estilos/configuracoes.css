@@ -1,0 +1,102 @@
+/* =========================================================================
+   Central de configurações (app/(consultor)/app/config): menu de seções, equipe e permissões.
+   Uma coluna de menu ao lado do conteúdo no computador; faixa de abas no celular.
+   ========================================================================= */
+
+.cfg { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 22px; align-items: start; }
+.cfg-conteudo { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.cfg-conteudo > .cartao + .cartao { margin-top: 0; }
+
+.cfg-nav { position: sticky; top: 62px; display: flex; flex-direction: column; gap: 4px; }
+.cfg-nav-item {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+  border: 1px solid transparent; border-radius: var(--r-p); color: var(--grafite);
+  transition: background .12s ease, border-color .12s ease;
+}
+.cfg-nav-item svg { flex: none; opacity: .85; }
+.cfg-nav-item span { display: flex; flex-direction: column; min-width: 0; }
+.cfg-nav-item b { font-size: 13.5px; color: var(--tinta); }
+.cfg-nav-item small { font-size: 11.5px; color: var(--grafite-2); }
+.cfg-nav-item:hover { background: rgba(17, 26, 20, .05); text-decoration: none; }
+.cfg-nav-item[data-ativa="true"] { background: var(--papel-2); border-color: var(--linha); box-shadow: var(--sombra); }
+.cfg-nav-item[data-ativa="true"] svg { color: var(--folha); opacity: 1; }
+
+/* celular: abas na horizontal, uma ao lado da outra, rolando — sem esconder nenhuma seção */
+@media (max-width: 959px) {
+  .cfg { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .cfg-nav {
+    position: static; flex-direction: row; gap: 6px; overflow-x: auto; padding: 2px 0 6px;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .cfg-nav::-webkit-scrollbar { display: none; }
+  .cfg-nav-item { flex: none; scroll-snap-align: start; padding: 9px 13px; background: var(--papel-2); border-color: var(--linha); border-radius: 99px; }
+  .cfg-nav-item small { display: none; }
+  .cfg-nav-item[data-ativa="true"] { background: var(--folha); border-color: var(--folha); }
+  .cfg-nav-item[data-ativa="true"] b, .cfg-nav-item[data-ativa="true"] svg { color: #fff; }
+}
+
+/* ---------- uso do plano ---------- */
+.cfg-uso { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cfg-uso-barra { flex: 1; min-width: 140px; height: 8px; border-radius: 99px; background: var(--linha); overflow: hidden; }
+.cfg-uso-barra > i { display: block; height: 100%; background: var(--folha); border-radius: 99px; }
+.cfg-uso[data-cheio="true"] .cfg-uso-barra > i { background: var(--c-b); }
+
+/* ---------- membros ---------- */
+.membro { background: var(--papel-2); border: 1px solid var(--linha); border-radius: var(--r-p); padding: 12px 14px; }
+.membro-topo { display: flex; align-items: center; gap: 12px; }
+.membro-topo .cresce { flex: 1; min-width: 0; }
+.membro-topo h3 { font-size: 14.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.membro-topo small { color: var(--grafite); font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.membro details { margin-top: 10px; border-top: 1px solid var(--linha); padding-top: 8px; }
+.membro summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--folha); list-style: none; padding: 4px 0; }
+.membro summary::-webkit-details-marker { display: none; }
+.membro summary::before { content: '▸ '; }
+.membro details[open] > summary::before { content: '▾ '; }
+.membro details.perigo > summary { color: var(--c-mb); }
+
+/* ---------- seletor de perfis (checkbox em forma de cartão) ---------- */
+.perfis-opcoes { display: grid; gap: 8px; margin: 8px 0 12px; }
+.perfil-opcao {
+  display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; margin: 0;
+  border: 1px solid var(--linha-forte); border-radius: var(--r-p); background: #fff; cursor: pointer;
+  font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--tinta);
+}
+.perfil-opcao input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--folha); }
+.perfil-opcao:has(input:checked) { border-color: var(--folha); background: var(--folha-clara); }
+.perfil-opcao:has(input:focus-visible) { outline: 2px solid var(--folha); outline-offset: 2px; }
+.perfil-opcao b { display: block; font-size: 13.5px; }
+.perfil-opcao small { display: block; color: var(--grafite); font-size: 12px; line-height: 1.45; margin-top: 2px; }
+.perfil-opcao .tag { margin-left: 6px; }
+
+/* ---------- convites pendentes ---------- */
+.convite { background: var(--papel-2); border: 1px solid var(--linha); border-radius: var(--r-p); padding: 12px 14px; display: grid; gap: 9px; }
+.convite-topo { display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+.convite-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- matriz de permissões ---------- */
+.matriz { width: 100%; min-width: 560px; }
+.matriz th, .matriz td { text-align: center; padding: 9px 8px; border-bottom: 1px solid var(--linha); }
+.matriz th:first-child, .matriz td:first-child { text-align: left; position: sticky; left: 0; background: var(--papel-2); min-width: 210px; }
+.matriz tr.grupo th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--grafite-2); background: var(--papel-3); }
+.matriz td { position: relative; } /* o texto só-leitor (absoluto) não pode escapar da rolagem da tabela */
+.matriz .sim { color: var(--folha); font-weight: 800; }
+.matriz .nao { color: var(--linha-forte); }
+
+/* ---------- atividade ---------- */
+.atividade { display: flex; flex-direction: column; }
+.atividade-linha { display: flex; gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--linha); font-size: 13px; }
+.atividade-linha:last-child { border-bottom: 0; }
+.atividade-linha time { flex: none; width: 78px; font-size: 11.5px; color: var(--grafite-2); }
+
+/* ---------- senha ---------- */
+.forca { display: flex; gap: 4px; margin: 6px 0 4px; }
+.forca i { flex: 1; height: 5px; border-radius: 99px; background: var(--linha); }
+.forca[data-nivel="1"] i:nth-child(-n+1) { background: var(--c-mb); }
+.forca[data-nivel="2"] i:nth-child(-n+2) { background: var(--c-b); }
+.forca[data-nivel="3"] i:nth-child(-n+3) { background: var(--c-m); }
+.forca[data-nivel="4"] i { background: var(--c-bom); }
+.regras { list-style: none; margin: 6px 0 0; padding: 0; font-size: 12px; color: var(--grafite); display: grid; gap: 2px; }
+.regras li[data-ok="true"] { color: var(--folha); }
+.regras li::before { content: '○ '; }
+.regras li[data-ok="true"]::before { content: '● '; }

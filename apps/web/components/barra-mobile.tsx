@@ -3,7 +3,7 @@
 import { useEffect, useState, type ComponentType, type SVGProps } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { NAVEGACAO_CONSULTOR, NAVEGACAO_MOBILE_PRINCIPAL, rotaAtiva } from '@/lib/navegacao';
+import { hrefAtivo, navegacaoPara, NAVEGACAO_MOBILE_PRINCIPAL } from '@/lib/navegacao';
 import { IconeMais, IconeFechar } from './icones';
 import { BotaoSair } from './botao-sair';
 
@@ -38,7 +38,8 @@ export function BarraInferior({
 
   const todos = grupos.flatMap((g) => g.itens);
   const fixos = principais.map((href) => todos.find((i) => i.href === href)).filter((i): i is ItemBarra => Boolean(i));
-  const ativaEmFixo = fixos.some((i) => rotaAtiva(path, i.href));
+  const atual = hrefAtivo(path, todos.map((i) => i.href));
+  const ativaEmFixo = fixos.some((i) => i.href === atual);
 
   // a gaveta fecha ao navegar e com a tecla Esc; e a página de trás não rola enquanto ela está aberta
   useEffect(() => setAberta(false), [path]);
@@ -55,7 +56,7 @@ export function BarraInferior({
     <>
       <nav className="barra-mobile nao-imprime" aria-label="Navegação principal">
         {fixos.map((item) => {
-          const ativa = rotaAtiva(path, item.href);
+          const ativa = item.href === atual;
           const Icone = item.icone;
           return (
             <Link key={item.href} href={item.href} className="barra-mobile-item" data-ativa={ativa} aria-current={ativa ? 'page' : undefined}>
@@ -90,7 +91,7 @@ export function BarraInferior({
               <div className="lateral-grupo" key={grupo.titulo ?? gi}>
                 {grupo.titulo ? <div className="lateral-grupo-titulo">{grupo.titulo}</div> : null}
                 {grupo.itens.map((item) => {
-                  const ativa = rotaAtiva(path, item.href);
+                  const ativa = item.href === atual;
                   const Icone = item.icone;
                   return (
                     <Link
@@ -123,10 +124,10 @@ export function BarraInferior({
 }
 
 /** Barra do consultor: itens e ordem vêm de NAVEGACAO_CONSULTOR (mesma fonte da sidebar). */
-export function BarraMobile({ nome, crea }: { nome?: string | null; crea?: string | null }) {
+export function BarraMobile({ nome, crea, perfis }: { nome?: string | null; crea?: string | null; perfis?: string[] | null }) {
   return (
     <BarraInferior
-      grupos={NAVEGACAO_CONSULTOR}
+      grupos={navegacaoPara(perfis)}
       principais={NAVEGACAO_MOBILE_PRINCIPAL}
       nome={nome}
       subtitulo={crea ? `CREA ${crea}` : 'Defina seu CREA em Configurações'}

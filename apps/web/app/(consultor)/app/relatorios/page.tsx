@@ -3,6 +3,8 @@ import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { nomeCultura } from '@/lib/culturas';
 import { f, dataBR, hojeISO } from '@/lib/formato';
 import { temFeature } from '@/lib/planos';
+import { pode } from '@/lib/permissoes';
+import { AcessoNegado } from '@/components/acesso-negado';
 import { Cartao } from '@/components/ui';
 import { BotaoImprimir } from '@/components/botao-imprimir';
 import { PrecisaUpgrade } from '@/components/precisa-upgrade';
@@ -13,6 +15,10 @@ export default async function Relatorios() {
   const sb = await criarClienteServidor();
   const perfil = await perfilAtual();
 
+  const podeExportar = pode(perfil?.perfis, 'dados.exportar');
+  if (!pode(perfil?.perfis, 'relatorios.ver')) {
+    return <AcessoNegado titulo="Relatórios" o_que="Relatório A4 imprimível e exportação em CSV de toda a carteira." />;
+  }
   if (!(await temFeature(sb, 'relatorios_avancados'))) {
     return (
       <PrecisaUpgrade
@@ -51,7 +57,7 @@ export default async function Relatorios() {
           <p>Um resumo pronto pra imprimir ou salvar em PDF, e a exportação em planilha de toda a carteira.</p>
         </div>
         <div className="acoes">
-          <Link className="btn sec" prefetch={false} href="/app/relatorios/carteira.csv">Baixar CSV</Link>
+          {podeExportar ? <Link className="btn sec" prefetch={false} href="/app/relatorios/carteira.csv">Baixar CSV</Link> : null}
           <BotaoImprimir />
         </div>
       </div>
@@ -102,7 +108,7 @@ export default async function Relatorios() {
           CSV com um talhão por linha: cultura, área, última coleta, saturação por bases, saturação por
           alumínio e situação — pronto pra abrir no Excel/Sheets.
         </p>
-        <Link className="btn verde mini" prefetch={false} href="/app/relatorios/carteira.csv">Baixar CSV</Link>
+        {podeExportar ? <Link className="btn verde mini" prefetch={false} href="/app/relatorios/carteira.csv">Baixar CSV</Link> : <small>Exportar dados é do perfil Agronômico.</small>}
       </Cartao>
     </>
   );

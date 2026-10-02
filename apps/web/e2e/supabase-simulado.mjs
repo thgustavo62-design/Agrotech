@@ -53,7 +53,18 @@ const notificacoes = [0, 1, 2].map((i) => ({ id: `n${i}`, org_id: O, destinatari
 const documentos = [0, 1, 2].map((i) => ({ id: `d${i}`, org_id: O, nome_arquivo: ['tomazin.pdf', 'laudo_boa_vista.pdf', 'analise_santa_rita.pdf'][i], status: ['revisao', 'confirmado', 'extraindo'][i], laboratorio: 'Laboratório Água Limpa', confianca_media: 0.86, criado_em: new Date(hoje.getTime() - i * 86400000).toISOString(), erro: null, storage_path: `x/${i}.pdf`, payload: null }));
 const recomendacoes = analises.slice(0, 3).map((a, i) => ({ id: `rc${i}`, org_id: O, analise_id: a.id, produtor_id: a.produtor_id, emitida_em: new Date(hoje.getTime() - i * 5 * 86400000).toISOString(), motor_versao: '0.1.0', arquivada_em: null, pdf_path: null, resultado: {}, observacoes: null }));
 const lancamentos = [0, 1, 2, 3, 4].map((i) => ({ id: `l${i}`, org_id: O, produtor_id: produtores[0].id, descricao: ['Adubo NPK 20-05-20', 'Mão de obra colheita', 'Venda de café', 'Combustível', 'Energia'][i], tipo: i === 2 ? 'receita' : 'despesa', valor: [3200, 4800, 18500, 640, 380][i], data: dia(-i * 6), status: i === 4 ? 'pendente' : 'pago', vencimento: dia(-i * 6), categoria_id: null, conta_id: null }));
-const planos = [{ id: 'free', nome: 'Gratuito', preco_mes: 0, limites: {} }, { id: 'pro', nome: 'Profissional', preco_mes: 149, limites: {} }];
+const planos = [{ id: 'free', nome: 'Gratuito', preco_mes: 0, limites: {}, usuarios_max: 1 }, { id: 'pro', nome: 'Profissional', preco_mes: 149, limites: {}, usuarios_max: 5 }];
+// equipe do escritório (a pessoa logada é a primeira; os perfis dela vêm do token — ver __sessao?perfis=)
+const COLEGAS = [
+  { id: 'c1000000-0000-0000-0000-000000000002', org_id: O, role: 'consultor', nome: 'Carlos Pereira', crea: 'ES-22222', art: null, fone: null, titulo: 'Técnico de campo', perfis: ['campo'] },
+  { id: 'c1000000-0000-0000-0000-000000000003', org_id: O, role: 'consultor', nome: 'Ana Lima', crea: null, art: null, fone: null, titulo: 'Financeiro', perfis: ['financeiro'] },
+];
+const convitesEquipe = [{ id: 'cv1', org_id: O, email: 'joao@exemplo.com', titulo: 'Agrônomo', perfis: ['agronomico', 'campo'], token: '71111111-0000-0000-0000-000000000001', expira_em: dia(6), usado_em: null, criado_em: dia(-1) }];
+const auditoria = [
+  { id: 3, org_id: O, user_id: U, acao: 'equipe.convidado', dados: { email: 'joao@exemplo.com', perfis: ['agronomico', 'campo'] }, criado_em: dia(-1) + 'T10:00:00Z' },
+  { id: 2, org_id: O, user_id: U, acao: 'equipe.perfis_alterados', dados: { nome: 'Ana Lima', perfis: ['financeiro'] }, criado_em: dia(-4) + 'T10:00:00Z' },
+  { id: 1, org_id: O, user_id: U, acao: 'escritorio.editado', dados: null, criado_em: dia(-9) + 'T10:00:00Z' },
+];
 
 const T = {
   profiles: [{ id: U, org_id: O, role: process.env.PAPEL ?? 'consultor', nome: process.env.PAPEL === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }],
@@ -62,11 +73,11 @@ const T = {
   vw_talhao_situacao: talhoes.map((t, i) => ({ talhao_id: t.id, nome: t.nome, cultura: t.cultura, area_ha: t.area_ha, data_coleta: analises[i % 6]?.data_coleta ?? null, situacao: ['precisa_correcao', 'em_ordem', 'sem_analise'][i % 3], produtor_id: t.produtor_id })),
   tabelas_referencia: [], financeiro_lancamentos: lancamentos, financeiro_escrit_lancamentos: lancamentos.map((l) => ({ ...l, produtor_id: null })),
   financeiro_categorias: [], financeiro_contas: [], financeiro_centros_custo: [], financeiro_orcamentos: [], financeiro_escrit_contas: [], financeiro_escrit_categorias: [],
-  planos, assinaturas: [{ id: 's1', org_id: O, plano: 'pro', status: 'ativa', trial_expira_em: null, atual_ate: dia(20) }], cobrancas: [], convites_equipe: [], convites: [], compartilhamentos: [], safras: [], producao_registros: [],
-  metricas_diarias: [], audit_log: [],
+  planos, assinaturas: [{ id: 's1', org_id: O, plano: 'pro', planos_id: 'pro', status: 'ativa', trial_expira_em: null, atual_ate: dia(20) }], cobrancas: [], convites_equipe: convitesEquipe, convites: [], compartilhamentos: [], safras: [], producao_registros: [],
+  metricas_diarias: [], audit_log: auditoria,
 };
 
-const PLURAL = { talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes' };
+const PLURAL = { talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos' };
 
 function divide(s) { // separa por vírgula respeitando parênteses
   const out = []; let nivel = 0; let atual = '';
@@ -121,6 +132,9 @@ http.createServer((req0, res0) => {
 }).listen(54321, '127.0.0.1', () => console.log('supabase simulado em :54321'));
 
 // o papel (consultor|produtor) vem do token da requisição: uma instância atende os dois portais
+function claimsDaRequisicao(req) {
+  try { return JSON.parse(Buffer.from((req.headers.authorization ?? '').split('.')[1], 'base64url').toString()); } catch { return {}; }
+}
 function papelDaRequisicao(req) {
   try {
     const carga = (req.headers.authorization ?? '').split('.')[1];
@@ -130,14 +144,15 @@ function papelDaRequisicao(req) {
 function atender(req, res) {
   const url = new URL(req.url, 'http://x');
   const papel = papelDaRequisicao(req);
-  T.profiles = [{ id: U, org_id: O, role: papel, nome: papel === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }];
+  const perfisSim = String(claimsDaRequisicao(req).perfis_sim || process.env.PERFIS || 'proprietario').split(',').filter(Boolean);
+  T.profiles = [{ id: U, org_id: O, role: papel, nome: papel === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma', perfis: papel === 'produtor' ? [] : perfisSim }, ...(papel === 'produtor' ? [] : COLEGAS)];
   const json = (obj, status = 200, extra = {}) => { res.writeHead(status, { 'content-type': 'application/json', ...extra }); res.end(JSON.stringify(obj)); };
 
   if (url.pathname === '/auth/v1/.well-known/jwks.json') return json({ keys: [{ ...publicKey.export({ format: 'jwk' }), kid: KID, alg: 'ES256', use: 'sig' }] });
   if (url.pathname === '/__sessao') { // valor do cookie de sessão para os scripts de teste
     const papel = url.searchParams.get('papel') ?? 'consultor';
     const exp = Math.floor(Date.now() / 1000) + 7 * 86400;
-    const sessao = { access_token: jwt({ sub: U, exp, iat: exp - 3600, aud: 'authenticated', role: 'authenticated', user_role: papel, org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } };
+    const sessao = { access_token: jwt({ sub: U, exp, iat: exp - 3600, aud: 'authenticated', role: 'authenticated', user_role: papel, org_id: O, perfis_sim: url.searchParams.get('perfis') ?? undefined }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } };
     return json({ cookie: 'base64-' + Buffer.from(JSON.stringify(sessao)).toString('base64url') });
   }
   if (url.pathname === '/auth/v1/user') return json({ id: U, aud: 'authenticated', role: 'authenticated', email: 'maria@exemplo.com', user_metadata: {}, app_metadata: {} });
@@ -158,6 +173,8 @@ function atender(req, res) {
     for (const [k, v] of url.searchParams) {
       if (['select', 'order', 'limit', 'offset', 'on_conflict', 'columns'].includes(k) || k.includes('.')) continue; // filtros em recurso aninhado: depois de montar
       const m = /^eq\.(.*)$/.exec(v); if (m) linhas = linhas.filter((r) => String(r[k]) === m[1]);
+      if (v === 'is.null') linhas = linhas.filter((r) => r[k] == null);
+      const cs = /^cs.{(.*)}$/.exec(v); if (cs) linhas = linhas.filter((r) => cs[1].split(',').every((x) => (r[k] ?? []).includes(x)));
       const i = /^in\.\((.*)\)$/.exec(v); if (i) { const lista = i[1].split(',').map((x) => x.replace(/"/g, '')); linhas = linhas.filter((r) => lista.includes(String(r[k]))); }
     }
     const lim = Number(url.searchParams.get('limit')); if (lim) linhas = linhas.slice(0, lim);

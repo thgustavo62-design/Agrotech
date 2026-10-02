@@ -49,7 +49,7 @@ async function carregarPerfil() {
   const { data } = await sb
     .schema('agro')
     .from('profiles')
-    .select('id, role, org_id, nome, crea')
+    .select('id, role, org_id, nome, crea, perfis')
     .eq('id', sessao.id)
     .single();
 

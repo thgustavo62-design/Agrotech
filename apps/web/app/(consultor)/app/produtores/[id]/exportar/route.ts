@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { criarClienteServidor } from '@/lib/supabase/server';
+import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { pode } from '@/lib/permissoes';
 import { registrar } from '@/lib/audit';
 import { hojeISO } from '@/lib/formato';
 
@@ -10,6 +11,8 @@ import { hojeISO } from '@/lib/formato';
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const perfil = await perfilAtual();
+  if (!pode(perfil?.perfis, 'dados.exportar')) return NextResponse.json({ erro: 'Seu perfil não permite exportar dados.' }, { status: 403 });
   const sb = await criarClienteServidor();
 
   const { data: produtor, error } = await sb

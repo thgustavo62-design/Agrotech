@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 import { TelaAuth } from '@/components/tela-auth';
 import { CampoAuth, CampoSenha } from '@/components/campo-auth';
+import { PERFIS, perfisValidos } from '@/lib/permissoes';
 import { IconeAgenda, IconeCadeado, IconeEmail, IconeLaudos, IconeProdutores } from '@/components/icones';
 
 interface Resumo {
   valido: boolean;
   organizacao: string | null;
   titulo: string | null;
+  perfis?: string[];
   email: string | null;
 }
 
@@ -100,11 +102,17 @@ function AceitarConviteEquipeInterno() {
     );
   }
 
+  const perfis = perfisValidos(resumo.perfis);
   return (
     <CartaoAceitar
       titulo="Criar seu acesso"
       legenda={`${resumo.organizacao} te convidou${resumo.titulo ? ` como ${resumo.titulo}` : ''}. Crie uma senha para entrar.`}
     >
+      {perfis.length > 0 ? (
+        <p className="nota" style={{ margin: '0 0 14px' }}>
+          Seu acesso: <b>{perfis.map((p) => PERFIS[p].nome).join(' + ')}</b>. {PERFIS[perfis[0]!].pode[0]}.
+        </p>
+      ) : null}
       <form onSubmit={aceitar}>
         <label>
           E-mail

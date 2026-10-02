@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import './publico.css';
 import { gerarRecomendacao } from '@agrotech/agro-core';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura, paraAnalise } from '@/lib/culturas';
@@ -41,8 +42,7 @@ export default async function ResultadosPublicos({ params }: { params: Promise<{
   if (!dados) {
     return (
       <main className="raw">
-        <ESTILO />
-        <h1>Link inválido ou expirado</h1>
+          <h1>Link inválido ou expirado</h1>
         <p>Peça um novo endereço ao seu técnico.</p>
       </main>
     );
@@ -64,7 +64,6 @@ export default async function ResultadosPublicos({ params }: { params: Promise<{
 
   return (
     <main className="raw">
-      <ESTILO />
       <header>
         <div className="marca">AGROTECH</div>
         <h1>{dados.produtor}</h1>
@@ -149,37 +148,4 @@ export default async function ResultadosPublicos({ params }: { params: Promise<{
 
 function nomeCorretivoCurto(c: string): string {
   return { calcitico: 'calcítico', magnesiano: 'magnesiano', dolomitico: 'dolomítico' }[c] ?? c;
-}
-
-function ESTILO() {
-  return (
-    <style
-      // vitrine "bruta": alto contraste, números grandes, legível no campo
-      dangerouslySetInnerHTML={{
-        __html: `
-        .raw { max-width: 680px; margin: 0 auto; padding: 20px 16px 60px; color: #111; background: #fff; }
-        .raw header { border-bottom: 3px solid #111; padding-bottom: 12px; margin-bottom: 8px; }
-        .raw .marca { font: 700 11px/1 var(--mono, monospace); letter-spacing: .28em; color: #0f5c43; }
-        .raw h1 { font-size: 26px; margin: 6px 0 2px; }
-        .raw .sub { font-size: 12.5px; color: #555; margin: 0; }
-        .raw h2 { font-size: 15px; margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #ccc; }
-        .raw article { border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
-        .raw .titulo { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
-        .raw .titulo b { font-size: 15px; }
-        .raw .titulo span { font-size: 12px; color: #666; }
-        .raw .numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
-        .raw .n { border-left: 3px solid #bbb; padding-left: 8px; }
-        .raw .n span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #666; }
-        .raw .n b { display: block; font: 700 24px/1.1 var(--mono, monospace); margin: 3px 0 1px; }
-        .raw .n em { font-style: normal; font-size: 11px; color: #888; }
-        .raw .n.bom { border-left-color: #1b7355; } .raw .n.bom b { color: #1b7355; }
-        .raw .n.ruim { border-left-color: #b4342a; } .raw .n.ruim b { color: #b4342a; }
-        .raw .acoes { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.7; }
-        .raw .acoes .alerta { color: #b4342a; }
-        .raw footer { margin-top: 26px; padding-top: 12px; border-top: 1px solid #ccc; font-size: 11.5px; color: #777; }
-        @media (max-width: 520px) { .raw .numeros { grid-template-columns: 1fr; } }
-      `,
-      }}
-    />
-  );
 }

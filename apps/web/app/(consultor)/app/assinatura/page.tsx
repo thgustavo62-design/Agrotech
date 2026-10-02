@@ -1,4 +1,6 @@
-import { criarClienteServidor } from '@/lib/supabase/server';
+import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { pode } from '@/lib/permissoes';
+import { AcessoNegado } from '@/components/acesso-negado';
 import { f, dataBR } from '@/lib/formato';
 import { Cartao, Grade, Metrica, Tag } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
@@ -14,6 +16,10 @@ const ROTULO_STATUS: Record<string, { txt: string; tom: 'ok' | 'alerta' | 'ruim'
 };
 
 export default async function Assinatura() {
+  const perfil = await perfilAtual();
+  if (!pode(perfil?.perfis, 'plano.gerenciar')) {
+    return <AcessoNegado titulo="Assinatura" o_que="Plano, cobrança e limites do escritório — só o proprietário altera." />;
+  }
   const sb = await criarClienteServidor();
   const inicioMes = new Date();
   inicioMes.setDate(1);

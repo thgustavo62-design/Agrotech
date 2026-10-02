@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { PADRAO, validarCultura, validarQuebras, type ChaveFaixa, type Cultura, type Faixa, type FaixaFosforo } from '@agrotech/agro-core';
-import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { criarClienteServidor } from '@/lib/supabase/server';
+import { exigir } from '@/lib/permissoes-servidor';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { registrar } from '@/lib/audit';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
@@ -13,9 +14,7 @@ const cinco = (fd: FormData, p: string) => [0, 1, 2, 3, 4].map((i) => num(fd.get
 type TipoTabela = 'culturas' | 'faixas' | 'fosforo';
 
 async function gravarTabela(tipo: TipoTabela, conteudo: unknown, acao: string, dados: Record<string, unknown> = {}) {
-  const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem escritório associado.');
-  if (perfil.role !== 'consultor' && perfil.role !== 'admin') throw new ErroDeUsuario('Sem permissão.');
+  const perfil = await exigir('tabelas.editar');
 
   const sb = await criarClienteServidor();
   const { data: atual } = await sb.schema('agro').from('tabelas_referencia')

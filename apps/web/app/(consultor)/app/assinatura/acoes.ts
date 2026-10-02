@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { criarClienteServidor } from '@/lib/supabase/server';
+import { exigir } from '@/lib/permissoes-servidor';
 import { comAviso, ErroDeUsuario } from '@/lib/acao';
 
 /**
@@ -25,8 +26,7 @@ async function iniciarUpgradeImpl(fd: FormData) {
     throw new ErroDeUsuario('Checkout automático ainda não está configurado neste ambiente. Fale com o suporte da Nova7 pra mudar de plano.');
   }
 
-  const perfil = await perfilAtual();
-  if (!perfil?.org_id) throw new ErroDeUsuario('Sessão sem organização.');
+  const perfil = await exigir('plano.gerenciar');
 
   const sb = await criarClienteServidor();
   const [{ data: org }, { data: plano }] = await Promise.all([
