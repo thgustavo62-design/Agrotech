@@ -4,6 +4,7 @@ import { ChipsPerfis } from '@/components/chips-perfis';
 import { alterarPerfis, removerDaEquipe } from '../acoes';
 import type { ContextoEquipe } from '../dados';
 import { SeletorPerfis } from './SeletorPerfis';
+import { GerarAcesso } from './GerarAcesso';
 
 /** Quem já está no escritório, com o perfil de cada um; o proprietário edita o acesso ou remove. */
 export function SecaoMembros({ ctx }: { ctx: ContextoEquipe }) {
@@ -36,6 +37,12 @@ export function SecaoMembros({ ctx }: { ctx: ContextoEquipe }) {
                         <button className="btn verde mini" type="submit">Salvar acesso</button>
                       </form>
                     </details>
+                    {!m.perfis.includes('proprietario') ? (
+                      <details>
+                        <summary>Senha esquecida</summary>
+                        <GerarAcesso id={m.id} nome={m.nome} />
+                      </details>
+                    ) : null}
                     <details className="perigo">
                       <summary>Remover do escritório</summary>
                       <form action={removerDaEquipe}>

@@ -128,6 +128,12 @@ const t0 = Date.now();
 http.createServer((req0, res0) => {
   const rotulo = new URL(req0.url, 'http://x').pathname.replace('/rest/v1/', '').replace('/auth/v1/', 'auth:');
   if (process.env.LOG) console.log(`${Date.now() - t0}	${req0.method}	${rotulo}`);
+  // o navegador também fala direto com o Auth (login, verifyOtp, updateUser…): precisa de CORS
+  res0.setHeader('access-control-allow-origin', req0.headers.origin ?? '*');
+  res0.setHeader('access-control-allow-headers', req0.headers['access-control-request-headers'] ?? '*');
+  res0.setHeader('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res0.setHeader('access-control-expose-headers', 'content-range');
+  if (req0.method === 'OPTIONS') { res0.writeHead(204); return res0.end(); }
   setTimeout(() => atender(req0, res0), LATENCIA);
 }).listen(54321, '127.0.0.1', () => console.log('supabase simulado em :54321'));
 
@@ -155,6 +161,11 @@ function atender(req, res) {
     const sessao = { access_token: jwt({ sub: U, exp, iat: exp - 3600, aud: 'authenticated', role: 'authenticated', user_role: papel, org_id: O, perfis_sim: url.searchParams.get('perfis') ?? undefined }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } };
     return json({ cookie: 'base64-' + Buffer.from(JSON.stringify(sessao)).toString('base64url') });
   }
+  // admin (service role): dados de um usuário e link de recuperação; verify troca o token_hash por sessão
+  if (url.pathname.startsWith('/auth/v1/admin/users/')) return json({ id: url.pathname.split('/').pop(), aud: 'authenticated', role: 'authenticated', email: 'carlos@exemplo.com', user_metadata: {}, app_metadata: {} });
+  if (url.pathname === '/auth/v1/admin/generate_link') return json({ id: 'c1000000-0000-0000-0000-000000000002', email: 'carlos@exemplo.com', action_link: 'http://x/verify', email_otp: '123456', hashed_token: 'a1b2c3d4e5f6a7b8c9d0e1f2', redirect_to: '', verification_type: 'recovery' });
+  if (url.pathname === '/auth/v1/recover') return json({});
+  if (url.pathname === '/auth/v1/verify') { const exp = Math.floor(Date.now() / 1000) + 3600; return json({ access_token: jwt({ sub: U, exp, aud: 'authenticated', role: 'authenticated', user_role: 'consultor', org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } }); }
   if (url.pathname === '/auth/v1/user') return json({ id: U, aud: 'authenticated', role: 'authenticated', email: 'maria@exemplo.com', user_metadata: {}, app_metadata: {} });
   if (url.pathname === '/auth/v1/token') return json({ access_token: jwt({ sub: U, exp: Math.floor(Date.now() / 1000) + 3600, aud: 'authenticated', role: 'authenticated', user_role: process.env.PAPEL ?? 'consultor', org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } });
   if (url.pathname === '/auth/v1/logout') { res.writeHead(204); return res.end(); }

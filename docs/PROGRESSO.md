@@ -844,6 +844,16 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## Recuperação de senha sem depender de e-mail (02/10/2026)
+
+- Sem SMTP próprio o Supabase manda só 2 e-mails/h (e só para a equipe do projeto no Supabase). Então: **`/redefinir-senha`** (troca `token_hash` por sessão com `verifyOtp`, valida as regras de `lib/senha.ts`, link de uso único) serve a dois caminhos:
+  - **Proprietário → empregado:** em Equipe e permissões, "Senha esquecida → Gerar link de nova senha" (`gerarAcessoEquipe`: `admin.generateLink`, exige `SUPABASE_SERVICE_ROLE_KEY`, não vale para outro proprietário nem para si, vai para o histórico). O link é entregue por WhatsApp; nada é enviado por e-mail nem guardado.
+  - **Proprietário esqueceu a dele:** "Esqueci minha senha" no login → `resetPasswordForEmail` (e-mail do Supabase; resposta sempre igual para não revelar quem tem conta). **Exige** o template "Reset password" do Supabase apontando para `{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=recovery` e o Site URL correto.
+- Mínimo de senha alinhado em 8 (site, aceite de convites, `config.toml` e Supabase real: 8 + letras e números).
+- Simulador de e2e ganhou CORS e as rotas admin/verify/recover; `e2e/verificar-senhas.mjs`.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.
