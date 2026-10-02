@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { criarClienteNavegador } from '@/lib/supabase/client';
@@ -42,7 +42,11 @@ export default function RedefinirSenha() {
 
 function RedefinirSenhaInterno() {
   const router = useRouter();
-  const params = lerParametrosRedefinicao(useSearchParams().toString());
+  const busca = useSearchParams().toString();
+  // o Supabase pode devolver o erro (link expirado) na âncora #…, que o servidor não enxerga: lê no navegador
+  const [ancora, setAncora] = useState<string | null>(null);
+  useEffect(() => setAncora(window.location.hash), []);
+  const params = lerParametrosRedefinicao(busca, ancora ?? '');
   const [senha, setSenha] = useState('');
   const [confirma, setConfirma] = useState('');
   const [estado, setEstado] = useState<'form' | 'enviando'>('form');
@@ -53,9 +57,11 @@ function RedefinirSenhaInterno() {
   const regras = regrasDaSenha(senha);
   const pronta = regras.every((r) => r.ok) && senha === confirma;
 
+  if (ancora === null) return <Cartao titulo="Carregando…" />;
+
   if (!params) {
     return (
-      <Cartao titulo="Link inválido" legenda="Este link de nova senha está incompleto ou foi alterado. Peça um novo a quem administra o escritório.">
+      <Cartao titulo="Link inválido" legenda="Este link de nova senha expirou, já foi usado ou está incompleto. Peça um novo a quem administra o escritório (ou use o link Esqueci minha senha, no login).">
         <Link className="btn verde" href="/login">Ir para o login</Link>
       </Cartao>
     );
@@ -69,10 +75,12 @@ function RedefinirSenhaInterno() {
     const sb = criarClienteNavegador();
 
     if (!comSessao) {
-      const { error } = await sb.auth.verifyOtp({ token_hash: params.tokenHash, type: 'recovery' });
+      const { error } = 'tokenHash' in params
+        ? await sb.auth.verifyOtp({ token_hash: params.tokenHash, type: 'recovery' })
+        : await sb.auth.setSession({ access_token: params.accessToken, refresh_token: params.refreshToken });
       if (error) {
         setEstado('form');
-        setErro('Este link já foi usado ou expirou. Peça um novo a quem administra o escritório.');
+        setErro('Este link já foi usado ou expirou. Peça um novo.');
         return;
       }
       setComSessao(true);

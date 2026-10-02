@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 import { TelaAuth } from '@/components/tela-auth';
 import { CampoAuth, CampoSenha } from '@/components/campo-auth';
@@ -30,7 +31,7 @@ export default function LoginConsultor() {
     router.replace('/app');
   }
 
-  // o Supabase manda o e-mail "Reset password" (template com o link /redefinir-senha). A resposta é sempre a
+  // o Supabase manda o e-mail "Reset password" padrão. A resposta é sempre a
   // mesma, exista ou não a conta: não revela quem tem cadastro. Limite do SMTP embutido: 2 e-mails por hora.
   async function esqueciSenha() {
     setErro(null);
@@ -39,7 +40,15 @@ export default function LoginConsultor() {
       setErro('Digite seu e-mail acima e clique de novo em "Esqueci minha senha".');
       return;
     }
-    const { error } = await criarClienteNavegador().auth.resetPasswordForEmail(email.trim());
+    // fluxo *implicit*, só para este pedido: o link do e-mail traz os tokens na âncora e funciona abrindo em
+    // OUTRO aparelho (o PKCE exige o mesmo navegador). Sessão não é guardada aqui.
+    const sbRecuperacao = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { flowType: 'implicit', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+    const { error } = await sbRecuperacao.auth.resetPasswordForEmail(email.trim(), {
+      // precisa estar em Authentication > URL Configuration > Redirect URLs
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    });
     if (error && /rate|limit|many/i.test(error.message)) {
       setErro('Muitos pedidos seguidos. Espere um pouco e tente de novo.');
       return;

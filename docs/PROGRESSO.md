@@ -848,7 +848,7 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 - Sem SMTP próprio o Supabase manda só 2 e-mails/h (e só para a equipe do projeto no Supabase). Então: **`/redefinir-senha`** (troca `token_hash` por sessão com `verifyOtp`, valida as regras de `lib/senha.ts`, link de uso único) serve a dois caminhos:
   - **Proprietário → empregado:** em Equipe e permissões, "Senha esquecida → Gerar link de nova senha" (`gerarAcessoEquipe`: `admin.generateLink`, exige `SUPABASE_SERVICE_ROLE_KEY`, não vale para outro proprietário nem para si, vai para o histórico). O link é entregue por WhatsApp; nada é enviado por e-mail nem guardado.
-  - **Proprietário esqueceu a dele:** "Esqueci minha senha" no login → `resetPasswordForEmail` (e-mail do Supabase; resposta sempre igual para não revelar quem tem conta). **Exige** o template "Reset password" do Supabase apontando para `{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=recovery` e o Site URL correto.
+  - **Proprietário esqueceu a dele:** "Esqueci minha senha" no login → `resetPasswordForEmail` com cliente *implicit* só para esse pedido (o PKCE exigiria abrir o e-mail no mesmo navegador); o link traz os tokens na âncora (`#access_token=…&type=recovery`) e a página faz `setSession`. Resposta sempre igual (não revela quem tem conta). **Exige** `https://<site>/redefinir-senha` em Authentication → URL Configuration → Redirect URLs (o template do e-mail não é editável sem SMTP próprio).
 - Mínimo de senha alinhado em 8 (site, aceite de convites, `config.toml` e Supabase real: 8 + letras e números).
 - Simulador de e2e ganhou CORS e as rotas admin/verify/recover; `e2e/verificar-senhas.mjs`.
 
