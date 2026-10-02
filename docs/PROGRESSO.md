@@ -854,6 +854,16 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## Empregado cadastrado direto pelo proprietário (02/10/2026)
+
+- [x] **Cadastrar empregado** (`/app/config/equipe`): o proprietário informa nome, e-mail, cargo, perfis e a **senha inicial** (campo visível com "Gerar senha" legível e regras ao vivo) e a conta nasce já confirmada (`admin.createUser` com `email_confirm`, service role): a pessoa entra pelo login normal, sem e-mail de confirmação nem convite. O gatilho de cadastro cria o perfil como consultor/proprietário; a ação o rebaixa na hora ao que foi escolhido (e apaga a conta se a colocação no escritório falhar). Respeita `usuarios_max`; e-mail já cadastrado é recusado (nunca puxa conta existente). Mostra e-mail + senha uma única vez com mensagem pronta para WhatsApp; fica no histórico (`equipe.cadastrado`).
+- [x] **Senha esquecida** do empregado agora tem "Definir nova senha" direto (`definirSenhaEquipe`, vale na hora) além do link de nova senha. Convite por link virou alternativa recolhida.
+- Cadastro do próprio proprietário segue direto (sem confirmar e-mail — Confirm email desligado no Supabase).
+- **Conhecido, em aberto:** "Remover do escritório" só zera `org_id`/perfis; a conta continua existindo e, no próximo login, a pessoa ganha um escritório de teste vazio. Falta banir/excluir a conta (cuidado com FKs para `auth.users`).
+- `gerarSenha()` em `lib/senha.ts` (sem 0/O/1/l/I). `e2e/verificar-cadastro-empregado.mjs`.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

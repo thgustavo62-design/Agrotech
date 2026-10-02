@@ -11,6 +11,8 @@ function frase(a: ContextoEquipe['atividade'][number], quem: string): string {
     case 'equipe.convite_cancelado': return `${quem} cancelou um convite`;
     case 'equipe.perfis_alterados': return `${quem} mudou o acesso de ${String(d.nome ?? 'um colega')} para ${rotuloDosPerfis(perfisValidos(d.perfis))}`;
     case 'equipe.acesso_gerado': return `${quem} gerou um novo acesso (senha) para ${String(d.nome ?? 'um colega')}`;
+    case 'equipe.cadastrado': return `${quem} cadastrou ${String(d.nome ?? 'um colega')} (${rotuloDosPerfis(perfisValidos(d.perfis))})`;
+    case 'equipe.senha_definida': return `${quem} definiu uma nova senha para ${String(d.nome ?? 'um colega')}`;
     case 'equipe.removido': return `${quem} removeu ${String(d.nome ?? 'um colega')} do escritório`;
     default: return `${quem}: ${a.acao}`;
   }

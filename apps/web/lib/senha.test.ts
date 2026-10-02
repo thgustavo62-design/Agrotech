@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nivelDaSenha, regrasDaSenha } from './senha';
+import { gerarSenha, nivelDaSenha, regrasDaSenha } from './senha';
 
 describe('senha', () => {
   it('regras: tamanho e mistura de letras e números', () => {
@@ -18,5 +18,23 @@ describe('senha', () => {
     expect(nivelDaSenha('Abcdefghij')).toBe(2);
     expect(nivelDaSenha('Abcdefg1!')).toBe(3);
     expect(nivelDaSenha('Abcdefghijklm1!')).toBe(4);
+  });
+});
+
+describe('gerarSenha', () => {
+  it('sempre passa nas regras, no tamanho pedido e sem caracteres ambíguos', () => {
+    for (let i = 0; i < 200; i++) {
+      const senha = gerarSenha();
+      expect(senha).toHaveLength(10);
+      expect(regrasDaSenha(senha).every((r) => r.ok)).toBe(true);
+      expect(senha).not.toMatch(/[0O1lI]/);
+    }
+    expect(gerarSenha(3)).toHaveLength(8); // nunca menor que o mínimo
+    expect(gerarSenha(14)).toHaveLength(14);
+  });
+
+  it('não repete', () => {
+    const todas = new Set(Array.from({ length: 50 }, () => gerarSenha()));
+    expect(todas.size).toBe(50);
   });
 });

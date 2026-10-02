@@ -162,6 +162,7 @@ function atender(req, res) {
     return json({ cookie: 'base64-' + Buffer.from(JSON.stringify(sessao)).toString('base64url') });
   }
   // admin (service role): dados de um usuário e link de recuperação; verify troca o token_hash por sessão
+  if (url.pathname === '/auth/v1/admin/users' && req.method === 'POST') return json({ id: 'c1000000-0000-0000-0000-0000000000ff', aud: 'authenticated', role: 'authenticated', email: 'novo@exemplo.com', user_metadata: {}, app_metadata: {} });
   if (url.pathname.startsWith('/auth/v1/admin/users/')) return json({ id: url.pathname.split('/').pop(), aud: 'authenticated', role: 'authenticated', email: 'carlos@exemplo.com', user_metadata: {}, app_metadata: {} });
   if (url.pathname === '/auth/v1/admin/generate_link') return json({ id: 'c1000000-0000-0000-0000-000000000002', email: 'carlos@exemplo.com', action_link: 'http://x/verify', email_otp: '123456', hashed_token: 'a1b2c3d4e5f6a7b8c9d0e1f2', redirect_to: '', verification_type: 'recovery' });
   if (url.pathname === '/auth/v1/recover') return json({});

@@ -1,0 +1,42 @@
+// Cadastro direto de empregado pelo proprietário (e-mail + senha) e "Senha esquecida" com senha nova direta.
+// Precisa do simulador com LOG=1 gravando em $LOG_SIM e do app com SUPABASE_SERVICE_ROLE_KEY=qualquer-valor.
+import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
+const cookie = (await (await fetch('http://127.0.0.1:54321/__sessao?papel=consultor&perfis=proprietario')).json()).cookie;
+const b = await chromium.launch();
+const c = await b.newContext({ viewport: { width: 1280, height: 1000 } });
+await c.addCookies([{ name: 'sb-127-auth-token', value: cookie, domain: '127.0.0.1', path: '/' }]);
+const p = await c.newPage();
+const erros = [];
+p.on('console', (m) => { if (m.type() === 'error') erros.push(m.text().slice(0, 160)); });
+await p.goto('http://127.0.0.1:3111/app/config/equipe', { waitUntil: 'networkidle' });
+console.log('cartão principal:', await p.locator('h2:has-text("Cadastrar empregado")').count() === 1);
+await p.fill('#ce_nome', 'João da Silva');
+await p.fill('#ce_email', 'joao@exemplo.com');
+await p.fill('#ce_titulo', 'Técnico de campo');
+await p.fill('#ce_senha', 'curta');
+await p.click('button:has-text("Cadastrar empregado")');
+console.log('senha fraca ->', await p.locator('p[role=alert]').first().innerText());
+await p.click('form:has(#ce_senha) button:has-text("Gerar senha")');
+const senha = await p.inputValue('#ce_senha');
+console.log('senha gerada:', senha.length, 'caracteres');
+await p.locator('label[for="novo-campo"]').click();
+await p.click('button:has-text("Cadastrar empregado")');
+await p.waitForSelector('text=foi cadastrado');
+const painel = await p.locator('.aviso[role=status]').first().innerText();
+console.log('painel:', painel.replace(/\n+/g, ' | ').slice(0, 160));
+console.log('mostra a senha gerada:', painel.includes(senha) || (await p.locator('.aviso[role=status] code').allInnerTexts()).some((t) => t.includes(senha.slice(0, 6))));
+const wa = await p.locator('.aviso[role=status] a:has-text("WhatsApp")').getAttribute('href');
+console.log('WhatsApp traz e-mail+senha:', decodeURIComponent(wa).includes('joao@exemplo.com') && decodeURIComponent(wa).includes(senha));
+console.log('formulário limpou:', (await p.inputValue('#ce_nome')) === '');
+// "Senha esquecida" de um empregado: define nova senha direto
+const card = p.locator('.membro', { hasText: 'Carlos Pereira' });
+await card.locator('summary:has-text("Senha esquecida")').click();
+await card.locator('button:has-text("Gerar senha")').click();
+await card.locator('button:has-text("Definir nova senha")').click();
+await card.locator('text=alterada').waitFor();
+console.log('nova senha do empregado:', (await card.locator('.aviso').first().innerText()).replace(/\n+/g, ' | ').slice(0, 90));
+const log = readFileSync(process.env.LOG_SIM, 'utf8');
+console.log('chamadas admin no servidor:', (log.match(/admin\/users/g) ?? []).length, '(esperado >= 2: createUser + updateUserById)');
+console.log('erros de console:', [...new Set(erros)].slice(0, 3));
+await b.close();

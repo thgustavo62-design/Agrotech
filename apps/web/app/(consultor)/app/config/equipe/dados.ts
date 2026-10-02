@@ -6,7 +6,7 @@ export type Membro = { id: string; nome: string | null; crea: string | null; tit
 export type Convite = { id: string; email: string; titulo: string | null; perfis: string[]; token: string; expira_em: string; criado_em: string };
 export type Atividade = { id: number; acao: string; user_id: string | null; dados: Record<string, unknown> | null; criado_em: string };
 
-export const ACOES_DA_EQUIPE = ['equipe.convidado', 'equipe.convite_cancelado', 'equipe.perfis_alterados', 'equipe.removido', 'equipe.acesso_gerado'];
+export const ACOES_DA_EQUIPE = ['equipe.convidado', 'equipe.convite_cancelado', 'equipe.perfis_alterados', 'equipe.removido', 'equipe.acesso_gerado', 'equipe.cadastrado', 'equipe.senha_definida'];
 
 /** Endereço do site (para o link do convite): variável de ambiente, ou o host da própria requisição. */
 export async function enderecoDoSite(): Promise<string> {

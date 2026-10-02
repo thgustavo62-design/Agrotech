@@ -40,7 +40,7 @@ export function SecaoMembros({ ctx }: { ctx: ContextoEquipe }) {
                     {!m.perfis.includes('proprietario') ? (
                       <details>
                         <summary>Senha esquecida</summary>
-                        <GerarAcesso id={m.id} nome={m.nome} />
+                        <GerarAcesso id={m.id} nome={m.nome} site={ctx.site} />
                       </details>
                     ) : null}
                     <details className="perigo">

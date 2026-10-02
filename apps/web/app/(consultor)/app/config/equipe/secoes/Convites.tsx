@@ -5,38 +5,53 @@ import { dataBR } from '@/lib/formato';
 import { cancelarConviteEquipe, convidarEquipe } from '../acoes';
 import type { ContextoEquipe } from '../dados';
 import { SeletorPerfis } from './SeletorPerfis';
+import { FormCadastrarEmpregado } from './FormCadastrarEmpregado';
 
-/** Convidar alguém (e-mail + perfis) e acompanhar os convites pendentes, com o link pronto para copiar/WhatsApp. */
+/**
+ * Cadastrar empregado (principal: o proprietário cria o acesso com e-mail e senha e a pessoa entra direto no
+ * login) e, como alternativa, convidar por link (a pessoa cria a própria senha) com os convites pendentes.
+ */
 export function SecaoConvites({ ctx }: { ctx: ContextoEquipe }) {
   const { plano, convites, site } = ctx;
   return (
     <>
-      <Cartao olho="Novo" titulo="Cadastrar alguém da equipe">
+      <Cartao olho="Novo" titulo="Cadastrar empregado">
         <p className="nota" style={{ margin: '0 0 14px' }}>
-          A pessoa recebe um link, cria a própria senha e já entra com os perfis que você escolher aqui.
+          Você cria o acesso: e-mail e senha. A pessoa entra direto pela tela de login, sem confirmar e-mail nem aceitar convite.
         </p>
         {plano.cheio ? (
           <p className="aviso">
-            O plano {plano.nome ? `“${plano.nome}” ` : ''}está no limite de {plano.limite} usuário(s). Cancele um convite ou mude de plano para convidar mais gente.
+            O plano {plano.nome ? `“${plano.nome}” ` : ''}está no limite de {plano.limite} usuário(s). Remova alguém, cancele um convite ou mude de plano para cadastrar mais gente.
           </p>
         ) : (
-          <form action={convidarEquipe}>
-            <div className="grade g2">
-              <div className="campo">
-                <label htmlFor="eq_email">E-mail</label>
-                <input id="eq_email" name="email" type="email" required autoComplete="off" inputMode="email" />
-              </div>
-              <div className="campo">
-                <label htmlFor="eq_titulo">Cargo <span className="un">(opcional)</span></label>
-                <input id="eq_titulo" name="titulo" placeholder="Agrônomo, técnico de campo…" maxLength={60} autoComplete="off" />
-              </div>
-            </div>
-            <label style={{ marginTop: 14 }}>O que esta pessoa vai poder fazer (pode marcar mais de um)</label>
+          <FormCadastrarEmpregado site={site}>
             <SeletorPerfis idBase="novo" marcados={['leitura']} />
-            <button className="btn verde" type="submit">Gerar convite</button>
-          </form>
+          </FormCadastrarEmpregado>
         )}
       </Cartao>
+
+      {!plano.cheio ? (
+        <Cartao olho="Alternativa" titulo="Convidar por link">
+          <details>
+            <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13, color: 'var(--folha)' }}>A pessoa prefere criar a própria senha</summary>
+            <form action={convidarEquipe} style={{ marginTop: 12 }}>
+              <div className="grade g2">
+                <div className="campo">
+                  <label htmlFor="eq_email">E-mail</label>
+                  <input id="eq_email" name="email" type="email" required autoComplete="off" inputMode="email" />
+                </div>
+                <div className="campo">
+                  <label htmlFor="eq_titulo">Cargo <span className="un">(opcional)</span></label>
+                  <input id="eq_titulo" name="titulo" placeholder="Agrônomo, técnico de campo…" maxLength={60} autoComplete="off" />
+                </div>
+              </div>
+              <label style={{ marginTop: 14 }}>O que esta pessoa vai poder fazer</label>
+              <SeletorPerfis idBase="conv" marcados={['leitura']} />
+              <button className="btn sec" type="submit">Gerar convite</button>
+            </form>
+          </details>
+        </Cartao>
+      ) : null}
 
       {convites.length > 0 && (
         <Cartao olho={`${convites.length} pendente(s)`} titulo="Convites aguardando aceite">
