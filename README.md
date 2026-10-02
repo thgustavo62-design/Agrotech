@@ -47,5 +47,6 @@ prontos, esqueleto do Next no lugar. Detalhe em
 | [docs/MOTOR.md](docs/MOTOR.md) | Fórmulas do `agro-core` + referências |
 | [docs/AUDITORIA.md](docs/AUDITORIA.md) | Revisão do protótipo (11 defeitos) |
 | [docs/AUDITORIA-02.md](docs/AUDITORIA-02.md) | Auditoria da extração para o monorepo |
+| [docs/ESTRUTURA.md](docs/ESTRUTURA.md) | Como o código está organizado (página → dados → seções) e como provar que uma refatoração não mudou nada |
 | [docs/AUDITORIA-03.md](docs/AUDITORIA-03.md) | Auditoria de sessão, segurança, banco e erros (01/10/2026) |
 | [docs/PROGRESSO.md](docs/PROGRESSO.md) | Passo a passo por fase |

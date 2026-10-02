@@ -4,7 +4,7 @@ import type {
 import { PERFIS, detectarPerfil } from './perfis.js';
 import { parseNumeroBR, norm } from './numero.js';
 import { dentroDaFaixa } from './sanidade.js';
-import { ehLaudoEmTabela, extrairLote, extrairDeOcr } from './lote.js';
+import { ehLaudoEmTabela, extrairLote, extrairDeOcr } from './lote/index.js';
 
 /** Detecta a unidade impressa na linha, em forma canônica. */
 function unidadeNaLinha(linhaNorm: string): string {

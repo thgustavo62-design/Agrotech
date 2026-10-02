@@ -1,0 +1,17 @@
+/* ---------- laudo ---------- */
+.folha-a4 {
+  background: #fff; border: 1px solid var(--linha); border-radius: var(--r);
+  padding: 34px; max-width: 840px; margin: 0 auto;
+}
+.folha-a4 h2 { border-bottom: 2px solid var(--tinta); padding-bottom: 6px; margin: 24px 0 11px; font-size: 16px; }
+.folha-a4 .cabecalho { display: flex; justify-content: space-between; gap: 20px; border-bottom: 3px solid var(--folha); padding-bottom: 13px; }
+.assina { margin-top: 50px; text-align: center; font-size: 12.5px; }
+.assina hr { border: 0; border-top: 1px solid var(--tinta); width: 290px; margin: 0 auto 6px; }
+
+@media print {
+  .topo, .abas, .lateral, .barra-mobile, .migalhas, .cabecalho-vista .acoes, .nao-imprime { display: none !important; }
+  .app-corpo { display: block !important; }
+  body { background: #fff; font-size: 11pt; }
+  main.vista { padding: 0; max-width: none; }
+  .cartao, table, .regua-linha { break-inside: avoid; }
+}

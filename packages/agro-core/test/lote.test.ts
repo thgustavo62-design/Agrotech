@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extrairLote } from '../src/parsers/lote.js';
+import { extrairLote } from '../src/parsers/lote/index.js';
 import { extrairDeTexto } from '../src/parsers/extrair.js';
 import type { ChaveCampoLaudo } from '../src/parsers/tipos.js';
 import { OCR_AGUA_LIMPA, VERDADE_AGUA_LIMPA } from './fixtures/agua-limpa.js';

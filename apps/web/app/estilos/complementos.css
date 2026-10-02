@@ -1,0 +1,19 @@
+/* "sair" é um <button> dentro de <form method="post"> (ver components/botao-sair.tsx), com cara de link */
+.link-sair {
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; color: #7fc6a3; cursor: pointer; text-decoration: none;
+}
+.link-sair:hover { text-decoration: underline; }
+
+/* ---------- esqueleto de carregamento (components/esqueleto.tsx) ---------- */
+.esq {
+  background: linear-gradient(100deg, var(--papel-3) 30%, #f6f8f4 50%, var(--papel-3) 70%);
+  background-size: 200% 100%; animation: esq-brilho 1.3s ease-in-out infinite;
+  border: 1px solid var(--linha); border-radius: var(--r);
+}
+.esq-banner { height: 150px; margin-bottom: 18px; }
+.esq-metrica { height: 84px; }
+.esq-linha { height: 64px; }
+@keyframes esq-brilho { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .esq { animation: none; } }
