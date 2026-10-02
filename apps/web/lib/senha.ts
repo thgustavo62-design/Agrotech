@@ -1,6 +1,6 @@
-/** Regras da senha (mesmo mínimo do cadastro: 10 caracteres) e um medidor de força simples. */
+/** Regras da senha (mesmo mínimo do cadastro e do Supabase: 8 caracteres) e um medidor de força simples. */
 
-export const MINIMO_SENHA = 10;
+export const MINIMO_SENHA = 8;
 
 export interface RegraSenha {
   texto: string;
@@ -19,7 +19,7 @@ export function nivelDaSenha(senha: string): 0 | 1 | 2 | 3 | 4 {
   if (!senha) return 0;
   let pontos = 0;
   if (senha.length >= MINIMO_SENHA) pontos++;
-  if (senha.length >= 14) pontos++;
+  if (senha.length >= 12) pontos++;
   if (/[a-zà-ÿ]/.test(senha) && /[A-ZÀ-ß]/.test(senha)) pontos++;
   if (/\d/.test(senha) && /[^A-Za-z0-9À-ÿ]/.test(senha)) pontos++;
   return Math.max(1, Math.min(4, pontos)) as 1 | 2 | 3 | 4;

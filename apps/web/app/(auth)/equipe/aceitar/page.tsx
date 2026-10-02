@@ -119,8 +119,8 @@ function AceitarConviteEquipeInterno() {
           <CampoAuth icone={<IconeEmail width={16} height={16} />} value={resumo.email ?? ''} disabled />
         </label>
         <label>
-          Senha (mínimo 10 caracteres)
-          <CampoSenha icone={<IconeCadeado width={16} height={16} />} value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={10} autoComplete="new-password" />
+          Senha (mínimo 8 caracteres)
+          <CampoSenha icone={<IconeCadeado width={16} height={16} />} value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={8} autoComplete="new-password" />
         </label>
         {erro ? <p style={{ color: 'var(--c-mb)', fontSize: 13, marginTop: 12 }}>{erro}</p> : null}
         <button className="btn verde" type="submit" disabled={estado === 'enviando'}>
