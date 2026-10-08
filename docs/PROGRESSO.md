@@ -891,6 +891,18 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## AG-003 e AG-004: gessagem sem dose "de referência" e camada de coleta (08/10/2026)
+
+Regra definida pelo Claude por delegação do dono ("veja o que você acha melhor") — registrada em `docs/POLITICA-DE-APROVACAO.md`, seção D.
+
+- [x] **Gessagem (AG-003):** três situações — `sem_indicacao`, `investigar_subsuperficie`, `aprovada`. **A dose (50 kg/ha × % de argila) só existe quando há análise de 20–40 cm do mesmo talhão que confirma** (Ca < 0,5 cmolc/dm³ ou m > 20%). Sem ela o motor devolve `dose: null` e o texto "investigar" — antes a tela mostrava "2.100 kg/ha" enquanto o PDF dizia "investigar". Subsuperfície incompleta (falta Ca, Mg, K ou Al) é ignorada, nunca completada com zero. O total de gesso (t) só entra quando aprovada. Tela, laudo impresso, PDF e link do produtor usam o mesmo texto (`resumoGessagem`). Recomendações antigas (sem `situacao`) nunca mostram a dose antiga como prescrição.
+- [x] **Qual análise de 20–40 vale:** a do mesmo talhão, não arquivada, coletada até **24 meses** antes/depois da superficial; a mais próxima no tempo (`lib/subsuperficie.ts`).
+- [x] **Camada × metodologia (AG-004):** calagem e adubação são calibradas para **0–20 cm**. Amostra de **20–40 cm** (subsuperfície) e **0–40 cm** (composta) **não geram recomendação** — a tela avisa, o botão desabilita e o servidor recusa com explicação (`validarCamadaParaRecomendar`). Migration **0040**: a view de situação do talhão e o link público do produtor consideram só 0–20 cm (antes, uma amostra de 20–40 mais recente definia "em ordem/precisa de correção" e aparecia no link com calagem), e o banco passa a recusar profundidade fora de 0-20/20-40/0-40 em análises novas.
+- **Não feito (de propósito):** vincular a metodologia analítica (Mehlich-1 × resina, pH água × CaCl₂) ao cálculo — hoje o leitor de laudos só avisa; e salvar mais de uma camada no mesmo laudo emitido. A regra de 24 meses e o limite Ca < 0,5 / m > 20% são os do código anterior e devem ser revisados por agrônomo responsável antes de venda ampla.
+- Testes: agro-core 92, web 99, db-test 63, laudo-pdf 5. `e2e/verificar-camada.mjs`.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

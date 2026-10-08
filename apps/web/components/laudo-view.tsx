@@ -1,4 +1,4 @@
-import { nomeCorretivo, type Analise, type Recomendacao } from '@agrotech/agro-core';
+import { nomeCorretivo, resumoGessagem, type Analise, type Recomendacao } from '@agrotech/agro-core';
 import { f } from '@/lib/formato';
 
 export interface ContextoLaudo {
@@ -98,8 +98,8 @@ export function LaudoView({
       <table>
         <tbody>
           <tr><td><b>Calcário</b></td><td className="num">{f(cal.corrigido, 2)} t/ha</td><td className="num">{f(rec.totais.calcario_t, 1)} t no talhão</td></tr>
-          {rec.gessagem.precisa && (
-            <tr><td><b>Gesso agrícola</b></td><td className="num">investigar</td><td className="num">exige análise de 20–40 cm</td></tr>
+          {resumoGessagem(rec.gessagem).mostrar && (
+            <tr><td><b>Gesso agrícola</b></td><td className="num">{resumoGessagem(rec.gessagem).valor}</td><td className="num">{resumoGessagem(rec.gessagem).detalhe}</td></tr>
           )}
         </tbody>
       </table>

@@ -2,6 +2,7 @@ import {
   gerarRecomendacao, nomeClasse, nomeCorretivo, n,
   type Analise, type Cultura, type TabelasReferencia,
 } from '@agrotech/agro-core';
+import { resumoGessagem } from '@agrotech/agro-core';
 import { f } from '@/lib/formato';
 import { Cartao, Grade, Metrica, Tag } from './ui';
 import { ReguaInterpretacao } from './regua-interpretacao';
@@ -181,8 +182,8 @@ export function InterpretacaoView({
           <Metrica rotulo="Total no talhão" valor={`${f(rec.totais.calcario_t, 1)} t`} detalhe={`${f(area, 1)} ha`} />
           <Metrica
             rotulo="Gesso agrícola"
-            valor={ges.precisa ? `${f(ges.dose, 0)} kg/ha` : '—'}
-            detalhe={ges.precisa ? '50 × % argila (referência)' : 'sem indicação'}
+            valor={resumoGessagem(ges).valor}
+            detalhe={resumoGessagem(ges).detalhe}
           />
         </Grade>
         <p className="nota" style={{ marginTop: 10 }}>

@@ -34,7 +34,7 @@ export function gerarRecomendacao(
   const calculo = calcular(analise, tabelas);
   const calagem = calcularCalagem(analise, calculo, cultura, prnt, incorp);
   const corretivo = escolherCorretivo(analise, calculo);
-  const gessagem = avaliarGessagem(analise, calculo);
+  const gessagem = avaliarGessagem(analise, calculo, entrada.subsuperficie);
   const adubacao = calcularAdubacao(analise, calculo, cultura, produtividade);
   const fontes = adubacao ? fontesSugeridas(analise, adubacao, tabelas) : [];
   const diagnostico = gerarDiagnostico(analise, calculo, cultura, tabelas);
@@ -53,7 +53,7 @@ export function gerarRecomendacao(
     areaHa: area,
     totais: {
       calcario_t: calagem.corrigido * area,
-      gesso_t: gessagem.precisa ? (gessagem.dose * area) / 1000 : 0,
+      gesso_t: gessagem.situacao === 'aprovada' && gessagem.dose != null ? (gessagem.dose * area) / 1000 : 0,
       N_kg: (adubacao?.N ?? 0) * area,
       P2O5_kg: (adubacao?.P2O5 ?? 0) * area,
       K2O_kg: (adubacao?.K2O ?? 0) * area,

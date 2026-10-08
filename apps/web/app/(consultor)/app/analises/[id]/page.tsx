@@ -4,7 +4,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { paraAnalise } from '@/lib/culturas';
 import { dataBR } from '@/lib/formato';
-import { validarAnalise, REGRAS } from '@agrotech/agro-core';
+import { validarAnalise, validarCamadaParaRecomendar, REGRAS } from '@agrotech/agro-core';
 import { InterpretacaoView } from '@/components/interpretacao-view';
 import { emitirRecomendacao } from '../acoes';
 
@@ -34,6 +34,8 @@ export default async function PaginaAnalise({ params }: { params: Promise<{ id: 
 
   const valores = paraAnalise(data);
   const validacao = validarAnalise(valores);
+  const camada = validarCamadaParaRecomendar(data.profundidade);
+  const podeEmitir = validacao.ok && camada.ok;
 
   return (
     <>
@@ -41,10 +43,15 @@ export default async function PaginaAnalise({ params }: { params: Promise<{ id: 
         <Link className="btn sec mini" href="/app/analises">← Análises</Link>
         <form action={emitirRecomendacao}>
           <input type="hidden" name="analise_id" value={id} />
-          <button className="btn verde mini" type="submit" disabled={!validacao.ok} title={validacao.ok ? undefined : 'Complete a análise para emitir'}>Emitir laudo</button>
+          <button className="btn verde mini" type="submit" disabled={!podeEmitir} title={podeEmitir ? undefined : camada.ok ? 'Complete a análise para emitir' : 'Esta camada não gera recomendação'}>Emitir laudo</button>
         </form>
         <Link className="btn sec mini" href={`/app/analises/${id}/laudo`}>Ver laudo</Link>
       </div>
+      {!camada.ok ? (
+        <div className="aviso" role="alert" style={{ marginBottom: 14 }}>
+          <b>Esta análise não gera recomendação.</b> {camada.mensagem}
+        </div>
+      ) : null}
       {!validacao.ok ? (
         <div className="aviso" role="alert" style={{ marginBottom: 14 }}>
           <b>Esta análise está incompleta e ainda não pode virar laudo.</b> A recomendação só é calculada com os dados do laboratório — campo em branco não é tratado como zero.

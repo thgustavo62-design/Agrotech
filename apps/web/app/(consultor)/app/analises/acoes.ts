@@ -1,13 +1,14 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { gerarRecomendacao, validarAnalise } from '@agrotech/agro-core';
+import { gerarRecomendacao, validarAnalise, validarCamadaParaRecomendar } from '@agrotech/agro-core';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { paraAnalise } from '@/lib/culturas';
 import { registrar } from '@/lib/audit';
 import { mensagemDeBloqueio } from '@/lib/analise-validacao';
 import { identidadeDoLaudo } from '@/lib/identidade-laudo';
+import { escolherSubsuperficie } from '@/lib/subsuperficie';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 /**
@@ -24,7 +25,7 @@ async function emitirRecomendacaoImpl(fd: FormData) {
 
   const [{ data, error }, tabelas, { data: eu }, { data: org }] = await Promise.all([
     sb.schema('agro').from('analises').select(
-      `id, data_coleta, profundidade, laboratorio, prnt, incorporacao, prod_esperada,
+      `id, talhao_id, data_coleta, profundidade, laboratorio, prnt, incorporacao, prod_esperada,
        argila, ph, mo, p, k, na, ca, mg, al, h_al, s, b, zn, cu, mn, fe,
        talhao:talhao_id (
          nome, cultura, variedade, area_ha, prod_esperada,
@@ -36,6 +37,11 @@ async function emitirRecomendacaoImpl(fd: FormData) {
     perfil?.org_id ? sb.schema('agro').from('orgs').select('nome, municipio, uf').eq('id', perfil.org_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   if (error || !data) throw new ErroDeUsuario('análise não encontrada');
+
+  // metodologia: calagem e adubação são calibradas para 0-20 cm. Amostra de 20-40 (subsuperfície) ou 0-40 não vira
+  // recomendação — a de 20-40 serve para decidir a gessagem da de 0-20.
+  const camada = validarCamadaParaRecomendar(data.profundidade);
+  if (!camada.ok) throw new ErroDeUsuario(camada.mensagem);
 
   // quem assina: o escritório e o responsável técnico (CREA) de quem está emitindo
   const identidade = identidadeDoLaudo(eu ?? {}, org ?? {});
@@ -51,6 +57,13 @@ async function emitirRecomendacaoImpl(fd: FormData) {
   const t = (data as any).talhao;
   const cultura = t?.cultura ? tabelas.culturas[t.cultura as string] : undefined;
 
+  // gessagem: análise de 20-40 cm do mesmo talhão (a mais próxima no tempo, até 24 meses); sem ela não há dose
+  const { data: candidatas } = await sb.schema('agro').from('analises')
+    .select('data_coleta, argila, ca, mg, k, na, al')
+    .eq('talhao_id', data.talhao_id).eq('profundidade', '20-40').is('arquivado_em', null);
+  const escolhida = escolherSubsuperficie(candidatas ?? [], data.data_coleta);
+  const subsuperficie = escolhida ? { analise: paraAnalise(escolhida), dataColeta: String(escolhida.data_coleta) } : null;
+
   const rec = gerarRecomendacao({
     analise: { ...paraAnalise(data), prnt: data.prnt, incorp: data.incorporacao },
     ...(cultura ? { cultura } : {}),
@@ -58,6 +71,7 @@ async function emitirRecomendacaoImpl(fd: FormData) {
       ? { prodEsperadaTalhao: Number(data.prod_esperada ?? t?.prod_esperada) }
       : {}),
     areaHa: Number(t?.area_ha ?? 0),
+    subsuperficie,
     tabelas,
   });
 

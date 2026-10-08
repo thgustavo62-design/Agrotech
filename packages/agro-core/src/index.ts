@@ -27,7 +27,8 @@ export {
   fatorY, fatorProfundidade, calcularCalagem, escolherCorretivo, nomeCorretivo,
 } from './calagem.js';
 
-export { avaliarGessagem } from './gessagem.js';
+export { avaliarGessagem, situacaoDaGessagem, resumoGessagem, type ResumoGessagem } from './gessagem.js';
+export { normalizarCamada, validarCamadaParaRecomendar, type Camada, type ResultadoCamada } from './camada.js';
 export { calcularAdubacao } from './adubacao.js';
 export { fontesSugeridas } from './fontes.js';
 export { gerarDiagnostico } from './diagnostico.js';

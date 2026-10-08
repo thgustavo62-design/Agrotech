@@ -178,11 +178,24 @@ export interface EscolhaCorretivo {
   motivo: string;
 }
 
+export type SituacaoGessagem = 'sem_indicacao' | 'investigar_subsuperficie' | 'aprovada';
+
+/** Análise de 20-40 cm do mesmo talhão, usada para decidir a gessagem. */
+export interface SubsuperficieGessagem {
+  analise: Analise;
+  /** data da coleta (ISO), só para registrar no laudo */
+  dataColeta?: string;
+}
+
 export interface Gessagem {
+  situacao: SituacaoGessagem;
+  /** há algo a fazer: investigar a subsuperfície ou aplicar */
   precisa: boolean;
-  /** dose indicativa, kg/ha (só vale com análise de 20-40 cm) */
-  dose: number;
+  /** kg/ha — SÓ quando situacao é 'aprovada'; nas demais é null (não existe dose de referência) */
+  dose: number | null;
   criterio: string;
+  /** o que a análise de 20-40 cm mostrou, quando houve uma utilizável */
+  subsuperficie?: { dataColeta: string | null; Ca: number; m: number };
 }
 
 export interface Adubacao {
@@ -217,6 +230,8 @@ export interface EntradaRecomendacao {
   prodEsperadaTalhao?: number;
   /** área do talhão em ha, para os totais */
   areaHa?: number;
+  /** análise de 20-40 cm do mesmo talhão: sem ela não há dose de gesso */
+  subsuperficie?: SubsuperficieGessagem | null;
   tabelas: TabelasReferencia;
 }
 

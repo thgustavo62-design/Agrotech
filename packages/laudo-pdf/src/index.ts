@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
-import { nomeCorretivo, type Recomendacao } from '@agrotech/agro-core';
+import { nomeCorretivo, resumoGessagem, type Recomendacao } from '@agrotech/agro-core';
 
 /** Contexto gravado junto da recomendação por `emitirRecomendacao` (o PDF não lê profiles). */
 export interface ContextoPdf {
@@ -182,7 +182,8 @@ export async function renderizarLaudoPdf(res: ResultadoLaudo, emitidaEm: string)
   );
   p.y -= 4;
   p.linha(['Calcário', `${fmt(cal.corrigido, 2)} t/ha`, `${fmt(res.totais.calcario_t, 1)} t no talhão`], { pesos: [1, 1, 1.4] });
-  if (res.gessagem.precisa) p.linha(['Gesso agrícola', 'investigar', 'exige análise de 20-40 cm'], { pesos: [1, 1, 1.4] });
+  const gesso = resumoGessagem(res.gessagem);
+  if (gesso.mostrar) p.linha(['Gesso agrícola', gesso.valor, gesso.detalhe.replace(/–/g, '-').replace(/·/g, '-')], { pesos: [1, 1, 1.4] });
 
   if (ad) {
     p.titulo(`5. Adubação - produtividade esperada de ${fmt(res.produtividade, 1)} ${c.culturaUn}`);

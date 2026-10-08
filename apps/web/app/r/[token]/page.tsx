@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './publico.css';
-import { gerarRecomendacao } from '@agrotech/agro-core';
+import { gerarRecomendacao, resumoGessagem } from '@agrotech/agro-core';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura, paraAnalise } from '@/lib/culturas';
 import { tabelasDeLinhas } from '@/lib/tabelas-org';
@@ -124,7 +124,7 @@ export default async function ResultadosPublicos({ params }: { params: Promise<{
                     {rec.areaHa > 0 ? ` — ${f(rec.totais.calcario_t, 1)} t no talhão` : ''}
                     {' '}({nomeCorretivoCurto(rec.corretivo.corretivo)})
                   </li>
-                  {rec.gessagem.precisa && <li><b>Gesso:</b> investigar com análise de 20–40 cm</li>}
+                  {resumoGessagem(rec.gessagem).mostrar && <li><b>Gesso:</b> {resumoGessagem(rec.gessagem).valor === 'investigar' ? 'investigar com análise de 20–40 cm (sem dose definida)' : resumoGessagem(rec.gessagem).valor}</li>}
                   {rec.adubacao && (
                     <li>
                       <b>Adubação:</b> N {rec.adubacao.N} · P₂O₅ {rec.adubacao.P2O5} · K₂O {rec.adubacao.K2O} kg/ha
