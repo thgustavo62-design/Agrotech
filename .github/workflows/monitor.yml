@@ -35,8 +35,8 @@ jobs:
         run: |
           corpo=$(curl -s --max-time 25 --retry 2 --retry-delay 5 -w '\n%{http_code}' "$SITE/api/saude" || echo -e '\n000')
           codigo=$(echo "$corpo" | tail -n1); json=$(echo "$corpo" | head -n -1)
-          echo "HTTP $codigo — $json"
-          [ "$codigo" = "200" ] || { echo "::error::/api/saude respondeu $codigo — $json"; exit 1; }
+          echo "HTTP $codigo — ${json:0:300}"
+          [ "$codigo" = "200" ] || { echo "::error::/api/saude respondeu $codigo — ${json:0:300}"; exit 1; }
 
       - name: Backup recente
         env:
