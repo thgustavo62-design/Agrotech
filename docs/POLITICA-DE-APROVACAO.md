@@ -30,7 +30,7 @@ Combinado entre o dono do sistema e o Claude para evitar retrabalho. **O que est
 - **Sem CAPTCHA.**
 - **Sem domínio próprio de e-mail por enquanto:** nada que dependa de enviar e-mail em volume.
 - **Next 16 + vitest 4**, `proxy.ts`, ESLint direto.
-- **Backup:** diário, criptografado (repositório é público); a senha fica só no secret e numa cópia do dono.
+- **Backup:** diário, criptografado (repositório é público); a senha fica só no secret e numa cópia do dono; restauração ensaiada a cada backup (`docs/RECUPERACAO-DE-DESASTRE.md`).
 - **Análise incompleta não vira laudo:** campo em branco nunca é tratado como zero; zero medido é válido.
 - **Laudo:** leva o escritório e o responsável com CREA de quem emite; sem CREA não emite.
 - **Edge Functions:** toda função com service_role autentica o chamador e confere o escritório atual do perfil antes de tocar nos dados (`_shared/autorizacao.ts`); nada é publicado sem o dono fornecer o token.
@@ -56,6 +56,7 @@ Quando o dono disser "veja o que você acha melhor", o Claude decide, **registra
 - Texto jurídico (privacidade, termos, contrato): o Claude rascunha, o dono e um advogado aprovam.
 
 ## F. Fila de decisões pendentes (aguardam o dono)
+- **Backup dos arquivos (PDFs e fotos) do Storage:** exige guardar uma credencial de Storage como secret do GitHub (o Claude não tem essa chave; quem cola é o dono).
 - **Proteger a branch `main`** (exigir Pull Request + testes passando antes de entrar): mais seguro, mas acaba o push direto que usamos hoje. E **criar um ambiente de teste (staging)** com um segundo projeto Supabase gratuito, para as migrações serem testadas fora de produção.
 - Revisão da regra de gessagem/camada (seção D) por agrônomo responsável antes de vender para vários escritórios.
 - Fluxo de revisão/aprovação do laudo (rascunho → revisão → aprovado → retificado), ou deixar o agrônomo emitir direto?

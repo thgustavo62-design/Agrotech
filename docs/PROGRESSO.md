@@ -941,6 +941,15 @@ As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está 
 
 ---
 
+## AG-012: restauração do backup ensaiada todo dia (08/10/2026)
+
+- [x] `backup.yml`: depois de guardar o arquivo criptografado, o mesmo job **decifra**, **restaura num Postgres 17 descartável** e confere: mesmas tabelas (67), contagem de linhas das tabelas principais igual à produção, usuários restaurados, RLS ligada em todas as tabelas do `agro`, e **zero erros** de pg_restore. Falhou → o job falha e o GitHub avisa; o backup já foi guardado antes do teste.
+- **Defeito real achado pelo ensaio e corrigido (0043):** `agro.unaccent_imutavel` chamava `unaccent()` sem search_path próprio; o pg_restore (search_path vazio) não recriava a função e, por consequência, as tabelas **produtores, propriedades e talhões**. Ou seja: o backup de produção NÃO restauraria a carteira de clientes. Agora restaura limpo.
+- Runbook: `docs/RECUPERACAO-DE-DESASTRE.md` (RPO 24 h; RTO estimado 1–2 h, não medido em emergência real).
+- **Ainda não coberto:** os **arquivos** do Storage (só a lista deles está no dump) — precisa de uma credencial de Storage como secret do GitHub (ação do dono); e o passo "restaurar só os dados sobre a estrutura das migrações" do runbook não foi ensaiado (o ensaio restaura o dump completo).
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.
