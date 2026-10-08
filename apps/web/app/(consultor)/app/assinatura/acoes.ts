@@ -3,7 +3,8 @@
 import { redirect } from 'next/navigation';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { exigir } from '@/lib/permissoes-servidor';
-import { comAviso, ErroDeUsuario } from '@/lib/acao';
+import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
+import { registrarErro } from '@/lib/log';
 
 /**
  * Gera um link de checkout recorrente no Asaas e redireciona pra lá — o
@@ -35,7 +36,10 @@ async function iniciarUpgradeImpl(fd: FormData) {
   ]);
   if (!plano) throw new ErroDeUsuario('Plano inválido.');
 
-  const resp = await fetch('https://api.asaas.com/v3/paymentLinks', {
+  // produção por padrão; para o ensaio no sandbox do Asaas: ASAAS_API_URL=https://api-sandbox.asaas.com (e a chave do sandbox)
+  const baseApi = process.env.ASAAS_API_URL ?? 'https://api.asaas.com';
+  if (!/^https:\/\/([a-z0-9-]+\.)*asaas\.com$/.test(baseApi)) throw new ErroDeUsuario('ASAAS_API_URL inválida no servidor.');
+  const resp = await fetch(`${baseApi}/v3/paymentLinks`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', access_token: apiKey },
     body: JSON.stringify({
@@ -51,8 +55,23 @@ async function iniciarUpgradeImpl(fd: FormData) {
   if (!resp.ok) {
     throw new ErroDeUsuario('Não deu pra gerar o link de pagamento agora. Tente de novo em instantes.');
   }
-  const dados = (await resp.json()) as { url?: string };
-  if (!dados.url) throw new ErroDeUsuario('O Asaas não devolveu o link de pagamento.');
+  const dados = (await resp.json()) as { id?: string; url?: string };
+  if (!dados.url || !dados.id) throw new ErroDeUsuario('O Asaas não devolveu o link de pagamento.');
+
+  // O pagamento só pode ser ligado a ESTE escritório (e a este plano e valor) se o checkout ficar registrado antes de a
+  // pessoa pagar: o webhook casa o pagamento pelo id do link. Se não deu para registrar, não manda pagar —
+  // pagar sem registro geraria uma cobrança que ninguém consegue atribuir.
+  const { error: eCheckout } = await sb.schema('agro').from('checkouts').insert({
+    org_id: perfil.org_id,
+    plano_id: planoId,
+    gateway_link_id: dados.id,
+    valor_esperado: Number(plano.preco_mes),
+    criado_por: perfil.id,
+  });
+  if (eCheckout) {
+    registrarErro('assinatura.checkout', eCheckout, { plano: planoId });
+    lancarDoBanco(eCheckout);
+  }
 
   // só segue para o domínio do Asaas por HTTPS (defesa em profundidade: o link vem de uma API externa)
   let destino: URL;

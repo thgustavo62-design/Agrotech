@@ -61,6 +61,7 @@ Quando o dono disser "veja o que você acha melhor", o Claude decide, **registra
 - Texto jurídico (privacidade, termos, contrato): o Claude rascunha (`docs/LGPD-MINUTA.md`), o dono e um advogado aprovam — nada vai para as páginas públicas antes disso.
 
 ## F. Fila de decisões pendentes (aguardam o dono)
+- **Ensaio da cobrança no sandbox do Asaas** (conta sandbox + chave + token do webhook): o código está pronto (AG-010); só depois do ensaio completo se decide ativar a cobrança real.
 - **Backup dos arquivos (PDFs e fotos) do Storage:** exige guardar uma credencial de Storage como secret do GitHub (o Claude não tem essa chave; quem cola é o dono).
 - **Proteger a branch `main`** (exigir Pull Request + testes passando antes de entrar): mais seguro, mas acaba o push direto que usamos hoje. E **criar um ambiente de teste (staging)** com um segundo projeto Supabase gratuito, para as migrações serem testadas fora de produção.
 - Revisão da regra de gessagem/camada (seção D) por agrônomo responsável antes de vender para vários escritórios.

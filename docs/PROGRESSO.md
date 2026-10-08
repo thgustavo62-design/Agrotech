@@ -971,6 +971,18 @@ As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está 
 
 ---
 
+## AG-010: cobrança Asaas endurecida — sem ativar cobrança nenhuma (08/10/2026)
+
+Nada aqui liga cobrança: sem `ASAAS_API_KEY` o checkout continua dizendo "não configurado", e o webhook não está publicado. É o código pronto para o ensaio no sandbox.
+- **Defeitos reais achados lendo o fluxo (nunca testado com conta real):** (1) o checkout criava o link no Asaas e não guardava nada que ligasse o pagamento ao escritório — o webhook procurava a assinatura por ids que ninguém preenchia, então **nenhum pagamento casava**; (2) o webhook só mudava o **status**: o plano ficava "teste" mesmo pago; (3) pagamento sem assinatura era gravado com `org_id` nulo numa coluna NOT NULL, o webhook falhava e, por responder 200 sem checar, **o evento se perdia**.
+- [x] Migration **0045**: `agro.checkouts` (escritório, plano, valor esperado, id do link no Asaas; só o proprietário registra/lê) e `agro.cobrancas_orfas` (quarentena, ninguém lê pelo cliente). O checkout **só manda pagar depois de registrar** o link.
+- [x] `_shared/cobranca.ts` (regras, testadas): pagamento casa pelo cliente/assinatura já vinculados **ou** pelo link do checkout; **valor tem que bater com o preço do plano** (senão quarentena); ativa **e troca o plano** pelo contratado; vincula cliente/assinatura do gateway; `atual_ate` = vencimento + 1 mês (fim de mês correto); pagamento antigo não reativa assinatura cancelada (só um checkout novo); vencida suspende, reembolso/exclusão cancelam; mesmo evento duas vezes dá o mesmo resultado.
+- [x] `webhook-asaas`: token em tempo constante e exigido (≥ 16 caracteres), **todas** as gravações têm o erro checado — falhou, responde 500 e o Asaas reenvia; só responde 200 depois de gravar tudo; o que não casa vai para a quarentena em vez de ser descartado.
+- [x] `ASAAS_API_URL` opcional para apontar ao sandbox. db-test: 107 (regras de cobrança, RLS dos checkouts e da quarentena).
+- **Não feito / depende de você:** conta **sandbox** do Asaas + um ciclo completo (link → pagamento → webhook → plano mudou → atraso → cancelamento); campo `paymentLink` no evento do Asaas e o formato do link **não confirmados** (assumidos pela documentação; o ensaio no sandbox prova ou derruba); **reconciliação periódica** com o Asaas (exige a chave da API em um job — decidir com o sandbox); estorno parcial, troca de plano no meio do ciclo e pagamento de valor dividido não tratados. Publicar o webhook exige o token do Supabase e `ASAAS_WEBHOOK_TOKEN`.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

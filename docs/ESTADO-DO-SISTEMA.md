@@ -51,7 +51,7 @@ Guias: [OPERACAO.md](OPERACAO.md) · [RECUPERACAO-DE-DESASTRE.md](RECUPERACAO-DE
 1. **Leitor de laudos:** provado com 1 laudo real (Água Limpa) e textos que imitam outros layouts. Falta testar PDFs reais de outros laboratórios (**precisa dos seus**).
 2. **Regra de gessagem e profundidade** foi decidida por mim por delegação; **um agrônomo responsável deve revisar** os limites antes de vender para vários escritórios.
 3. **Verificação em duas etapas, senha provisória e as funções do Supabase** foram testadas no simulador e no banco de testes, **não no Supabase real**. Antes de ligar o segundo fator na sua conta: deixe outro proprietário cadastrado e saiba que a recuperação é pelo painel do Supabase.
-4. **Cobrança Asaas** nunca foi testada e o webhook ainda não casa o pagamento com o escritório de forma garantida (AG-010 — envolve dinheiro, espero seu OK). **Edge Functions** não estão publicadas (precisam de um token seu).
+4. **Cobrança Asaas** nunca foi testada com conta real. O código foi endurecido (o pagamento só ativa o escritório e o plano certos, valor errado não ativa, nada se perde), mas **falta o ensaio no sandbox do Asaas** (conta sua) antes de cobrar de verdade. **Edge Functions** não estão publicadas (precisam de um token seu).
 5. **Arquivos do Storage** (PDFs e fotos) não entram no backup (só a lista). Precisa de uma credencial guardada como secret do GitHub (ação sua).
 6. **E-mails:** sem domínio próprio, o Supabase manda pouquíssimos e-mails; por isso o cadastro de empregado é direto e a recuperação do empregado é feita pelo proprietário.
 7. **Offline:** o reenvio só acontece com o app aberto (limite do iPhone); só visitas entram na fila.
@@ -63,7 +63,7 @@ Guias: [OPERACAO.md](OPERACAO.md) · [RECUPERACAO-DE-DESASTRE.md](RECUPERACAO-DE
 - **Testar no site real** (15 min): cadastrar um empregado de teste → entrar com ele (deve pedir para criar a senha) → removê-lo; excluir um produtor de teste; uma visita offline no celular; (opcional) ligar a verificação em duas etapas com outro proprietário cadastrado.
 - **Conferir** que o GitHub manda e-mail quando um workflow falha (Settings → Notifications → Actions).
 - **Mandar** 2–3 PDFs de laudos reais de laboratórios diferentes.
-- **Decidir:** proteger a `main` + criar staging; fluxo de revisão/aprovação do laudo; AG-010 (cobrança).
+- **Decidir:** proteger a `main` + criar staging; fluxo de revisão/aprovação do laudo; quando fazer o ensaio da cobrança no sandbox do Asaas.
 - **Ações suas nos painéis:** região do Vercel → Portland; token do Supabase para publicar as funções; credencial de Storage para o backup dos arquivos; advogado para os textos.
 
 ## 8. Mapa técnico (para quem for manter)

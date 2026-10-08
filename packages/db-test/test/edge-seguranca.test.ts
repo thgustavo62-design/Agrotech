@@ -79,6 +79,6 @@ describe('Edge Functions — nenhuma abre a service_role sem autorizar', () => {
   it('webhook-asaas confere o token do gateway em tempo constante', () => {
     const f = readFileSync(new URL('webhook-asaas/index.ts', FUNCOES), 'utf8');
     expect(f).toMatch(/iguaisEmTempoConstante\(/);
-    expect(f).toMatch(/!tokenEsperado/);
+    expect(f).toMatch(/tokenEsperado.length < 16/);
   });
 });

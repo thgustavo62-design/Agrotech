@@ -313,3 +313,40 @@ describe('remover alguém da equipe: conta desativada (0039)', () => {
     });
   });
 });
+
+describe('checkouts de cobrança (0045): só o proprietário, só do próprio escritório', () => {
+  const novo = (org: string, link: string) =>
+    `insert into agro.checkouts (org_id, plano_id, gateway_link_id, valor_esperado) values ('${org}', 'teste', '${link}', 0)`;
+
+  it('proprietário registra e lê; agronômico e outro escritório não', async () => {
+    await como(db, dono(), async () => {
+      expect(await tenta(novo(ID.orgA, 'link-a'))).toBeNull();
+      expect(await contar(db, 'select count(*)::int n from agro.checkouts')).toBe(1);
+      expect(await tenta(novo(ID.orgB, 'link-b'))).not.toBeNull(); // não registra para outro escritório
+    });
+    await como(db, U.agro, async () => {
+      expect(await tenta(novo(ID.orgA, 'link-ag'))).not.toBeNull();
+      expect(await contar(db, 'select count(*)::int n from agro.checkouts')).toBe(0);
+    });
+    await como(db, ID.consultorB, async () => {
+      expect(await contar(db, 'select count(*)::int n from agro.checkouts')).toBe(0);
+    });
+  });
+
+  it('o cliente não altera nem apaga um checkout (só o webhook)', async () => {
+    await como(db, dono(), async () => {
+      await tenta("update agro.checkouts set valor_esperado = 1 where gateway_link_id = 'link-a'");
+      await tenta("delete from agro.checkouts where gateway_link_id = 'link-a'");
+    });
+    const { rows } = await db.query<{ valor_esperado: string }>("select valor_esperado from agro.checkouts where gateway_link_id = 'link-a'");
+    expect(rows).toHaveLength(1);
+    expect(Number(rows[0]!.valor_esperado)).toBe(0);
+  });
+
+  it('a quarentena de pagamentos não é legível pelo cliente', async () => {
+    await db.exec("insert into agro.cobrancas_orfas (gateway_id, evento, motivo, payload) values ('pay-x', 'PAYMENT_RECEIVED', 'teste', '{}')");
+    await como(db, dono(), async () => {
+      expect(await contar(db, 'select count(*)::int n from agro.cobrancas_orfas')).toBe(0);
+    });
+  });
+});

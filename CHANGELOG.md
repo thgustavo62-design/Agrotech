@@ -20,6 +20,9 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 - Laudo com o escritório e o responsável (nome + CREA) de quem emite; sem CREA não emite (AG-008).
 - Leitor de laudos recusa o que não é laudo (testado com 10 PDFs técnicos reais) e lê tabelas horizontais.
 
+### Cobrança (sem ativar nada)
+- O checkout registra o link no banco antes de mandar pagar; o webhook casa o pagamento pelo escritório, confere o valor, **troca o plano** e põe o que não casa em quarentena; erro de gravação não é mais escondido (0045).
+
 ### Campo e operação
 - Visita offline completa só o que faltou, sem duplicar nem perder ocorrências/fotos (AG-007, 0042); páginas das próximas visitas salvas no aparelho; faixa "sem sinal".
 - Backup diário **criptografado** e **restauração ensaiada todo dia**; a restauração achou e corrigiu um defeito real (0043).
