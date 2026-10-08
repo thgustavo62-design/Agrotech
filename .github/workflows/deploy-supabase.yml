@@ -4,6 +4,10 @@ name: Migrações (Supabase)
 # (ver docs/ARQUITETURA.md "Como rodar"). Usa --db-url direto: não precisa
 # de `supabase link` nem de SUPABASE_ACCESS_TOKEN, só da connection string
 # (mesmo secret SUPABASE_DB_URL que o backup.yml já usa).
+#
+# AG-006: a migration só vai para PRODUÇÃO depois de passar pelos testes de banco (todas as migrations
+# aplicadas num Postgres limpo + isolamento, permissões e segurança). Antes, ela era aplicada sem esperar
+# teste nenhum. Se o teste falhar, nada é enviado.
 
 on:
   push:
@@ -12,14 +16,40 @@ on:
       - 'supabase/migrations/**'
   workflow_dispatch:
 
+# uma migração de cada vez, na ordem em que chegaram (nunca duas aplicando juntas em produção)
+concurrency:
+  group: migracoes-producao
+  cancel-in-progress: false
+
 jobs:
+  validar:
+    name: testar as migrações antes de produção
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace @agrotech/agro-core
+      # aplica TODAS as migrations num Postgres limpo e roda isolamento, permissões e segurança
+      - run: npm run test --workspace @agrotech/db-test
+
   migrar:
+    name: aplicar em produção
+    needs: validar
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+
+      - name: Conferir o que será aplicado (não altera nada)
+        run: supabase db push --db-url "$DB_URL" --dry-run
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
       - name: Aplicar migrações
         run: supabase db push --db-url "$DB_URL" --yes

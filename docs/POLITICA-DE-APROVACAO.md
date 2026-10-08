@@ -56,6 +56,7 @@ Quando o dono disser "veja o que você acha melhor", o Claude decide, **registra
 - Texto jurídico (privacidade, termos, contrato): o Claude rascunha, o dono e um advogado aprovam.
 
 ## F. Fila de decisões pendentes (aguardam o dono)
+- **Proteger a branch `main`** (exigir Pull Request + testes passando antes de entrar): mais seguro, mas acaba o push direto que usamos hoje. E **criar um ambiente de teste (staging)** com um segundo projeto Supabase gratuito, para as migrações serem testadas fora de produção.
 - Revisão da regra de gessagem/camada (seção D) por agrônomo responsável antes de vender para vários escritórios.
 - Fluxo de revisão/aprovação do laudo (rascunho → revisão → aprovado → retificado), ou deixar o agrônomo emitir direto?
 - Região do site no Vercel → Portland (2 minutos, feito pelo dono).

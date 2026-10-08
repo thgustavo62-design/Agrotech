@@ -923,6 +923,13 @@ As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está 
 
 ---
 
+## AG-006 (parte automática): migração só vai a produção depois dos testes (08/10/2026)
+
+- [x] `deploy-supabase.yml` ganhou o job **validar** (aplica todas as migrations num Postgres limpo e roda os testes de banco: isolamento, permissões, segurança) e o job **migrar** só roda se ele passar (`needs`); antes aplicava direto em produção sem esperar teste nenhum. Também faz um `db push --dry-run` (mostra o que seria aplicado, sem alterar) e roda uma migração de cada vez (`concurrency`).
+- **Não feito — precisa da decisão do dono (política, seção E):** proteger a branch `main` no GitHub (exigir Pull Request e checks) e criar um **ambiente de teste (staging)** com banco separado. Proteger a `main` passa a bloquear o push direto que usamos hoje; staging é um segundo projeto Supabase (plano grátis permite 2). Ver "Fila de decisões" em `docs/POLITICA-DE-APROVACAO.md`.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.
