@@ -33,6 +33,7 @@ Combinado entre o dono do sistema e o Claude para evitar retrabalho. **O que est
 - **Backup:** diário, criptografado (repositório é público); a senha fica só no secret e numa cópia do dono.
 - **Análise incompleta não vira laudo:** campo em branco nunca é tratado como zero; zero medido é válido.
 - **Laudo:** leva o escritório e o responsável com CREA de quem emite; sem CREA não emite.
+- **Edge Functions:** toda função com service_role autentica o chamador e confere o escritório atual do perfil antes de tocar nos dados (`_shared/autorizacao.ts`); nada é publicado sem o dono fornecer o token.
 - **Offline:** fila de visitas e pré-carregamento das próximas visitas.
 
 ## C. Sistemas já aprovados (só mexer com motivo)

@@ -74,3 +74,13 @@ enabled = true
 
 [analytics]
 enabled = false
+
+# O gateway do Supabase exige um JWT por padrão. Estas duas funções recebem chamadas SEM JWT de usuário (o Asaas e o
+# webhook do banco) e se autenticam sozinhas: asaas-access-token (webhook-asaas) e x-webhook-secret (processar-laudo,
+# que também aceita o JWT de um usuário da equipe). As demais ficam com verify_jwt padrão (true) e conferem o escritório
+# em _shared/autorizacao.ts.
+[functions.webhook-asaas]
+verify_jwt = false
+
+[functions.processar-laudo]
+verify_jwt = false

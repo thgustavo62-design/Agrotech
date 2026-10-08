@@ -7,6 +7,7 @@
 //   3. responde 200 só DEPOIS de gravar
 
 import { createClient } from '@supabase/supabase-js';
+import { iguaisEmTempoConstante } from '../_shared/seguranca.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -99,12 +100,3 @@ Deno.serve(async (req) => {
   // 3. só agora responde
   return new Response('ok', { status: 200 });
 });
-
-/** Compara sem sair no primeiro byte diferente (não vaza, pelo tempo, quantos bytes do token acertou). */
-function iguaisEmTempoConstante(a: string, b: string): boolean {
-  const ea = new TextEncoder().encode(a);
-  const eb = new TextEncoder().encode(b);
-  let diff = ea.length ^ eb.length;
-  for (let i = 0; i < Math.max(ea.length, eb.length); i++) diff |= (ea[i] ?? 0) ^ (eb[i] ?? 0);
-  return diff === 0;
-}

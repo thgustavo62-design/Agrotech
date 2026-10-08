@@ -7,12 +7,17 @@
 // Este arquivo é o esqueleto real do pipeline. As partes marcadas TODO dependem
 // de credenciais e de casos de laudo reais anonimizados (ver AUDITORIA-02 §Pendências).
 
-import { createClient } from '@supabase/supabase-js';
 import { extrairDeTexto } from '@agrotech/agro-core/parsers';
 import { cors, json } from '../_shared/cors.ts';
+import { clienteServico, equipeAutorizada, identificar } from '../_shared/autorizacao.ts';
+import { ehUuid, segredoConfere } from '../_shared/seguranca.ts';
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+// Esta função roda com a service_role (ignora a RLS). Só entra quem:
+//   a) traz o segredo interno (webhook do banco) em x-webhook-secret — PROCESSAR_LAUDO_SEGREDO, mín. 16 caracteres; ou
+//   b) é da equipe do escritório DONO do documento, com permissão de editar a carteira (perfil ativo).
+// Documento já confirmado não é reprocessado (não sobrescreve o que o técnico conferiu).
+const segredoInterno = Deno.env.get('PROCESSAR_LAUDO_SEGREDO');
+const REPROCESSAVEIS = new Set(['recebido', 'erro', 'revisao']);
 
 interface Evento {
   documento_id: string;
@@ -22,8 +27,13 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ erro: 'método não suportado' }, 405);
 
-  const { documento_id } = (await req.json()) as Evento;
-  const db = createClient(supabaseUrl, serviceRole);
+  const interno = segredoConfere(req.headers.get('x-webhook-secret'), segredoInterno);
+  const quem = interno ? null : await identificar(req);
+  if (quem && !quem.ok) return quem.resposta;
+
+  const { documento_id } = (await req.json().catch(() => ({}))) as Partial<Evento>;
+  if (!ehUuid(documento_id)) return json({ erro: 'documento_id inválido' }, 400);
+  const db = clienteServico();
 
   const { data: doc, error } = await db
     .schema('agro')
@@ -32,7 +42,12 @@ Deno.serve(async (req) => {
     .eq('id', documento_id)
     .single();
 
+  // mesma resposta para "não existe" e "não é seu": não revela quais ids existem
   if (error || !doc) return json({ erro: 'documento não encontrado' }, 404);
+  if (quem?.ok && !(await equipeAutorizada(quem, doc.org_id as string, 'carteira.editar'))) {
+    return json({ erro: 'documento não encontrado' }, 404);
+  }
+  if (!REPROCESSAVEIS.has(String(doc.status))) return json({ erro: `documento em "${doc.status}" não pode ser reprocessado` }, 409);
 
   try {
     await db.schema('agro').from('documentos').update({ status: 'extraindo' }).eq('id', documento_id);

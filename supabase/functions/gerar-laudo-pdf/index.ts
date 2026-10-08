@@ -11,12 +11,10 @@
 // org dona da recomendação, ou o próprio produtor dono do laudo). Resposta:
 // { ok, pdf_path, url } — `url` é assinada e vale 5 minutos.
 
-import { createClient } from '@supabase/supabase-js';
 import { renderizarLaudoPdf, type ResultadoLaudo } from '@agrotech/laudo-pdf';
 import { cors, json } from '../_shared/cors.ts';
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+import { clienteServico, equipeAutorizada, identificar } from '../_shared/autorizacao.ts';
+import { ehUuid } from '../_shared/seguranca.ts';
 
 interface Corpo {
   recomendacao_id?: string;
@@ -33,15 +31,13 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ erro: 'método não suportado' }, 405);
 
   const corpo = (await req.json().catch(() => ({}))) as Corpo;
-  if (!corpo.recomendacao_id) return json({ erro: 'recomendacao_id é obrigatório' }, 400);
-
-  const db = createClient(supabaseUrl, serviceRole);
+  if (!ehUuid(corpo.recomendacao_id)) return json({ erro: 'recomendacao_id inválido' }, 400);
 
   // Quem está chamando. A service role ignora a RLS, então a autorização é daqui.
-  const jwt = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  const { data: sessao } = jwt ? await db.auth.getUser(jwt) : { data: { user: null } };
-  const usuario = sessao.user;
-  if (!usuario) return json({ erro: 'não autenticado' }, 401);
+  const quem = await identificar(req);
+  if (!quem.ok) return quem.resposta;
+  const usuario = quem.usuario;
+  const db = clienteServico();
 
   const { data: rec, error } = await db
     .schema('agro')
@@ -57,10 +53,11 @@ Deno.serve(async (req) => {
   const produtor = (rec as any).analise?.talhao?.propriedade?.produtor as Produtor | undefined;
   if (!produtor) return json({ erro: 'recomendação sem produtor associado' }, 422);
 
-  const { data: perfil } = await db.schema('agro').from('profiles').select('org_id, role').eq('id', usuario.id).maybeSingle();
-  const consultorDaOrg = perfil?.org_id === produtor.org_id && (perfil?.role === 'consultor' || perfil?.role === 'admin');
+  // equipe: perfil ativo no escritório do produtor com acesso a relatórios (pessoa removida não passa, mesmo com token
+  // antigo); ou o próprio produtor dono do laudo
+  const consultorDaOrg = await equipeAutorizada(quem, produtor.org_id, 'relatorios.ver');
   const proprioProdutor = produtor.user_id === usuario.id;
-  if (!consultorDaOrg && !proprioProdutor) return json({ erro: 'sem permissão' }, 403);
+  if (!consultorDaOrg && !proprioProdutor) return json({ erro: 'recomendação não encontrada' }, 404);
 
   // O resultado é imutável: se o PDF já existe, só devolve o link.
   let caminho = rec.pdf_path as string | null;

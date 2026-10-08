@@ -903,6 +903,17 @@ Regra definida pelo Claude por delegação do dono ("veja o que você acha melho
 
 ---
 
+## AG-009: Edge Functions só com autorização (08/10/2026)
+
+As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está publicada ainda** (precisam do token do dono) — o conserto é para antes de publicar.
+- [x] `processar-laudo` não tinha autenticação nenhuma (qualquer um com a chave pública reprocessava qualquer documento). Agora: segredo interno `PROCESSAR_LAUDO_SEGREDO` (mín. 16 caracteres; ausente nunca autoriza) **ou** usuário da equipe do escritório dono do documento com `carteira.editar`; documento já confirmado não é reprocessado; "não existe" e "não é seu" respondem igual.
+- [x] `gerar-laudo-pdf` e `convidar-produtor`: autorização por `_shared/autorizacao.ts` — identifica o JWT, usa **`agro.pode()`** (a regra do banco: perfil ativo, escritório, não desativado) e compara o escritório do recurso com o escritório ATUAL do perfil (não o do token, que sobrevive à remoção por até 1 h). Pessoa removida não gera PDF nem convida produtor.
+- [x] Entradas validadas (uuid, e-mail); comparação de segredos em tempo constante (`_shared/seguranca.ts`, também usada pelo `webhook-asaas`). `config.toml`: `verify_jwt = false` só no `webhook-asaas` e no `processar-laudo` (que se autenticam sozinhos).
+- **Não testado contra um Supabase real** (nenhuma função publicada, sem Deno aqui). Teste de guarda em `db-test/test/edge-seguranca.test.ts`: sintaxe válida, autorização antes do primeiro acesso a dados, utilitários. **Antes de publicar:** rodar `deno check` e testar com duas contas de escritórios diferentes e uma conta removida.
+- Continua em aberto (AG-010): o webhook do Asaas ainda não casa o pagamento com o escritório de forma garantida nem checa o resultado das gravações.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.
