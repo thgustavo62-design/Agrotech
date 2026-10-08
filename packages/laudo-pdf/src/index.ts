@@ -38,6 +38,8 @@ const SUBSTITUI: Record<string, string> = {
 
 /** pt-BR sem depender de ICU (Deno e Node formatam igual). */
 export function fmt(v: unknown, casas = 1): string {
+  // em branco é "não informado", não zero
+  if (v == null || String(v).trim() === '') return '—';
   const x = typeof v === 'number' ? v : Number(String(v ?? '').replace(',', '.'));
   const [int, dec] = (Number.isFinite(x) ? x : 0).toFixed(casas).split('.');
   const milhar = int!.replace(/\B(?=(\d{3})+(?!\d))/g, '.');

@@ -1,11 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { gerarRecomendacao } from '@agrotech/agro-core';
+import { gerarRecomendacao, validarAnalise } from '@agrotech/agro-core';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { paraAnalise } from '@/lib/culturas';
 import { registrar } from '@/lib/audit';
+import { mensagemDeBloqueio } from '@/lib/analise-validacao';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 /**
@@ -32,6 +33,12 @@ async function emitirRecomendacaoImpl(fd: FormData) {
     tabelasDaOrg(sb),
   ]);
   if (error || !data) throw new ErroDeUsuario('análise não encontrada');
+
+  // A regra vale no SERVIDOR (a tela só avisa antes): análise incompleta ou impossível nunca vira recomendação,
+  // porque o motor trata campo em branco como zero e emitiria um laudo sobre dados que não existem.
+  const valores = paraAnalise(data);
+  const validacao = validarAnalise(valores);
+  if (!validacao.ok) throw new ErroDeUsuario(mensagemDeBloqueio(validacao, valores as Record<string, unknown>));
 
   // deno-lint-ignore no-explicit-any
   const t = (data as any).talhao;

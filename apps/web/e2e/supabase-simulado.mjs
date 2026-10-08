@@ -40,7 +40,7 @@ const talhoes = culturas.map((c, i) => ({
 const val = (i) => ({ ph: 4.8 + i * 0.2, mo: 1.9 + i * 0.3, p: 4 + i * 3, k: 40 + i * 12, na: 0, ca: 1.2 + i * 0.4, mg: 0.3 + i * 0.15, al: 1.1 - i * 0.15, h_al: 6.5 - i * 0.5, s: 4, b: 0.2, zn: 0.6, cu: 0.8, mn: 6, fe: 30, argila: 42, prnt: 80, incorporacao: 20 });
 const analises = talhoes.slice(0, 6).map((t, i) => ({
   id: `a000000${i + 1}-0000-0000-0000-000000000000`, talhao_id: t.id, org_id: O, produtor_id: t.produtor_id, data_coleta: dia(-20 - i * 25), profundidade: '0-20', laboratorio: 'Laboratório Água Limpa',
-  origem: i % 2 ? 'pdf' : 'manual', criado_em: dia(-19 - i * 25), arquivado_em: null, documento_id: null, prod_esperada: 60, ...val(i),
+  origem: i % 2 ? 'pdf' : 'manual', criado_em: dia(-19 - i * 25), arquivado_em: null, documento_id: null, prod_esperada: 60, ...val(i), ...(process.env.INCOMPLETA && i === 0 ? { ca: null, mg: '', b: null } : {}),
 }));
 const visitas = talhoes.slice(0, 4).map((t, i) => ({
   id: `v000000${i + 1}-0000-0000-0000-000000000000`, talhao_id: t.id, org_id: O, produtor_id: t.produtor_id, data: dia(-5 - i * 12), fenologia: ['Florada', 'Chumbinho', 'Granação', 'Colheita'][i],

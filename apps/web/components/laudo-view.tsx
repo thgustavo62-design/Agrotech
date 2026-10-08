@@ -33,7 +33,9 @@ export function LaudoView({
   const r = rec.calculo;
   const cal = rec.calagem;
   const ad = rec.adubacao;
-  const val = (v: unknown) => (v == null || v === '' ? 0 : Number(String(v).replace(',', '.')));
+  const val = (v: unknown) => (v == null || v === '' ? null : Number(String(v).replace(',', '.')));
+  // em branco no laudo é "—" (não informado), nunca "0,0"
+  const fv = (v: unknown, casas: number) => (val(v) === null ? '—' : f(val(v) as number, casas));
 
   return (
     <div className="folha-a4">
@@ -64,21 +66,21 @@ export function LaudoView({
         <tbody>
           <tr><th>pH</th><th className="num">M.O.</th><th className="num">P</th><th className="num">K</th><th className="num">Ca</th><th className="num">Mg</th><th className="num">Al</th><th className="num">H+Al</th></tr>
           <tr>
-            <td className="num">{f(val(a.pH), 1)}</td><td className="num">{f(val(a.MO), 1)}</td>
-            <td className="num">{f(val(a.P), 1)}</td><td className="num">{f(val(a.K), 0)}</td>
-            <td className="num">{f(val(a.Ca), 2)}</td><td className="num">{f(val(a.Mg), 2)}</td>
-            <td className="num">{f(val(a.Al), 2)}</td><td className="num">{f(val(a.HAl), 2)}</td>
+            <td className="num">{fv(a.pH, 1)}</td><td className="num">{fv(a.MO, 1)}</td>
+            <td className="num">{fv(a.P, 1)}</td><td className="num">{fv(a.K, 0)}</td>
+            <td className="num">{fv(a.Ca, 2)}</td><td className="num">{fv(a.Mg, 2)}</td>
+            <td className="num">{fv(a.Al, 2)}</td><td className="num">{fv(a.HAl, 2)}</td>
           </tr>
           <tr><th>SB</th><th className="num">CTC (t)</th><th className="num">CTC (T)</th><th className="num">V%</th><th className="num">m%</th><th className="num">Ca/Mg</th><th className="num">Argila</th><th className="num">S</th></tr>
           <tr>
             <td className="num">{f(r.SB, 2)}</td><td className="num">{f(r.t, 2)}</td><td className="num">{f(r.T, 2)}</td>
             <td className="num">{f(r.V, 1)}</td><td className="num">{f(r.m, 1)}</td><td className="num">{f(r.CaMg, 1)}</td>
-            <td className="num">{f(val(a.argila), 0)}%</td><td className="num">{f(val(a.S), 1)}</td>
+            <td className="num">{fv(a.argila, 0)}%</td><td className="num">{fv(a.S, 1)}</td>
           </tr>
           <tr><th>B</th><th className="num">Zn</th><th className="num">Cu</th><th className="num">Mn</th><th className="num">Fe</th><th colSpan={3} /></tr>
           <tr>
-            <td className="num">{f(val(a.B), 2)}</td><td className="num">{f(val(a.Zn), 1)}</td><td className="num">{f(val(a.Cu), 1)}</td>
-            <td className="num">{f(val(a.Mn), 1)}</td><td className="num">{f(val(a.Fe), 1)}</td><td colSpan={3} />
+            <td className="num">{fv(a.B, 2)}</td><td className="num">{fv(a.Zn, 1)}</td><td className="num">{fv(a.Cu, 1)}</td>
+            <td className="num">{fv(a.Mn, 1)}</td><td className="num">{fv(a.Fe, 1)}</td><td colSpan={3} />
           </tr>
         </tbody>
       </table>

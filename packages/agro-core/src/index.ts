@@ -32,5 +32,9 @@ export { calcularAdubacao } from './adubacao.js';
 export { fontesSugeridas } from './fontes.js';
 export { gerarDiagnostico } from './diagnostico.js';
 export { gerarRecomendacao } from './recomendacao.js';
+export {
+  validarAnalise, resumoDosErros, informado, lerNumero, REGRAS, PARAMETROS_ESSENCIAIS, PARAMETROS_OPCIONAIS,
+  type ProblemaAnalise, type ResultadoValidacaoAnalise,
+} from './validar-analise.js';
 
 export * as parsers from './parsers/index.js';

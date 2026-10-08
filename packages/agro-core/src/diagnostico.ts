@@ -1,6 +1,7 @@
 import type {
   Analise, Cultura, ItemDiagnostico, ResultadoCalculo, TabelasReferencia,
 } from './tipos.js';
+import { informado } from './validar-analise.js';
 import { n } from './num.js';
 import { f0, f1 } from './formato.js';
 import { nomeClasse } from './interpretacao.js';
@@ -46,7 +47,9 @@ export function gerarDiagnostico(
     add('atencao', `Potássio ${nomeClasse(r.classeK).toLowerCase()} – priorize o parcelamento para reduzir perda por lixiviação.`);
   }
 
-  if (n(a.MO) < 2) {
+  // parâmetro em branco NÃO é zero: sem o dado, o item não é avaliado (e aparece como "não avaliado" no fim)
+  const tem = (v: unknown) => informado(v);
+  if (tem(a.MO) && n(a.MO) < 2) {
     add('atencao', `Matéria orgânica baixa (${f1(n(a.MO))} dag/kg) – avaliar adubação orgânica, cobertura morta ou braquiária na entrelinha.`);
   }
 
@@ -58,20 +61,26 @@ export function gerarDiagnostico(
     add('atencao', `Relação Mg/K em ${f1(r.MgK)}:1 – excesso relativo de K pode induzir deficiência de Mg.`);
   }
 
-  if (n(a.B) <= limiteBaixo('B')) {
+  if (tem(a.B) && n(a.B) <= limiteBaixo('B')) {
     add('atencao', 'Boro baixo – corrigir via solo (bórax/ulexita) ou foliar, principalmente em café, mamão e eucalipto.');
   }
 
-  if (n(a.Zn) <= limiteBaixo('Zn')) {
+  if (tem(a.Zn) && n(a.Zn) <= limiteBaixo('Zn')) {
     add('atencao', 'Zinco baixo – aplicar via solo com o formulado ou foliar no crescimento vegetativo.');
   }
 
-  if (n(a.S) <= limiteBaixo('S')) {
+  if (tem(a.S) && n(a.S) <= limiteBaixo('S')) {
     add('atencao', 'Enxofre baixo – preferir superfosfato simples ou sulfato de amônio como fonte.');
   }
 
+  const faltam = (['MO', 'S', 'B', 'Zn'] as const).filter((k) => !tem(a[k]));
   if (d.length === 0) {
-    add('ok', 'Nenhuma limitação química relevante na camada analisada. Manter a fertilidade com adubação de reposição.');
+    add('ok', faltam.length
+      ? 'Nenhuma limitação nos parâmetros informados. Manter a fertilidade com adubação de reposição.'
+      : 'Nenhuma limitação química relevante na camada analisada. Manter a fertilidade com adubação de reposição.');
+  }
+  if (faltam.length) {
+    add('atencao', `Não informados na análise (não avaliados): ${faltam.join(', ')}. Solicite ao laboratório se forem relevantes para a cultura.`);
   }
 
   return d;

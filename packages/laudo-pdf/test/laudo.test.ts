@@ -80,7 +80,12 @@ describe('formatação', () => {
   it('pt-BR sem ICU', () => {
     expect(fmt(1234.5, 1)).toBe('1.234,5');
     expect(fmt('4,8', 1)).toBe('4,8');
-    expect(fmt(null, 2)).toBe('0,00');
+    // em branco é "não informado" (—); zero medido continua sendo 0
+    expect(fmt(null, 2)).toBe('—');
+    expect(fmt('', 1)).toBe('—');
+    expect(fmt(undefined, 1)).toBe('—');
+    expect(fmt(0, 2)).toBe('0,00');
+    expect(fmt('0', 1)).toBe('0,0');
     expect(fmt(7, 0)).toBe('7');
     expect(dataBR('2026-09-01T12:00:00Z')).toBe('01/09/2026');
     expect(dataBR(null)).toBe('—');

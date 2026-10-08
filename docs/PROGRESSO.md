@@ -881,6 +881,15 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 
 ---
 
+## AG-001 e AG-002: backup e emissão só com análise completa (08/10/2026)
+
+- [x] **Backup (AG-001):** falhava todo dia desde 01/10 (pg_dump 15 × servidor 17.6). Agora usa pg_dump 17, guarda os schemas agro/auth/storage, confere tamanho e tabelas e **criptografa (AES-256)** antes de guardar — o repositório é público e o artefato de um workflow é baixável por qualquer conta do GitHub. Senha no secret `BACKUP_PASSPHRASE`. Decifragem do arquivo verificada. **Falta:** ensaio de restauração (pg_restore num banco de teste) e backup dos arquivos do Storage (AG-012).
+- [x] **Emissão com análise incompleta (AG-002):** o motor trata campo em branco como zero (`n()`), então Ca vazio gerava laudo como se o solo não tivesse cálcio. Novo `validarAnalise()` (`agro-core/src/validar-analise.ts`): **essenciais** pH, argila, P, K, Ca, Mg, Al, H+Al (em branco, texto, negativo ou fora da faixa bloqueiam); **zero medido é válido**; opcionais (M.O., Na, S, B, Zn, Cu, Mn, Fe) em branco ficam "não informados". O servidor (`emitirRecomendacao`) recusa antes de calcular — a tela só avisa e desabilita o botão. O diagnóstico não inventa mais "boro/zinco/enxofre/M.O. baixo" quando o dado não existe e lista o que não foi avaliado; o laudo (tela e PDF) mostra "—" em vez de "0,0".
+- Limite: a regra está no servidor e no motor, **não** como constraint do banco (a recomendação é calculada em TypeScript). Quem gravar direto na tabela `recomendacoes` com a service role ainda poderia contornar.
+- Testes: agro-core 84, web 95, laudo-pdf 5, db-test 59. Faltam AG-003 (gessagem) e AG-004 (profundidade/método), que dependem de decisão agronômica.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

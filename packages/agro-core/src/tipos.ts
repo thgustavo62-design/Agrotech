@@ -42,6 +42,11 @@ export interface Analise {
   prodEsperada?: ValorAnalise;
 }
 
+/** Parâmetros de uma análise de solo (as chaves de `Analise` que são resultado de laboratório). */
+export type ChaveParametro =
+  | 'argila' | 'pH' | 'MO' | 'P' | 'K' | 'Na' | 'Ca' | 'Mg' | 'Al' | 'HAl'
+  | 'S' | 'B' | 'Zn' | 'Cu' | 'Mn' | 'Fe';
+
 /** Faixa de interpretação de um parâmetro: 4 quebras => 5 classes. */
 export interface Faixa {
   rot: string;

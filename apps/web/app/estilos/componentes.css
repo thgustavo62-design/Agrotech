@@ -36,6 +36,8 @@
 .btn.verde { background: var(--folha); border-color: var(--folha); }
 .btn.verde:hover { background: var(--folha-escura); }
 .btn.mini { padding: 5px 10px; font-size: 12px; border-radius: var(--r-mini); }
+.btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn:disabled:hover, .btn[disabled]:hover { background: inherit; }
 .btn:focus-visible, .aba:focus-visible, a:focus-visible { outline: 2px solid var(--folha); outline-offset: 2px; }
 
 /* ---------- listas / itens ---------- */
