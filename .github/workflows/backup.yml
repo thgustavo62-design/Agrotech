@@ -114,6 +114,8 @@ jobs:
           "$BIN/pg_restore" --no-owner --dbname "$T" restaurar.dump 2> restauracao.log || true
           echo "mensagens de erro da restauração: $(grep -c 'error:' restauracao.log || true)"
           grep 'error:' restauracao.log | sort | uniq -c | sort -rn | head -8 || true
+          echo '--- primeiros erros, com contexto ---'
+          grep -n -B1 -A3 'error:' restauracao.log | head -45 || true
 
       - name: Conferir que o restaurado bate com a produção
         env:
