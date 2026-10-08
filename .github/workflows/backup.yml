@@ -4,7 +4,7 @@ name: Backup diário
 # Por isso o dump NUNCA sai daqui sem criptografia (AES-256 com a senha do secret BACKUP_PASSPHRASE).
 # Sem a senha o job falha de propósito, antes de gerar qualquer arquivo.
 #
-# Guarda: schemas agro (negócio), auth (contas) e a tabela de metadados de arquivos do storage.
+# Guarda: schemas agro (negócio), auth (contas) e storage (só os metadados dos arquivos).
 # Os ARQUIVOS (PDFs, fotos) ficam no Storage do Supabase e NÃO estão neste dump.
 # Restaurar: gpg --decrypt backup-*.dump.gpg > backup.dump  &&  pg_restore --no-owner -d <banco novo> backup.dump
 
@@ -42,7 +42,7 @@ jobs:
         run: |
           "/usr/lib/postgresql/${PGVER}/bin/pg_dump" "$DB_URL" \
             --format=custom --no-owner --no-privileges \
-            --schema=agro --schema=auth --table=storage.objects --table=storage.buckets \
+            --schema=agro --schema=auth --schema=storage \
             --file=backup.dump
 
       - name: Conferir o dump (tamanho e conteúdo legível)
