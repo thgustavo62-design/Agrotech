@@ -105,17 +105,21 @@ jobs:
             loop if not exists (select 1 from pg_roles where rolname = r) then execute format('create role %I nologin', r); end if; end loop;
           end $$;
           create schema if not exists extensions;
-          create extension if not exists pg_trgm with schema extensions;
-          create extension if not exists unaccent with schema extensions;
+          -- na produção pg_trgm e unaccent ficam em public (os índices do dump dizem public.gin_trgm_ops)
+          create extension if not exists pg_trgm with schema public;
+          create extension if not exists unaccent with schema public;
           create extension if not exists pgcrypto with schema extensions;
           create extension if not exists "uuid-ossp" with schema extensions;
           SQL
           # 3) restaura. Erros isolados são esperados (objetos que o Supabase gerencia); o que vale é a conferência abaixo.
           "$BIN/pg_restore" --no-owner --dbname "$T" restaurar.dump 2> restauracao.log || true
-          echo "mensagens de erro da restauração: $(grep -c 'error:' restauracao.log || true)"
+          erros=$(grep -c 'error:' restauracao.log || true)
+          echo "mensagens de erro da restauração: $erros"
           grep 'error:' restauracao.log | sort | uniq -c | sort -rn | head -8 || true
           echo '--- primeiros erros, com contexto ---'
           grep -n -B1 -A3 'error:' restauracao.log | head -45 || true
+          # restauração limpa é o padrão: qualquer erro novo (objeto que deixou de restaurar) derruba o job
+          [ "$erros" -eq 0 ] || { echo "::error::$erros erro(s) ao restaurar o backup — veja os primeiros erros acima"; exit 1; }
 
       - name: Conferir que o restaurado bate com a produção
         env:
