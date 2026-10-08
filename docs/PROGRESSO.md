@@ -859,7 +859,7 @@ Perda de sessão ao navegar (logout por pré-carregamento de `<Link>`), 2 falhas
 - [x] **Cadastrar empregado** (`/app/config/equipe`): o proprietário informa nome, e-mail, cargo, perfis e a **senha inicial** (campo visível com "Gerar senha" legível e regras ao vivo) e a conta nasce já confirmada (`admin.createUser` com `email_confirm`, service role): a pessoa entra pelo login normal, sem e-mail de confirmação nem convite. O gatilho de cadastro cria o perfil como consultor/proprietário; a ação o rebaixa na hora ao que foi escolhido (e apaga a conta se a colocação no escritório falhar). Respeita `usuarios_max`; e-mail já cadastrado é recusado (nunca puxa conta existente). Mostra e-mail + senha uma única vez com mensagem pronta para WhatsApp; fica no histórico (`equipe.cadastrado`).
 - [x] **Senha esquecida** do empregado agora tem "Definir nova senha" direto (`definirSenhaEquipe`, vale na hora) além do link de nova senha. Convite por link virou alternativa recolhida.
 - Cadastro do próprio proprietário segue direto (sem confirmar e-mail — Confirm email desligado no Supabase).
-- [x] **Remover do escritório de verdade** (`0039_desativar_membro.sql`): o servidor bane a conta no Auth (`ban_duration`), troca o e-mail por um endereço morto (libera o e-mail para novo cadastro) e marca `profiles.desativado_em` (+ zera escritório/perfis). A conta **não é apagada**: laudos e recomendações guardam quem os emitiu (as FKs viram null ao excluir). O banco: `agro.pode()` exige perfil ativo e dentro de um escritório → quem foi removido **não grava mais nada na hora**, mesmo com token antigo; o cliente não (des)ativa contas (gatilho); `criar_escritorio()` recusa conta desativada. O app mostra "Seu acesso foi removido" em toda a área do consultor (sem escritório de teste, sem menu, sem dados). **Limite conhecido:** a LEITURA com um token já emitido vale até ele expirar (`jwt_expiry` = 1 h), porque o RLS lê `org_id` do token por desempenho; reduzir exigiria consultar o perfil em toda política. db-test: 59.
+- [x] **Remover do escritório de verdade** (`0039_desativar_membro.sql`): o servidor bane a conta no Auth (`ban_duration`), troca o e-mail por um endereço morto (libera o e-mail para novo cadastro) e marca `profiles.desativado_em` (+ zera escritório/perfis). A conta **não é apagada**: laudos e recomendações guardam quem os emitiu (as FKs viram null ao excluir). O banco: `agro.pode()` exige perfil ativo e dentro de um escritório → quem foi removido **não grava mais nada na hora**, mesmo com token antigo; o cliente não (des)ativa contas (gatilho); `criar_escritorio()` recusa conta desativada. O app mostra "Seu acesso foi removido" em toda a área do consultor (sem escritório de teste, sem menu, sem dados). **(Limite de leitura de até 1 h resolvido na 0041.)** db-test: 59.
 - `gerarSenha()` em `lib/senha.ts` (sem 0/O/1/l/I). `e2e/verificar-cadastro-empregado.mjs`.
 
 ---
@@ -911,6 +911,15 @@ As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está 
 - [x] Entradas validadas (uuid, e-mail); comparação de segredos em tempo constante (`_shared/seguranca.ts`, também usada pelo `webhook-asaas`). `config.toml`: `verify_jwt = false` só no `webhook-asaas` e no `processar-laudo` (que se autenticam sozinhos).
 - **Não testado contra um Supabase real** (nenhuma função publicada, sem Deno aqui). Teste de guarda em `db-test/test/edge-seguranca.test.ts`: sintaxe válida, autorização antes do primeiro acesso a dados, utilitários. **Antes de publicar:** rodar `deno check` e testar com duas contas de escritórios diferentes e uma conta removida.
 - Continua em aberto (AG-010): o webhook do Asaas ainda não casa o pagamento com o escritório de forma garantida nem checa o resultado das gravações.
+
+---
+
+## AG-005: removido perde a leitura na hora (08/10/2026)
+
+- [x] Migration **0041**: `agro.jwt_org()` e `agro.jwt_role()` passam a valer o que está no **perfil** no momento da consulta (conta desativada = sem escritório e sem papel), e o claim do token só é usado quando não há perfil (serviço). Isso fecha a janela de até 1 hora em que um empregado removido ainda lia produtores, análises e arquivos com o token antigo — em todas as tabelas e no Storage, porque todas as políticas passam por essas funções. Efeito colateral bom: quem muda de escritório também vale na hora.
+- Medido no PGlite com 20 000 análises: **sem diferença de tempo**. Não medido no Supabase real.
+- Testes (`db-test/test/revogacao.test.ts`, com token antigo fixado à mão): removido lê 0 linhas em produtores/propriedades/talhões/visitas/Storage/equipe e não grava; ainda enxerga o próprio perfil (a tela "acesso removido" precisa); a equipe que ficou e o produtor não são afetados. db-test: 79.
+- Limite: o Auth ainda aceita o token até expirar (não existe revogação de JWT); o que muda é que o banco não entrega mais nada com ele.
 
 ---
 

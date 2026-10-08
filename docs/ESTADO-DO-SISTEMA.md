@@ -51,7 +51,7 @@ Um painel de assistência técnica agronômica para escritórios. O escritório 
 
 ## 5. Limites conhecidos (sem rodeios)
 1. **Leitor de laudos:** validado com um laudo real (Laboratório Água Limpa) e com textos que imitam outros layouts. **Nunca foi testado com PDFs reais de outros laboratórios.** Não existem laudos reais públicos na internet; precisa que você mande 2 ou 3.
-2. **Remoção de empregado:** a pessoa removida perde a escrita na hora, mas pode **ler** dados por até 1 hora (até a sessão expirar).
+2. **Remoção de empregado:** corrigido — quem é removido perde leitura e escrita na hora (migração 0041). O Auth ainda aceita o token até expirar, mas o banco não entrega mais dados com ele.
 3. **E-mails:** sem domínio próprio, o Supabase embutido manda poucos e-mails por hora e só para a equipe do projeto. Por isso o cadastro de empregado é direto, por senha, e a recuperação do empregado é feita pelo proprietário.
 4. **Offline:** o reenvio só acontece com o app aberto (limitação do iPhone), e só visitas entram na fila.
 5. **Plano gratuito do Supabase:** sem proteção contra senhas vazadas.

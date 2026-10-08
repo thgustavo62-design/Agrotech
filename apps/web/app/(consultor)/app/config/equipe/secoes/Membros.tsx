@@ -48,7 +48,7 @@ export function SecaoMembros({ ctx }: { ctx: ContextoEquipe }) {
                       <form action={removerDaEquipe}>
                         <input type="hidden" name="id" value={m.id} />
                         <p className="nota" style={{ margin: '4px 0 10px' }}>
-                          A conta de {m.nome ?? 'a pessoa'} é desativada: ela não consegue mais entrar. Quem estiver com o app aberto perde a escrita na hora e a leitura em até 1 hora. Os dados e o histórico continuam com o escritório.
+                          A conta de {m.nome ?? 'a pessoa'} é desativada: ela perde o acesso na hora (leitura e escrita) e não consegue mais entrar. Os dados e o histórico continuam com o escritório.
                         </p>
                         <button className="btn sec mini" type="submit">Confirmar remoção</button>
                       </form>

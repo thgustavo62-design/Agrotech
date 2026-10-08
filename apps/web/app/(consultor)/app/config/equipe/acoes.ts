@@ -114,7 +114,7 @@ async function alterarPerfisImpl(fd: FormData) {
  * Remove um colega: a conta é DESATIVADA (não só desvinculada). Sem isso a pessoa entrava de novo e ganhava um
  * escritório de teste vazio. Ordem: 1) bane o login no Auth e libera o e-mail (renomeia para um endereço morto,
  * assim dá para cadastrar outra pessoa — ou a mesma — com ele); 2) zera escritório/perfis e marca `desativado_em`
- * (migration 0039: o banco recusa qualquer escrita com o token antigo; a leitura cai quando o token expira, ≤ 1 h).
+ * (0039 barra a escrita e 0041 a leitura na hora: o banco lê o escritório do perfil, não do token).
  * A conta NÃO é apagada: laudos e recomendações guardam quem os emitiu (as chaves viram null ao excluir).
  */
 async function removerDaEquipeImpl(fd: FormData) {
