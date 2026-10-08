@@ -51,6 +51,7 @@ jobs:
           echo "dump: $tam bytes"
           [ "$tam" -gt 20000 ] || { echo "::error::Dump pequeno demais ($tam bytes)"; exit 1; }
           lista=$("/usr/lib/postgresql/${PGVER}/bin/pg_restore" --list backup.dump)
+          echo "$lista" | grep -E " (TABLE|TABLE DATA|SCHEMA) " | grep -E " agro | auth | storage " | head -40 | cut -c1-90
           echo "$lista" | grep -q "TABLE agro produtores" || { echo "::error::Dump sem a tabela agro.produtores"; exit 1; }
           echo "$lista" | grep -q "TABLE DATA auth users"       || { echo "::error::Dump sem auth.users"; exit 1; }
           echo "itens no dump: $(echo "$lista" | grep -c 'TABLE DATA')"
