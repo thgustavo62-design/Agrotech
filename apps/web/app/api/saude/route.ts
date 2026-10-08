@@ -4,10 +4,10 @@ export const dynamic = 'force-dynamic';
 
 const LIMITE_MS = 4000;
 
-async function sonda(url: string, cabecalhos: Record<string, string> = {}): Promise<{ ok: boolean; ms: number }> {
+async function sonda(url: string, cabecalhos: Record<string, string> = {}, corpo?: string): Promise<{ ok: boolean; ms: number }> {
   const t0 = Date.now();
   try {
-    const r = await fetch(url, { headers: cabecalhos, signal: AbortSignal.timeout(LIMITE_MS), cache: 'no-store' });
+    const r = await fetch(url, { method: corpo ? 'POST' : 'GET', body: corpo, headers: cabecalhos, signal: AbortSignal.timeout(LIMITE_MS), cache: 'no-store' });
     return { ok: r.ok, ms: Date.now() - t0 };
   } catch {
     return { ok: false, ms: Date.now() - t0 };
@@ -29,7 +29,13 @@ export async function GET() {
   }
   const [auth, api] = await Promise.all([
     sonda(`${base}/auth/v1/health`, { apikey: chave }),
-    sonda(`${base}/rest/v1/`, { apikey: chave, authorization: `Bearer ${chave}` }),
+    // chama a função pública de convite com um token que não existe: passa pela API REST E pelo Postgres, devolve null (200)
+    // e não grava nada. (A raiz /rest/v1/ não serve: o Supabase a restringe à chave de serviço.)
+    sonda(
+      `${base}/rest/v1/rpc/convite_resumo`,
+      { apikey: chave, authorization: `Bearer ${chave}`, 'content-type': 'application/json', 'content-profile': 'agro' },
+      JSON.stringify({ p_token: '00000000-0000-0000-0000-000000000000' }),
+    ),
   ]);
   const ok = auth.ok && api.ok;
   return NextResponse.json(
