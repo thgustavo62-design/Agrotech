@@ -13,7 +13,7 @@ export function FormFilaOffline({
   action, children, className, rotuloOk,
 }: {
   /** devolve se deu certo (não lança nem redireciona): ver registrarVisita */
-  action: (fd: FormData) => Promise<{ ok: boolean; mensagem?: string }>;
+  action: (fd: FormData) => Promise<{ ok: boolean; mensagem?: string; parcial?: boolean }>;
   children: ReactNode;
   className?: string;
   /** mensagem de sucesso, ex.: "Visita salva." */
@@ -36,6 +36,15 @@ export function FormFilaOffline({
       if (!r.ok) {
         setMsg({ tom: 'erro', txt: r.mensagem ?? 'Não foi possível salvar.' });
         return;
+      }
+      if (r.parcial) {
+        // a visita foi gravada, mas faltam partes: guarda o MESMO formulário (mesma chave) para completar sem duplicar
+        try {
+          await enfileirar(fd);
+        } catch {
+          setMsg({ tom: 'erro', txt: `${r.mensagem ?? 'Faltaram partes da visita.'} Não consegui guardar para reenviar: não feche esta tela e tente salvar de novo.` });
+          return;
+        }
       }
       setMsg({ tom: r.mensagem ? 'fila' : 'ok', txt: r.mensagem ?? rotuloOk });
       setGeracao((g) => g + 1);

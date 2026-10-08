@@ -930,6 +930,17 @@ As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está 
 
 ---
 
+## AG-007: visita offline completa sem duplicar nem perder partes (08/10/2026)
+
+- **Problema (lido no código):** visita, ocorrências e fotos eram gravadas em passos separados; se um falhasse depois da visita, o reenvio batia na chave da visita ("já gravado") e **descartava** as ocorrências e fotos que faltavam; uma falha de foto virava só um aviso e o formulário era apagado do aparelho.
+- [x] Migration **0042**: `visita_ocorrencias.indice` e `visita_fotos.chave` com `unique (visita_id, …)`. Cada ocorrência tem como identidade a posição no formulário e cada foto a chave "<chave da visita>-f<n>"; o arquivo vai para um caminho determinístico.
+- [x] `registrarVisita`: no reenvio **acha a visita pela chave e completa só o que falta** (ocorrências por upsert que ignora duplicadas; foto já registrada é pulada; arquivo que já subiu mas não foi registrado só é registrado). Devolve `parcial: true` quando falhou algo que pode passar (rede/armazenamento); foto que nunca dará certo (maior que 8 MB, não é imagem, passou de 6) é descartada com motivo e **não** é reenviada.
+- [x] Aparelho: resposta parcial **não é sucesso** — o MESMO formulário (mesma chave, fotos incluídas) fica na fila, é reenviado até completar, e para depois de 8 tentativas ficando visível com o motivo (sem laço infinito); a faixa fala em "envio incompleto" separado de "recusada". Um item parcial não trava os seguintes.
+- Testes: fila (parcial fica, reenvio completa, teto de tentativas, não trava a fila), regras puras (`lib/visita-itens.ts`), e no banco as restrições da 0042 simulando falha no meio e reenvio duplo (db-test 83). **Não** há teste do servidor real de ponta a ponta com falha de rede/armazenamento no meio (o simulador não guarda estado); navegador: a fila offline continua enviando e esvaziando.
+- Continua valendo: o reenvio só ocorre com o app aberto (Safari), e limpar os dados do navegador apaga o que ainda não subiu.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

@@ -21,7 +21,12 @@ export interface ItemFila {
   campos: Array<[string, string | File]>;
   tentativas: number;
   erro?: string;
+  /** o servidor gravou a visita mas faltaram partes (ocorrência/foto): o item fica para completar no próximo envio */
+  parcial?: boolean;
 }
+
+/** Depois disto o item para de ser reenviado sozinho e fica visível com o motivo (o técnico decide: descartar ou conferir). */
+export const MAX_TENTATIVAS = 8;
 
 function abrir(): Promise<IDBDatabase> {
   return new Promise((ok, falha) => {
@@ -88,8 +93,8 @@ export async function remover(id: string): Promise<void> {
   avisar();
 }
 
-async function marcarFalha(item: ItemFila, mensagem: string): Promise<void> {
-  await transacao('readwrite', (l) => l.put({ ...item, tentativas: item.tentativas + 1, erro: mensagem }));
+async function marcarFalha(item: ItemFila, mensagem: string, parcial = false): Promise<void> {
+  await transacao('readwrite', (l) => l.put({ ...item, tentativas: item.tentativas + 1, erro: mensagem, parcial }));
   avisar();
 }
 
@@ -97,6 +102,8 @@ export interface ResultadoSync {
   enviadas: number;
   /** itens que o servidor recusou (ficam na fila com a mensagem) */
   recusadas: number;
+  /** visita gravada, mas com partes pendentes: continuam na fila para completar */
+  parciais: number;
   /** parou por falta de sinal; o restante segue na fila */
   semRede: boolean;
 }
@@ -106,15 +113,23 @@ export interface ResultadoSync {
  * (o resto espera); erro do servidor marca o item e segue para o próximo.
  */
 export async function sincronizar(enviar: (fd: FormData) => Promise<unknown>): Promise<ResultadoSync> {
-  // a server action devolve { ok: false, mensagem } quando o servidor recusa; vira erro para cair na mesma via
-  const enviarOuFalhar = async (fd: FormData) => {
-    const r = (await enviar(fd)) as { ok?: boolean; mensagem?: string } | undefined;
+  // a server action devolve { ok: false, mensagem } quando o servidor recusa; vira erro para cair na mesma via.
+  // { ok: true, parcial: true } = gravou a visita mas faltou parte: NÃO é sucesso, o item fica para completar.
+  const enviarOuFalhar = async (fd: FormData): Promise<{ parcial: boolean; mensagem?: string }> => {
+    const r = (await enviar(fd)) as { ok?: boolean; mensagem?: string; parcial?: boolean } | undefined;
     if (r && r.ok === false) throw new Error(r.mensagem ?? 'O servidor recusou o envio.');
+    return { parcial: r?.parcial === true, mensagem: r?.mensagem };
   };
-  const r: ResultadoSync = { enviadas: 0, recusadas: 0, semRede: false };
+  const r: ResultadoSync = { enviadas: 0, recusadas: 0, parciais: 0, semRede: false };
   for (const item of await listar()) {
+    if (item.tentativas >= MAX_TENTATIVAS) continue; // desistiu de reenviar sozinho; segue visível com o motivo
     try {
-      await enviarOuFalhar(paraFormData(item));
+      const resultado = await enviarOuFalhar(paraFormData(item));
+      if (resultado.parcial) {
+        await marcarFalha(item, resultado.mensagem ?? 'Faltam partes da visita.', true);
+        r.parciais++;
+        continue;
+      }
       await remover(item.id);
       r.enviadas++;
     } catch (e) {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { EVENTO_FILA, listar, remover, sincronizar, type ItemFila } from '@/lib/fila-offline';
+import { EVENTO_FILA, MAX_TENTATIVAS, listar, remover, sincronizar, type ItemFila } from '@/lib/fila-offline';
 import { registrarVisita } from '@/app/(consultor)/app/talhoes/[id]/acoes';
 
 /**
@@ -30,7 +30,7 @@ export function SincronizadorOffline() {
       // trava entre abas para não reenviar o mesmo item em paralelo
       const rodar = async () => {
         const r = await sincronizar(registrarVisita);
-        if (r.enviadas > 0) router.refresh();
+        if (r.enviadas > 0 || r.parciais > 0) router.refresh();
       };
       if (navigator.locks) await navigator.locks.request('agrotech-fila', { ifAvailable: true }, async (lock) => { if (lock) await rodar(); });
       else await rodar();
@@ -54,21 +54,24 @@ export function SincronizadorOffline() {
   }, []);
 
   if (itens.length === 0) return null;
-  const recusadas = itens.filter((i) => i.erro);
+  const recusadas = itens.filter((i) => i.erro && !i.parcial);
+  const incompletas = itens.filter((i) => i.parcial);
+  const desistidas = itens.filter((i) => i.tentativas >= MAX_TENTATIVAS);
 
   return (
     <div className="aviso nao-imprime" role="status" style={{ position: 'fixed', left: 12, right: 12, bottom: 70, zIndex: 50 }}>
       <b>{itens.length} visita(s) aguardando envio.</b>{' '}
       {enviando ? 'Enviando…' : navigator.onLine ? '' : 'Sem sinal — envio automático quando voltar.'}
+      {incompletas.length > 0 ? <> {incompletas.length} com envio incompleto (a visita já está salva; faltam ocorrências/fotos){desistidas.length > 0 ? ` — ${desistidas.length} não consegui completar: confira a visita no talhão e descarte.` : ' — tento de novo sozinho.'}</> : null}
       {recusadas.length > 0 ? <> {recusadas.length} recusada(s): {recusadas[0]!.erro}</> : null}
       <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
         <button className="btn mini verde" type="button" disabled={enviando} onClick={() => void enviar()}>Enviar agora</button>
-        {recusadas.length > 0 ? (
+        {recusadas.length > 0 || desistidas.length > 0 ? (
           <button
             className="btn mini sec" type="button"
-            onClick={async () => { for (const i of recusadas) await remover(i.id); }}
+            onClick={async () => { for (const i of new Set([...recusadas, ...desistidas])) await remover(i.id); }}
           >
-            Descartar recusadas
+            Descartar as que não foram
           </button>
         ) : null}
       </div>
