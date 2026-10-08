@@ -7,6 +7,11 @@ name: Backup diário
 # Guarda: schemas agro (negócio), auth (contas) e storage (só os metadados dos arquivos).
 # Os ARQUIVOS (PDFs, fotos) ficam no Storage do Supabase e NÃO estão neste dump.
 # Restaurar: gpg --decrypt backup-*.dump.gpg > backup.dump  &&  pg_restore --no-owner -d <banco novo> backup.dump
+#
+# AG-012: backup que nunca foi restaurado é uma esperança, não um backup. TODO DIA, depois de guardar o arquivo
+# criptografado, o próprio job o DECIFRA com a senha do secret, RESTAURA num Postgres 17 descartável e confere que o
+# que voltou bate com o banco de produção (tabelas e contagem de linhas). Se a restauração falhar, o job falha e o
+# GitHub avisa — o arquivo já foi guardado antes do teste, então uma falha do teste não perde o backup.
 
 on:
   schedule:
@@ -18,6 +23,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PGVER: '17'          # igual à versão do servidor do Supabase (o pg_dump recusa servidor mais novo que ele)
+    # banco descartável onde o backup é restaurado e conferido (some quando o job termina)
+    services:
+      teste:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: teste
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - name: Conferir segredos
         env:
@@ -72,3 +86,62 @@ jobs:
           path: backup-*.dump.gpg
           retention-days: 30
           if-no-files-found: error
+
+      # ---- ensaio de restauração ------------------------------------------------------------------------------
+      - name: Restaurar o backup num banco de teste
+        env:
+          SENHA: ${{ secrets.BACKUP_PASSPHRASE }}
+          PGPASSWORD: teste
+        run: |
+          set -u
+          BIN="/usr/lib/postgresql/${PGVER}/bin"
+          T="postgresql://postgres@localhost:5433/postgres"
+          # 1) decifra o arquivo que acabou de ser guardado (prova que a senha do secret abre o backup)
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$SENHA" --output restaurar.dump --decrypt backup-*.dump.gpg
+          # 2) o Supabase já traz estes papéis e extensões; o banco descartável precisa deles para as políticas e índices
+          psql "$T" -v ON_ERROR_STOP=1 <<'SQL'
+          do $$ declare r text; begin
+            foreach r in array array['anon','authenticated','service_role','authenticator','supabase_auth_admin','supabase_storage_admin','supabase_admin','dashboard_user']
+            loop if not exists (select 1 from pg_roles where rolname = r) then execute format('create role %I nologin', r); end if; end loop;
+          end $$;
+          create schema if not exists extensions;
+          create extension if not exists pg_trgm with schema extensions;
+          create extension if not exists unaccent with schema extensions;
+          create extension if not exists pgcrypto with schema extensions;
+          create extension if not exists "uuid-ossp" with schema extensions;
+          SQL
+          # 3) restaura. Erros isolados são esperados (objetos que o Supabase gerencia); o que vale é a conferência abaixo.
+          "$BIN/pg_restore" --no-owner --dbname "$T" restaurar.dump 2> restauracao.log || true
+          echo "mensagens de erro da restauração: $(grep -c 'error:' restauracao.log || true)"
+          grep 'error:' restauracao.log | sort | uniq -c | sort -rn | head -8 || true
+
+      - name: Conferir que o restaurado bate com a produção
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PGPASSWORD: teste
+        run: |
+          set -u
+          BIN="/usr/lib/postgresql/${PGVER}/bin"
+          T="postgresql://postgres@localhost:5433/postgres"
+          falhou=0
+          # mesmas tabelas?
+          LISTA="select table_schema||'.'||table_name from information_schema.tables where table_type='BASE TABLE' and table_schema in ('agro','auth','storage') order by 1"
+          psql "$DB_URL" -Atc "$LISTA" > tabelas-prod.txt
+          psql "$T" -Atc "$LISTA" > tabelas-restaurado.txt
+          if diff -u tabelas-prod.txt tabelas-restaurado.txt; then echo "tabelas: $(wc -l < tabelas-prod.txt) iguais"; else echo "::error::tabelas diferentes entre produção e restauração"; falhou=1; fi
+          # mesmas linhas? (o dump saiu há minutos: tolera crescimento na produção, nunca perda no restaurado)
+          for tab in auth.users agro.orgs agro.profiles agro.produtores agro.propriedades agro.talhoes agro.analises agro.recomendacoes agro.visitas storage.objects; do
+            p=$(psql "$DB_URL" -Atc "select count(*) from $tab"); r=$(psql "$T" -Atc "select count(*) from $tab")
+            echo "$tab: produção=$p restaurado=$r"
+            if [ "$r" -gt "$p" ] || [ "$r" -lt $((p - 5)) ]; then echo "::error::$tab: restaurado ($r) não bate com a produção ($p)"; falhou=1; fi
+          done
+          # sem usuário restaurado, o backup não serve para nada
+          [ "$(psql "$T" -Atc 'select count(*) from auth.users')" -ge 1 ] || { echo "::error::nenhum usuário restaurado"; falhou=1; }
+          # as regras de segurança voltaram? (RLS ligada nas tabelas do agro)
+          sem_rls=$(psql "$T" -Atc "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='agro' and c.relkind='r' and not c.relrowsecurity")
+          [ "$sem_rls" -eq 0 ] || { echo "::error::$sem_rls tabela(s) do agro sem RLS depois de restaurar"; falhou=1; }
+          exit $falhou
+
+      - name: Apagar o dump decifrado
+        if: always()
+        run: shred -u restaurar.dump 2>/dev/null || rm -f restaurar.dump
