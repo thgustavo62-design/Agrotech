@@ -7,6 +7,7 @@ import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { paraAnalise } from '@/lib/culturas';
 import { registrar } from '@/lib/audit';
 import { mensagemDeBloqueio } from '@/lib/analise-validacao';
+import { identidadeDoLaudo } from '@/lib/identidade-laudo';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
 /**
@@ -21,7 +22,7 @@ async function emitirRecomendacaoImpl(fd: FormData) {
   const sb = await criarClienteServidor();
   const perfil = await perfilAtual();
 
-  const [{ data, error }, tabelas] = await Promise.all([
+  const [{ data, error }, tabelas, { data: eu }, { data: org }] = await Promise.all([
     sb.schema('agro').from('analises').select(
       `id, data_coleta, profundidade, laboratorio, prnt, incorporacao, prod_esperada,
        argila, ph, mo, p, k, na, ca, mg, al, h_al, s, b, zn, cu, mn, fe,
@@ -31,8 +32,14 @@ async function emitirRecomendacaoImpl(fd: FormData) {
        )`,
     ).eq('id', analiseId).single(),
     tabelasDaOrg(sb),
+    perfil ? sb.schema('agro').from('profiles').select('nome, crea, fone').eq('id', perfil.id).maybeSingle() : Promise.resolve({ data: null }),
+    perfil?.org_id ? sb.schema('agro').from('orgs').select('nome, municipio, uf').eq('id', perfil.org_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   if (error || !data) throw new ErroDeUsuario('análise não encontrada');
+
+  // quem assina: o escritório e o responsável técnico (CREA) de quem está emitindo
+  const identidade = identidadeDoLaudo(eu ?? {}, org ?? {});
+  if (!identidade.ok) throw new ErroDeUsuario(identidade.mensagem);
 
   // A regra vale no SERVIDOR (a tela só avisa antes): análise incompleta ou impossível nunca vira recomendação,
   // porque o motor trata campo em branco como zero e emitiria um laudo sobre dados que não existem.
@@ -70,12 +77,7 @@ async function emitirRecomendacaoImpl(fd: FormData) {
       dataColeta: data.data_coleta,
       profundidade: data.profundidade ?? '0-20',
       laboratorio: data.laboratorio ?? '',
-      consultor: {
-        nome: perfil?.nome ?? '',
-        crea: perfil?.crea ?? '',
-        fone: '',
-        empresa: 'Campo Forte Soluções Agrícolas',
-      },
+      consultor: identidade.consultor,
     },
     analise_valores: { ...paraAnalise(data), prnt: data.prnt, incorp: data.incorporacao },
   };

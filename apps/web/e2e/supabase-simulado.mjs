@@ -151,7 +151,7 @@ function atender(req, res) {
   const url = new URL(req.url, 'http://x');
   const papel = papelDaRequisicao(req);
   const perfisSim = String(claimsDaRequisicao(req).perfis_sim || process.env.PERFIS || 'proprietario').split(',').filter(Boolean);
-  T.profiles = [{ id: U, org_id: O, role: papel, nome: papel === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma', perfis: papel === 'produtor' ? [] : perfisSim, desativado_em: process.env.DESATIVADO ? '2026-10-02T00:00:00Z' : null }, ...(papel === 'produtor' ? [] : COLEGAS)];
+  T.profiles = [{ id: U, org_id: O, role: papel, nome: papel === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: process.env.SEM_CREA ? '' : 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma', perfis: papel === 'produtor' ? [] : perfisSim, desativado_em: process.env.DESATIVADO ? '2026-10-02T00:00:00Z' : null }, ...(papel === 'produtor' ? [] : COLEGAS)];
   const json = (obj, status = 200, extra = {}) => { res.writeHead(status, { 'content-type': 'application/json', ...extra }); res.end(JSON.stringify(obj)); };
 
   if (url.pathname === '/auth/v1/.well-known/jwks.json') return json({ keys: [{ ...publicKey.export({ format: 'jwk' }), kid: KID, alg: 'ES256', use: 'sig' }] });
