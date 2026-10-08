@@ -17,3 +17,9 @@
 @keyframes esq-brilho { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 .so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .esq { animation: none; } }
+
+/* ---------- faixa "sem sinal" (components/aviso-sem-sinal.tsx) ---------- */
+.aviso-sem-sinal {
+  position: sticky; top: 45px; z-index: 40; padding: 8px 16px; font-size: 13px; line-height: 1.4;
+  background: #fbeedf; color: #6b430c; border-bottom: 1px solid #ecd2ab;
+}

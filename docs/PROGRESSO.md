@@ -962,6 +962,15 @@ As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está 
 
 ---
 
+## AG-014 a AG-017: monitoramento, documentação, offline visível, LGPD (08/10/2026)
+
+- [x] **AG-014 — vigilância sem custo:** workflow *Monitoramento* (a cada 30 min): site e páginas públicas, `/api/saude` (Auth e API do banco respondem, versão no ar) e **backup bem-sucedido nas últimas 36 h**; falha = e-mail do GitHub. Log de erros em uma linha JSON (`lib/log.ts`: contexto, código, id da requisição; JWT, chaves, senhas e e-mails são mascarados) usado em `comAviso`. Runbook em `docs/OPERACAO.md`. **Não feito:** painel interno de métricas (tempo de laudo, fila de OCR) e alerta de erros por serviço externo (Sentry etc. — custo/conta). Conferir uma vez que o GitHub envia os e-mails de falha de workflow.
+- [x] **AG-015 — documentação:** README reescrito (Next 16, estrutura real, como rodar, ambientes, o que é histórico), `CHANGELOG.md`, `docs/decisoes/` (ADR) com as decisões desta rodada. Documentos antigos marcados como históricos no README.
+- [x] **AG-016 — offline, parte visível:** faixa "Sem sinal — você está vendo dados salvos no aparelho (de <data e hora>)" na área do consultor, para ninguém confundir cópia com dado atual. A fila de visitas e o pré-carregamento já existiam (AG-007). **Não feito:** fila offline para outros formulários (análises, ocorrências avulsas, execução de insumos) — cada um pede o desenho de idempotência feito para a visita.
+- [x] **AG-017 — LGPD:** `docs/LGPD-MINUTA.md` (papéis, mapa de dados, direitos × o que o sistema atende, retenção, incidente, o que o advogado precisa produzir) — **rascunho, nada publicado no site**. Achado e corrigido: a **exclusão do produtor não apagava os PDFs e fotos do Storage** (só as linhas); agora apaga (`lib/lgpd-arquivos.ts`, com chave de serviço; o que falhar vira aviso e fica no registro de atividade). Testado com um Storage falso (pastas por produtor, paginação, falha parcial); não testado no Storage real.
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

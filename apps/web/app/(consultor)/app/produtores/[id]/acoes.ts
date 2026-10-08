@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { clienteAdmin } from '@/lib/supabase/admin';
+import { removerArquivosDoProdutor } from '@/lib/lgpd-arquivos';
 import { registrar } from '@/lib/audit';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 
@@ -104,10 +105,22 @@ async function excluirProdutorImpl(fd: FormData) {
     org_id: perfil?.org_id ?? null,
   });
 
+  // As fotos de visita moram em visitas/{org}/{visita}/…: os caminhos só existem no banco, então são lidos ANTES do delete
+  // (que apaga as linhas em cascata). Os PDFs ficam em pastas por produtor e são achados pela pasta.
+  const { data: fotos } = await sb.schema('agro').from('visita_fotos')
+    .select('storage_path, visita:visita_id!inner(talhao:talhao_id!inner(propriedade:propriedade_id!inner(produtor_id)))')
+    .eq('visita.talhao.propriedade.produtor_id', id);
+  const fotosDeVisitas = (fotos ?? []).map((x) => String(x.storage_path));
+
   const { error } = await sb.schema('agro').from('produtores').delete().eq('id', id);
   if (error) lancarDoBanco(error);
 
-  if (contaAuth) await eliminarContaDoProdutor(sb, contaAuth, id, perfil?.org_id ?? null);
+  const pendencias = [
+    ...(await eliminarArquivosDoProdutor(sb, id, perfil?.org_id ?? null, fotosDeVisitas)),
+    ...(contaAuth ? await eliminarContaDoProdutor(sb, contaAuth, id, perfil?.org_id ?? null) : []),
+  ];
+  // os dados de negócio já foram apagados: o que ficou pendente precisa ser dito, não escondido
+  if (pendencias.length) throw new ErroDeUsuario(`Dados apagados, mas ficou pendente: ${pendencias.join(' ')}`);
   redirect('/app/produtores');
 }
 
@@ -115,7 +128,7 @@ async function excluirProdutorImpl(fd: FormData) {
  *  Só apaga se for conta de produtor e não estiver ligada a outro cadastro —
  *  nunca uma conta de consultor. Falha alta: os dados de negócio já foram
  *  apagados, então o consultor precisa saber que a conta ficou pendente. */
-async function eliminarContaDoProdutor(sb: SupabaseClient, userId: string, produtorId: string, orgId: string | null) {
+async function eliminarContaDoProdutor(sb: SupabaseClient, userId: string, produtorId: string, orgId: string | null): Promise<string[]> {
   const registrarConta = (resultado: string) =>
     registrar(sb, {
       acao: 'produtor.conta_auth_lgpd',
@@ -128,26 +141,42 @@ async function eliminarContaDoProdutor(sb: SupabaseClient, userId: string, produ
   const admin = clienteAdmin();
   if (!admin) {
     await registrarConta('pendente: SUPABASE_SERVICE_ROLE_KEY ausente');
-    throw new ErroDeUsuario('Dados apagados, mas a conta de acesso do produtor não pôde ser removida (service role não configurada). Remova-a no painel do Supabase.');
+    return ['a conta de acesso do produtor não pôde ser removida (service role não configurada) — remova-a no painel do Supabase.'];
   }
 
   const { data: perfil } = await admin.schema('agro').from('profiles').select('role').eq('id', userId).maybeSingle();
   if (perfil && perfil.role !== 'produtor') {
     await registrarConta('ignorada: conta não é de produtor');
-    return;
+    return [];
   }
   const { count } = await admin.schema('agro').from('produtores').select('id', { count: 'exact', head: true }).eq('user_id', userId);
   if (count) {
     await registrarConta('ignorada: conta ligada a outro cadastro');
-    return;
+    return [];
   }
 
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) {
     await registrarConta(`pendente: ${error.message}`);
-    throw new ErroDeUsuario(`Dados apagados, mas a conta de acesso do produtor não foi removida: ${error.message}`);
+    return [`a conta de acesso do produtor não foi removida: ${error.message}`];
   }
   await registrarConta('eliminada');
+  return [];
+}
+
+/** Apaga PDFs e fotos do produtor no Storage (o delete do banco só apaga as linhas). Devolve o que ficou pendente. */
+async function eliminarArquivosDoProdutor(sb: SupabaseClient, produtorId: string, orgId: string | null, fotosDeVisitas: string[]): Promise<string[]> {
+  const registrarArquivos = (dados: Record<string, unknown>) =>
+    registrar(sb, { acao: 'produtor.arquivos_lgpd', entidade: 'produtores', entidade_id: produtorId, org_id: orgId, dados });
+
+  const admin = clienteAdmin();
+  if (!admin) {
+    await registrarArquivos({ resultado: 'pendente: SUPABASE_SERVICE_ROLE_KEY ausente' });
+    return ['os PDFs e fotos do produtor não puderam ser removidos do armazenamento (service role não configurada).'];
+  }
+  const r = await removerArquivosDoProdutor(admin, { orgId, produtorId, fotosDeVisitas });
+  await registrarArquivos({ removidos: r.removidos, falhas: r.falhas, detalhes: r.detalhes.slice(0, 5) });
+  return r.falhas > 0 ? [`${r.falhas} arquivo(s) não foram removidos do armazenamento (${r.detalhes[0] ?? 'erro desconhecido'}).`] : [];
 }
 
 async function alternarCompartilhamentoImpl(fd: FormData) {

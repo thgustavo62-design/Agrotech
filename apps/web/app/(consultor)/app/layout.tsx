@@ -11,6 +11,7 @@ import { AvatarUsuario } from '@/components/avatar-usuario';
 import { LogoIcone } from '@/components/logo';
 import { BotaoSair } from '@/components/botao-sair';
 import { SincronizadorOffline } from '@/components/sincronizador-offline';
+import { AvisoSemSinal } from '@/components/aviso-sem-sinal';
 import { AcessoRemovido } from '@/components/acesso-removido';
 import { TrocaDeSenhaObrigatoria } from '@/components/troca-de-senha-obrigatoria';
 import { nivelDeAutenticacao } from '@/lib/supabase/sessao';
@@ -58,6 +59,7 @@ export default async function LayoutConsultor({ children }: { children: React.Re
           <AvatarUsuario nome={perfil.nome} />
         </div>
       </header>
+      <AvisoSemSinal geradoEm={new Date().toISOString()} />
       <div className="app-corpo">
         <LateralConsultor perfis={perfil.perfis} />
         <div className="app-conteudo">

@@ -1,0 +1,49 @@
+name: Monitoramento
+
+# Vigia o site de 30 em 30 minutos e avisa por e-mail (o GitHub manda e-mail quando um workflow agendado falha).
+#   1. o site responde e as páginas públicas carregam;
+#   2. /api/saude: o Auth e a API do banco do Supabase respondem;
+#   3. existe um backup bem-sucedido nas últimas 36 horas (backup que parou de rodar em silêncio é o pior caso).
+# Sem serviço externo e sem custo: usa minutos gratuitos de repositório público.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  vigiar:
+    runs-on: ubuntu-latest
+    env:
+      SITE: https://agrotech-three-self.vercel.app
+    steps:
+      - name: Site e páginas públicas
+        run: |
+          falhou=0
+          for rota in /login /offline /termos; do
+            codigo=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 "$SITE$rota" || echo 000)
+            echo "$rota → $codigo"
+            [ "$codigo" = "200" ] || { echo "::error::$rota respondeu $codigo"; falhou=1; }
+          done
+          exit $falhou
+
+      - name: Saúde (Auth e banco)
+        run: |
+          corpo=$(curl -s --max-time 25 --retry 2 --retry-delay 5 -w '\n%{http_code}' "$SITE/api/saude" || echo -e '\n000')
+          codigo=$(echo "$corpo" | tail -n1); json=$(echo "$corpo" | head -n -1)
+          echo "HTTP $codigo — $json"
+          [ "$codigo" = "200" ] || { echo "::error::/api/saude respondeu $codigo — $json"; exit 1; }
+
+      - name: Backup recente
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ultimo=$(gh api "repos/${{ github.repository }}/actions/workflows/backup.yml/runs?status=success&per_page=1" --jq '.workflow_runs[0].created_at // empty')
+          [ -n "$ultimo" ] || { echo "::error::nenhum backup bem-sucedido encontrado"; exit 1; }
+          idade=$(( ( $(date -u +%s) - $(date -u -d "$ultimo" +%s) ) / 3600 ))
+          echo "último backup bem-sucedido: $ultimo (${idade}h atrás)"
+          [ "$idade" -le 36 ] || { echo "::error::último backup bem-sucedido há ${idade}h (limite 36h)"; exit 1; }

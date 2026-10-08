@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { COOKIE_AVISO, PARAM_AVISO } from './acao-constantes';
+import { registrarErro } from './log';
 
 /**
  * Erros de server action que o USUÁRIO precisa ler.
@@ -32,7 +33,7 @@ export function lancarDoBanco(erro: { message: string; code?: string | null }): 
     case '22007':
     case '22003': throw new ErroDeUsuario('Algum valor informado é inválido. Confira os campos e tente de novo.');
     default:
-      console.error('[acao] erro do banco:', erro);
+      registrarErro('banco', erro);
       throw new Error(erro.message);
   }
 }
@@ -68,7 +69,7 @@ export function comAviso<A extends unknown[], R>(acao: (...args: A) => Promise<R
       if (ehControleDoNext(e)) throw e;
       let mensagem = MENSAGEM_GENERICA;
       if (e instanceof ErroDeUsuario) mensagem = e.message;
-      else console.error('[acao] erro inesperado:', e);
+      else registrarErro('acao.inesperado', e, undefined, (await headers()).get('x-vercel-id'));
 
       const jar = await cookies();
       jar.set(COOKIE_AVISO, encodeURIComponent(mensagem.slice(0, 300)), {

@@ -35,7 +35,9 @@ Combinado entre o dono do sistema e o Claude para evitar retrabalho. **O que est
 - **Análise incompleta não vira laudo:** campo em branco nunca é tratado como zero; zero medido é válido.
 - **Laudo:** leva o escritório e o responsável com CREA de quem emite; sem CREA não emite.
 - **Edge Functions:** toda função com service_role autentica o chamador e confere o escritório atual do perfil antes de tocar nos dados (`_shared/autorizacao.ts`); nada é publicado sem o dono fornecer o token.
-- **Offline:** fila de visitas e pré-carregamento das próximas visitas.
+- **Offline:** fila de visitas, pré-carregamento das próximas visitas e faixa "sem sinal".
+- **Vigilância:** workflow de monitoramento a cada 30 min + `/api/saude`; log de erros estruturado e mascarado.
+- **LGPD:** a exclusão de um produtor apaga também os arquivos dele no Storage; textos jurídicos só como minuta até o advogado aprovar.
 
 ## C. Sistemas já aprovados (só mexer com motivo)
 Funcionando e verificados — **não refatorar nem "melhorar" por conta própria**:
@@ -56,7 +58,7 @@ Quando o dono disser "veja o que você acha melhor", o Claude decide, **registra
 - Mudar regra agronômica que **não** esteja na seção D, ou fórmulas e tabelas técnicas.
 - Enviar mensagens ou e-mails a terceiros, ou publicar algo em nome do dono.
 - Alterar configurações no painel do Supabase/Vercel (o Claude orienta; quem clica é o dono).
-- Texto jurídico (privacidade, termos, contrato): o Claude rascunha, o dono e um advogado aprovam.
+- Texto jurídico (privacidade, termos, contrato): o Claude rascunha (`docs/LGPD-MINUTA.md`), o dono e um advogado aprovam — nada vai para as páginas públicas antes disso.
 
 ## F. Fila de decisões pendentes (aguardam o dono)
 - **Backup dos arquivos (PDFs e fotos) do Storage:** exige guardar uma credencial de Storage como secret do GitHub (o Claude não tem essa chave; quem cola é o dono).
