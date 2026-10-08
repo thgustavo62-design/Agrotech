@@ -2,7 +2,9 @@
 create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;
 create role supabase_auth_admin nologin;
 create schema auth;
-create table auth.users (id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb default '{}'::jsonb, created_at timestamptz default now());
+create table auth.users (id uuid primary key default gen_random_uuid(), email text, encrypted_password text, raw_user_meta_data jsonb default '{}'::jsonb, created_at timestamptz default now());
+-- fatores de MFA do Auth (só as colunas que o AgroTech lê)
+create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, factor_type text default 'totp', status text not null default 'unverified');
 -- igual ao Supabase: aceita o claim legado (request.jwt.claim.sub) ou o JSON (request.jwt.claims)
 create function auth.uid() returns uuid language sql stable as $$
   select coalesce(

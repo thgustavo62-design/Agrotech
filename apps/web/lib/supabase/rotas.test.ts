@@ -13,7 +13,7 @@ describe('decidirRota — sem sessão', () => {
   });
 
   it('telas de entrada, convites e páginas públicas seguem', () => {
-    for (const c of ['/login', '/cadastro', '/produtor/login', '/produtor/aceitar', '/equipe/aceitar', '/redefinir-senha', '/demo', '/demo/tabelas', '/r/abc', '/offline', '/sw.js', '/privacidade', '/termos', '/']) {
+    for (const c of ['/login', '/cadastro', '/produtor/login', '/produtor/aceitar', '/equipe/aceitar', '/redefinir-senha', '/verificar-codigo', '/demo', '/demo/tabelas', '/r/abc', '/offline', '/sw.js', '/privacidade', '/termos', '/']) {
       expect(decidirRota(c, false, null), c).toBeNull();
     }
   });

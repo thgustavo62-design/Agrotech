@@ -5,7 +5,7 @@ const OFFLINE_URL = '/offline';
 
 // Telas/rotas de sessão nunca entram no cache nem são servidas dele: uma tela de login
 // guardada reapareceria para quem já está logado quando a rede falhasse ao reabrir a aba.
-const SESSAO = ['/login', '/cadastro', '/sair', '/produtor/login', '/produtor/sair', '/produtor/aceitar', '/equipe/aceitar', '/redefinir-senha'];
+const SESSAO = ['/login', '/cadastro', '/sair', '/produtor/login', '/produtor/sair', '/produtor/aceitar', '/equipe/aceitar', '/redefinir-senha', '/verificar-codigo'];
 const ehSessao = (caminho) => SESSAO.some((p) => caminho === p || caminho.startsWith(p + '/'));
 
 self.addEventListener('install', (event) => {

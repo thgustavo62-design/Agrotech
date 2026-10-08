@@ -5,6 +5,7 @@ import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { exigir } from '@/lib/permissoes-servidor';
 import { registrar } from '@/lib/audit';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
+import { clienteAdmin } from '@/lib/supabase/admin';
 
 /** Edita o próprio perfil — coberto pela policy profiles_atualiza_proprio; o gatilho (0037) impede mexer em papel/perfis/escritório. */
 async function salvarPerfilConsultorImpl(fd: FormData) {
@@ -57,3 +58,21 @@ async function salvarEscritorioImpl(fd: FormData) {
 
 export const salvarPerfilConsultor = comAviso(salvarPerfilConsultorImpl);
 export const salvarEscritorio = comAviso(salvarEscritorioImpl);
+
+/**
+ * Espelha em profiles.mfa_ativo se a pessoa tem um segundo fator CONFIRMADO. O gatilho do banco já faz isso; esta ação é
+ * a rede de segurança (a tabela de fatores é do Auth e o gatilho pode não existir no projeto real) e é idempotente.
+ * Só mexe no perfil de quem chama. Sem a chave de serviço no servidor, não faz nada.
+ */
+export async function sincronizarMfa(): Promise<{ ok: boolean }> {
+  const perfil = await perfilAtual();
+  const admin = clienteAdmin();
+  if (!perfil || !admin) return { ok: false };
+  const { data, error } = await admin.auth.admin.mfa.listFactors({ userId: perfil.id });
+  if (error) { console.error('[sincronizarMfa]', error); return { ok: false }; }
+  const ativo = (data?.factors ?? []).some((f) => f.status === 'verified');
+  const { error: eUp } = await admin.schema('agro').from('profiles').update({ mfa_ativo: ativo }).eq('id', perfil.id);
+  if (eUp) { console.error('[sincronizarMfa] perfil', eUp); return { ok: false }; }
+  revalidatePath('/app/config', 'layout');
+  return { ok: true };
+}

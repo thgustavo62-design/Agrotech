@@ -54,7 +54,7 @@ export function GerarAcesso({ id, nome, site }: { id: string; nome: string | nul
   }
 
   const msgSenha = definida
-    ? `Oi${primeiro ? `, ${primeiro}` : ''}! Sua nova senha do AgroTech.\nEntre em: ${site}/login\nE-mail: ${definida.email}\nSenha: ${definida.senha}\nDepois de entrar, troque a senha em Configurações → Meu perfil.`
+    ? `Oi${primeiro ? `, ${primeiro}` : ''}! Sua nova senha do AgroTech.\nEntre em: ${site}/login\nE-mail: ${definida.email}\nSenha: ${definida.senha}\nNo primeiro acesso o sistema pede para você criar a sua própria senha.`
     : '';
   const msgLink = link
     ? `Oi${primeiro ? `, ${primeiro}` : ''}! Crie sua nova senha do AgroTech por este link (vale por cerca de 1 hora e só funciona uma vez): ${link}`

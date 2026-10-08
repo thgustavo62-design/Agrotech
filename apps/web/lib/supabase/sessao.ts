@@ -58,3 +58,16 @@ export async function lerSessao(sb: SupabaseClient): Promise<{ sessao: SessaoLid
   }
   return { sessao: null, transitoria: ehFalhaTransitoria(error) };
 }
+
+/**
+ * Nível de autenticação da sessão: 'aal1' (só a senha) ou 'aal2' (senha + código do segundo fator), lido dos claims
+ * JÁ validados do token. Só é chamado para quem ligou a verificação em duas etapas (perfil.mfa_ativo).
+ */
+export async function nivelDeAutenticacao(sb: SupabaseClient): Promise<'aal1' | 'aal2' | null> {
+  const { data } = await sb.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return null;
+  const { data: c } = await sb.auth.getClaims(token);
+  const aal = (c?.claims as { aal?: string } | undefined)?.aal;
+  return aal === 'aal2' ? 'aal2' : aal === 'aal1' ? 'aal1' : null;
+}

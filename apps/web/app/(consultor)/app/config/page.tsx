@@ -5,6 +5,7 @@ import { BotaoSair } from '@/components/botao-sair';
 import { ChipsPerfis } from '@/components/chips-perfis';
 import { salvarPerfilConsultor } from './acoes';
 import { FormSenha } from './form-senha';
+import { FormMfa } from './form-mfa';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,10 @@ export default async function ConfigPerfil() {
 
       <Cartao olho="Segurança" titulo="Trocar a senha">
         <FormSenha />
+      </Cartao>
+
+      <Cartao olho="Segurança" titulo="Verificação em duas etapas">
+        <FormMfa />
       </Cartao>
 
       <Cartao olho="Sessão" titulo="Sair da conta">

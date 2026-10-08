@@ -232,7 +232,7 @@ export async function cadastrarEmpregado(fd: FormData): Promise<ResultadoCadastr
     }
 
     const { error: ePerfil } = await admin.schema('agro').from('profiles')
-      .update({ org_id: perfil.org_id, nome, titulo, perfis, role: 'consultor' }).eq('id', criado.user.id);
+      .update({ org_id: perfil.org_id, nome, titulo, perfis, role: 'consultor', senha_provisoria: true }).eq('id', criado.user.id);
     if (ePerfil) {
       console.error('[cadastrarEmpregado] perfil', ePerfil);
       await admin.auth.admin.deleteUser(criado.user.id); // não deixa conta solta, sem escritório
@@ -265,6 +265,10 @@ export async function definirSenhaEquipe(fd: FormData): Promise<ResultadoSenha> 
       console.error('[definirSenhaEquipe]', error);
       throw new ErroDeUsuario('Não foi possível trocar a senha agora. Tente de novo em instantes.');
     }
+    // a senha agora é conhecida por quem a definiu: a pessoa troca no primeiro acesso (o banco tira a marca quando ela trocar)
+    // — o gatilho já limpou a marca ao mudar a senha; aqui ela é recolocada
+    const { error: eMarca } = await admin.schema('agro').from('profiles').update({ senha_provisoria: true }).eq('id', alvo.id);
+    if (eMarca) console.error('[definirSenhaEquipe] marca', eMarca);
     await registrar(sb, {
       acao: 'equipe.senha_definida', entidade: 'profiles', entidade_id: alvo.id, org_id: perfil.org_id, dados: { nome: alvo.nome },
     });

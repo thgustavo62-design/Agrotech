@@ -26,7 +26,8 @@ Combinado entre o dono do sistema e o Claude para evitar retrabalho. **O que est
 - **Estrutura:** monorepo Next + Supabase; código modular (página → dados → componentes), como está hoje.
 - **Segurança:** perfis combináveis (Proprietário, Agronômico, Campo, Financeiro, Consulta), regras no banco (RLS); CSP com nonce; toda migration que cria função revoga o acesso público.
 - **Equipe:** o proprietário cadastra o empregado direto com e-mail e senha (sem confirmação de e-mail); remover = desativar a conta (não apagar); recuperação de senha pelo proprietário (definir a senha ou gerar link) e "Esqueci minha senha" no login.
-- **Senha:** mínimo de 8 caracteres, com letras e números.
+- **Senha:** mínimo de 8 caracteres, com letras e números. Senha definida pelo proprietário é **provisória**: a pessoa cria a própria no primeiro acesso.
+- **Verificação em duas etapas (TOTP):** opcional por pessoa, recomendada ao proprietário; quando ligada, o banco só entrega dados a sessões com o código.
 - **Sem CAPTCHA.**
 - **Sem domínio próprio de e-mail por enquanto:** nada que dependa de enviar e-mail em volume.
 - **Next 16 + vitest 4**, `proxy.ts`, ESLint direto.
@@ -46,6 +47,8 @@ Funcionando e verificados — **não refatorar nem "melhorar" por conta própria
 ## D. Delegado ao Claude ("faça o que achar melhor")
 Quando o dono disser "veja o que você acha melhor", o Claude decide, **registra a decisão aqui** e segue:
 - **08/10 — Gessagem e profundidade (AG-003/AG-004):** a dose de gesso só existe com análise de 20–40 cm; sem ela o sistema diz apenas "investigar". Calagem e adubação só saem de amostra de 0–20 cm; amostras de 20–40 cm (subsuperfície) e 0–40 cm não geram recomendação. A situação do talhão passa a vir só da camada 0–20. Subsuperfície válida: mesmo talhão, até 24 meses de diferença, Ca < 0,5 ou m > 20% confirma. Revisar com agrônomo responsável antes de venda ampla.
+
+- **08/10 — AG-013:** MFA opcional (não obrigatório, por falta de recuperação por e-mail); senha provisória obrigatória de trocar; limite de usuários do plano imposto no banco.
 
 ## E. Sempre perguntar antes (não entram na autorização)
 - Gastar dinheiro, contratar plano ou serviço pago, ativar cobrança (Asaas) ou mexer em preços.

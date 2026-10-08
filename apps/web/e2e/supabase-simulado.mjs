@@ -151,14 +151,14 @@ function atender(req, res) {
   const url = new URL(req.url, 'http://x');
   const papel = papelDaRequisicao(req);
   const perfisSim = String(claimsDaRequisicao(req).perfis_sim || process.env.PERFIS || 'proprietario').split(',').filter(Boolean);
-  T.profiles = [{ id: U, org_id: O, role: papel, nome: papel === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: process.env.SEM_CREA ? '' : 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma', perfis: papel === 'produtor' ? [] : perfisSim, desativado_em: process.env.DESATIVADO ? '2026-10-02T00:00:00Z' : null }, ...(papel === 'produtor' ? [] : COLEGAS)];
+  T.profiles = [{ id: U, org_id: O, role: papel, nome: papel === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: process.env.SEM_CREA ? '' : 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma', perfis: papel === 'produtor' ? [] : perfisSim, senha_provisoria: Boolean(process.env.PROVISORIA), mfa_ativo: Boolean(process.env.MFA), desativado_em: process.env.DESATIVADO ? '2026-10-02T00:00:00Z' : null }, ...(papel === 'produtor' ? [] : COLEGAS)];
   const json = (obj, status = 200, extra = {}) => { res.writeHead(status, { 'content-type': 'application/json', ...extra }); res.end(JSON.stringify(obj)); };
 
   if (url.pathname === '/auth/v1/.well-known/jwks.json') return json({ keys: [{ ...publicKey.export({ format: 'jwk' }), kid: KID, alg: 'ES256', use: 'sig' }] });
   if (url.pathname === '/__sessao') { // valor do cookie de sessão para os scripts de teste
     const papel = url.searchParams.get('papel') ?? 'consultor';
     const exp = Math.floor(Date.now() / 1000) + 7 * 86400;
-    const sessao = { access_token: jwt({ sub: U, exp, iat: exp - 3600, aud: 'authenticated', role: 'authenticated', user_role: papel, org_id: O, perfis_sim: url.searchParams.get('perfis') ?? undefined }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } };
+    const sessao = { access_token: jwt({ sub: U, exp, iat: exp - 3600, aud: 'authenticated', role: 'authenticated', user_role: papel, org_id: O, aal: process.env.AAL ?? 'aal1', perfis_sim: url.searchParams.get('perfis') ?? undefined }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } };
     return json({ cookie: 'base64-' + Buffer.from(JSON.stringify(sessao)).toString('base64url') });
   }
   // admin (service role): dados de um usuário e link de recuperação; verify troca o token_hash por sessão
@@ -167,7 +167,19 @@ function atender(req, res) {
   if (url.pathname === '/auth/v1/admin/generate_link') return json({ id: 'c1000000-0000-0000-0000-000000000002', email: 'carlos@exemplo.com', action_link: 'http://x/verify', email_otp: '123456', hashed_token: 'a1b2c3d4e5f6a7b8c9d0e1f2', redirect_to: '', verification_type: 'recovery' });
   if (url.pathname === '/auth/v1/recover') return json({});
   if (url.pathname === '/auth/v1/verify') { const exp = Math.floor(Date.now() / 1000) + 3600; return json({ access_token: jwt({ sub: U, exp, aud: 'authenticated', role: 'authenticated', user_role: 'consultor', org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } }); }
-  if (url.pathname === '/auth/v1/user') return json({ id: U, aud: 'authenticated', role: 'authenticated', email: 'maria@exemplo.com', user_metadata: {}, app_metadata: {} });
+  // MFA (TOTP): a lista de fatores vem dentro do usuário; enroll/challenge/verify mínimos
+  if (url.pathname === '/auth/v1/factors' && req.method === 'POST') return json({ id: 'f-novo', type: 'totp', friendly_name: 'AgroTech', totp: { qr_code: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><rect width="180" height="180" fill="black"/></svg>', secret: 'JBSWY3DPEHPK3PXP', uri: 'otpauth://totp/AgroTech' } });
+  if (/^\/auth\/v1\/factors\/[^/]+\/challenge$/.test(url.pathname)) return json({ id: 'ch1', expires_at: Math.floor(Date.now() / 1000) + 300 });
+  if (/^\/auth\/v1\/factors\/[^/]+\/verify$/.test(url.pathname)) {
+    let corpo = ''; req.on('data', (d) => { corpo += d; });
+    return req.on('end', () => {
+      if (!corpo.includes('"code":"123456"')) return json({ code: 422, error_code: 'mfa_verification_failed', msg: 'Invalid TOTP code entered' }, 422);
+      const exp = Math.floor(Date.now() / 1000) + 3600;
+      json({ access_token: jwt({ sub: U, exp, aud: 'authenticated', role: 'authenticated', user_role: 'consultor', org_id: O, aal: 'aal2' }), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } });
+    });
+  }
+  if (/^\/auth\/v1\/factors\/[^/]+$/.test(url.pathname) && req.method === 'DELETE') return json({ id: 'f1' });
+  if (url.pathname === '/auth/v1/user') return json({ id: U, aud: 'authenticated', role: 'authenticated', email: 'maria@exemplo.com', user_metadata: {}, app_metadata: {}, factors: process.env.MFA ? [{ id: 'f1', factor_type: 'totp', status: 'verified', friendly_name: 'AgroTech' }] : [] });
   if (url.pathname === '/auth/v1/token') return json({ access_token: jwt({ sub: U, exp: Math.floor(Date.now() / 1000) + 3600, aud: 'authenticated', role: 'authenticated', user_role: process.env.PAPEL ?? 'consultor', org_id: O }), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'r', user: { id: U, email: 'maria@exemplo.com' } });
   if (url.pathname === '/auth/v1/logout') { res.writeHead(204); return res.end(); }
 

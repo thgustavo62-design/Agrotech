@@ -272,6 +272,7 @@ describe('remover alguém da equipe: conta desativada (0039)', () => {
 
   beforeAll(async () => {
     await db.exec(`
+      update agro.planos set usuarios_max = 50;   -- o limite de vagas agora vale no banco (0044); este teste não é sobre ele
       insert into auth.users (id, email) values ('${ID_X}','x@t');
       update agro.profiles set org_id='${ID.orgA}', role='consultor', perfis=array['agronomico','campo'] where id='${ID_X}'`);
   });

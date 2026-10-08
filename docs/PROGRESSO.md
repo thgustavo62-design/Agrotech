@@ -950,6 +950,18 @@ As funções do Supabase usam a service_role, que ignora a RLS. **Nenhuma está 
 
 ---
 
+## AG-013: identidade da equipe — senha provisória, segundo fator, limite de vagas (08/10/2026)
+
+- [x] **Senha provisória de verdade (0044):** a senha que o proprietário define (cadastro ou "senha esquecida") marca a conta (`profiles.senha_provisoria`); até a pessoa criar a própria, o sistema só mostra a tela "Crie a sua senha" (sem menu, sem dados). A marca sai sozinha por gatilho em `auth.users` quando a senha muda, e o cliente não consegue editá-la (nem o proprietário a de outra pessoa).
+- [x] **Verificação em duas etapas (TOTP), opcional por pessoa:** Configurações → Meu perfil → ativar (QR code + código). Ligada, o login pede o código (`/verificar-codigo`) e o **banco aplica**: `jwt_org`, `jwt_role` e `pode` só entregam dados a sessões `aal2` — quem tem a senha mas não o celular não lê nem grava, nem pela API (`profiles.mfa_ativo` espelha o fator confirmado por gatilho em `auth.mfa_factors`). O próprio perfil continua legível em aal1 (é por ele que o app pede o código). Não ligar não muda nada para ninguém.
+- [x] **Limite de usuários do plano no banco:** antes só o app contava vagas (duas criações simultâneas passavam do limite); agora um gatilho com trava por escritório recusa. Conta desativada não ocupa vaga.
+- Testes: db-test 92 (senha provisória, MFA no banco com aal1/aal2, limite); navegador (simulador): tela de senha obrigatória, redirecionamento para o código, erro de código, ativação com QR.
+- **Não testado:** com o Supabase real (o código TOTP, o claim `aal` do token e o gatilho em `auth.mfa_factors` dependem do Auth de verdade). **Risco a conferir antes de ligar a verificação na sua conta:** depois de ligar, saia e entre de novo — se algo falhar, o único jeito de recuperar é apagar o fator no painel do Supabase (Authentication → Users → seu usuário → Factors). Perder o celular exige o mesmo. Deixe outro proprietário cadastrado antes de ligar.
+- Decisão registrada (política, D): MFA **opcional** (recomendado ao proprietário), não obrigatório — sem domínio de e-mail próprio não há recuperação automática de conta.
+- Em aberto de AG-013: e-mail verificado/SMTP próprio (depende de domínio), senhas vazadas (plano pago do Supabase).
+
+---
+
 ## Portal do produtor — Atividades
 
 - [x] **`/produtor/atividades`** deixou de ser "em breve": linha do tempo das visitas do técnico (condição, fenologia, ocorrências acima do nível, **recomendação de campo**, fotos por URL assinada, próxima visita). As observações internas do técnico (`visitas.observacoes`) **não** aparecem — só o que é destinado ao produtor. Depende da `0032` (produtor lê só as fotos das próprias visitas); coberto no db-test.

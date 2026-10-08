@@ -49,14 +49,14 @@ export function FormCadastrarEmpregado({ children, site }: { children: ReactNode
 
   const entrada = `${site}/login`;
   const mensagem = criado
-    ? `Oi, ${criado.nome.split(' ')[0]}! Seu acesso ao AgroTech está pronto.\nEntre em: ${entrada}\nE-mail: ${criado.email}\nSenha: ${criado.senha}\nDepois de entrar, troque a senha em Configurações → Meu perfil.`
+    ? `Oi, ${criado.nome.split(' ')[0]}! Seu acesso ao AgroTech está pronto.\nEntre em: ${entrada}\nE-mail: ${criado.email}\nSenha: ${criado.senha}\nNo primeiro acesso o sistema pede para você criar a sua própria senha.`
     : '';
 
   return (
     <>
       {criado ? (
         <div className="aviso" role="status" style={{ marginBottom: 14 }}>
-          <b>{criado.nome} foi cadastrado(a).</b> Passe o acesso abaixo — a senha não aparece de novo.
+          <b>{criado.nome} foi cadastrado(a).</b> Passe o acesso abaixo — a senha é provisória (a pessoa cria a própria no primeiro acesso) e não aparece de novo.
           <div style={{ display: 'grid', gap: 6, margin: '10px 0' }}>
             <div><small>Endereço</small><LinkCompartilhado url={entrada} /></div>
             <div><small>E-mail</small><LinkCompartilhado url={criado.email} /></div>

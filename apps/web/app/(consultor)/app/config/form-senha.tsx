@@ -5,7 +5,7 @@ import { criarClienteNavegador } from '@/lib/supabase/client';
 import { regrasDaSenha, nivelDaSenha } from '@/lib/senha';
 
 /** Troca de senha. Roda no navegador: quem fala com o Auth é a sessão da própria pessoa. */
-export function FormSenha() {
+export function FormSenha({ aoConcluir }: { aoConcluir?: () => void } = {}) {
   const [senha, setSenha] = useState('');
   const [confirma, setConfirma] = useState('');
   const [estado, setEstado] = useState<'form' | 'enviando' | 'ok'>('form');
@@ -29,6 +29,7 @@ export function FormSenha() {
     setSenha('');
     setConfirma('');
     setEstado('ok');
+    aoConcluir?.();
   }
 
   return (
