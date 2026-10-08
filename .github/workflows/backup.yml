@@ -1,5 +1,13 @@
 name: Backup diário
 
+# O repositório é PÚBLICO: o artefato de um workflow pode ser baixado por qualquer pessoa logada no GitHub.
+# Por isso o dump NUNCA sai daqui sem criptografia (AES-256 com a senha do secret BACKUP_PASSPHRASE).
+# Sem a senha o job falha de propósito, antes de gerar qualquer arquivo.
+#
+# Guarda: schemas agro (negócio), auth (contas) e a tabela de metadados de arquivos do storage.
+# Os ARQUIVOS (PDFs, fotos) ficam no Storage do Supabase e NÃO estão neste dump.
+# Restaurar: gpg --decrypt backup-*.dump.gpg > backup.dump  &&  pg_restore --no-owner -d <banco novo> backup.dump
+
 on:
   schedule:
     - cron: '0 6 * * *'   # 03h em Brasília (UTC-3)
@@ -8,20 +16,58 @@ on:
 jobs:
   dump:
     runs-on: ubuntu-latest
+    env:
+      PGVER: '17'          # igual à versão do servidor do Supabase (o pg_dump recusa servidor mais novo que ele)
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Dump do banco
-        run: supabase db dump --db-url "$DB_URL" -f backup.sql
+      - name: Conferir segredos
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SENHA: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          [ -n "$DB_URL" ] || { echo "::error::Falta o secret SUPABASE_DB_URL"; exit 1; }
+          [ -n "$SENHA" ]  || { echo "::error::Falta o secret BACKUP_PASSPHRASE (o backup só sai criptografado)"; exit 1; }
 
-      - name: Guardar artefato (30 dias)
+      - name: Instalar o cliente PostgreSQL 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-${PGVER}"
+          "/usr/lib/postgresql/${PGVER}/bin/pg_dump" --version
+
+      - name: Dump do banco
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          "/usr/lib/postgresql/${PGVER}/bin/pg_dump" "$DB_URL" \
+            --format=custom --no-owner --no-privileges \
+            --schema=agro --schema=auth --table=storage.objects --table=storage.buckets \
+            --file=backup.dump
+
+      - name: Conferir o dump (tamanho e conteúdo legível)
+        run: |
+          tam=$(stat -c %s backup.dump)
+          echo "dump: $tam bytes"
+          [ "$tam" -gt 20000 ] || { echo "::error::Dump pequeno demais ($tam bytes)"; exit 1; }
+          lista=$("/usr/lib/postgresql/${PGVER}/bin/pg_restore" --list backup.dump)
+          echo "$lista" | grep -q "TABLE DATA agro produtores" || { echo "::error::Dump sem os dados de agro.produtores"; exit 1; }
+          echo "$lista" | grep -q "TABLE DATA auth users"       || { echo "::error::Dump sem auth.users"; exit 1; }
+          echo "itens no dump: $(echo "$lista" | grep -c 'TABLE DATA')"
+
+      - name: Criptografar (AES-256)
+        env:
+          SENHA: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase "$SENHA" --output "backup-$(date -u +%Y%m%d).dump.gpg" backup.dump
+          shred -u backup.dump || rm -f backup.dump
+          ls -l backup-*.dump.gpg
+
+      - name: Guardar artefato criptografado (30 dias)
         uses: actions/upload-artifact@v4
         with:
           name: backup-${{ github.run_id }}
-          path: backup.sql
+          path: backup-*.dump.gpg
           retention-days: 30
+          if-no-files-found: error
