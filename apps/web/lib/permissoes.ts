@@ -21,7 +21,9 @@ export type Permissao =
   | 'equipe.gerenciar'
   | 'plano.gerenciar'
   | 'escritorio.editar'
-  | 'dados.excluir';
+  | 'dados.excluir'
+  | 'academy.gerenciar'
+  | 'academy.indicar';
 
 export interface DefinicaoPerfil {
   id: PerfilId;
@@ -46,15 +48,15 @@ export const PERFIS: Record<PerfilId, DefinicaoPerfil> = {
     id: 'agronomico',
     nome: 'Agronômico',
     para: 'Engenheiro agrônomo ou técnico responsável.',
-    pode: ['Cadastrar e editar produtores, talhões, análises e laudos', 'Emitir recomendações', 'Ajustar as tabelas técnicas', 'Exportar dados e ver relatórios'],
+    pode: ['Cadastrar e editar produtores, talhões, análises e laudos', 'Emitir recomendações', 'Ajustar as tabelas técnicas', 'Exportar dados e ver relatórios', 'Publicar conteúdos na Academy e indicá-los aos produtores'],
     naoPode: ['Ver o financeiro', 'Gerenciar equipe, plano ou dados do escritório'],
   },
   campo: {
     id: 'campo',
     nome: 'Campo',
     para: 'Técnico de campo ou assistente que visita as propriedades.',
-    pode: ['Lançar visitas, fotos, análises e laudos', 'Cadastrar produtores e talhões', 'Usar a agenda'],
-    naoPode: ['Emitir recomendação', 'Alterar as tabelas técnicas', 'Ver o financeiro', 'Excluir dados'],
+    pode: ['Lançar visitas, fotos, análises e laudos', 'Cadastrar produtores e talhões', 'Usar a agenda', 'Indicar conteúdos da Academy aos produtores'],
+    naoPode: ['Emitir recomendação', 'Alterar as tabelas técnicas', 'Publicar conteúdos na Academy', 'Ver o financeiro', 'Excluir dados'],
   },
   financeiro: {
     id: 'financeiro',
@@ -86,6 +88,8 @@ const CONCEDIDA_POR: Record<Permissao, readonly PerfilId[]> = {
   'plano.gerenciar': [],
   'escritorio.editar': [],
   'dados.excluir': [],
+  'academy.gerenciar': ['agronomico'],
+  'academy.indicar': ['agronomico', 'campo'],
 };
 
 export const TODAS_PERMISSOES = Object.keys(CONCEDIDA_POR) as Permissao[];
@@ -100,6 +104,13 @@ export const MATRIZ: Array<{ grupo: string; itens: Array<{ permissao: Permissao;
       { permissao: 'tabelas.editar', rotulo: 'Ajustar as tabelas técnicas' },
       { permissao: 'relatorios.ver', rotulo: 'Ver relatórios e indicadores' },
       { permissao: 'dados.exportar', rotulo: 'Exportar dados' },
+    ],
+  },
+  {
+    grupo: 'Academy (universidade do produtor)',
+    itens: [
+      { permissao: 'academy.gerenciar', rotulo: 'Criar, publicar e arquivar conteúdos da Academy' },
+      { permissao: 'academy.indicar', rotulo: 'Indicar conteúdo a um produtor' },
     ],
   },
   { grupo: 'Dinheiro', itens: [{ permissao: 'financeiro', rotulo: 'Financeiro do escritório' }] },
