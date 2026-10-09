@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { contarNaoLidas } from '@/lib/notificacoes';
@@ -25,6 +26,7 @@ export default async function LayoutProdutor({ children }: { children: React.Rea
           <SinoNotificacoes href="/produtor/notificacoes" contagem={naoLidas} />
           <span className="quem-texto">
             <b style={{ display: 'block' }}>{perfil.nome ?? 'Produtor'}</b>
+            <Link href="/sites" className="link-sair">trocar de site</Link>{' · '}
             <BotaoSair action="/produtor/sair" />
           </span>
           <AvatarUsuario nome={perfil.nome} />

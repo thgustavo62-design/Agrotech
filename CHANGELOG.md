@@ -5,6 +5,9 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 
 ## 2026-10-09
 
+- **Três sites, uma conta:** a tela de login agora pergunta **para onde você quer ir** — Assistência Técnica, Academy ou Connect — e cada um tem o próprio molde. "Trocar de site" no topo. A Academy saiu de dentro da Assistência Técnica. Ver [docs/SITES.md](docs/SITES.md).
+- **Academy como site de cursos** (estilo plataforma de cursos): vitrine, catálogo com filtros, **cursos com módulos e aulas**, progresso, matrícula automática, vídeo do YouTube/Vimeo dentro da página (só depois do clique) e **certificado de participação** imprimível ao concluir. Equipe monta tudo no **Estúdio** (cursos, conteúdos, notícias com fonte, visibilidade por cultura, indicação a produtores, acompanhamento dos alunos). Ver [docs/ACADEMY.md](docs/ACADEMY.md). Migrações 0047 e 0048.
+
 - **Academy (nova):** a universidade do produtor. O escritório publica vídeos (por link), artigos e materiais, escolhe quem vê, **indica** a um produtor depois de uma visita ou de um laudo e acompanha se ele abriu e concluiu. O produtor tem a área "Universidade" no portal e recebe aviso. Só o que foi publicado e é para ele aparece; rascunho nunca. Detalhes em [docs/ACADEMY.md](docs/ACADEMY.md). Migração 0046.
 
 - **Recorte do laudo ao lado de cada valor:** na conferência de laudo escaneado, cada campo mostra o trecho da imagem do laudo (rótulo + número ampliado e circulado). Dá para comparar o impresso com o lido sem procurar no PDF.

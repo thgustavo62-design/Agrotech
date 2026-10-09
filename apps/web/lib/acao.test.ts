@@ -112,6 +112,11 @@ describe('lancarDoBanco', () => {
     expect(e).toBeInstanceOf(ErroDeUsuario);
     expect(e!.message).toBe('Limite do plano atingido: 3 talhões.');
   });
+  it('22023 (regras do banco da Academy) também expõe a mensagem escrita para o usuário', () => {
+    const e = tenta({ code: '22023', message: 'Adicione pelo menos uma aula antes de publicar o curso.' });
+    expect(e).toBeInstanceOf(ErroDeUsuario);
+    expect(e!.message).toBe('Adicione pelo menos uma aula antes de publicar o curso.');
+  });
   it('RLS, duplicidade e FK viram mensagens em português, sem nome de tabela/constraint', () => {
     expect(tenta({ code: '42501', message: 'new row violates row-level security policy for table "talhoes"' })!.message).toMatch(/permissão/);
     expect(tenta({ code: '23505', message: 'duplicate key ... "visitas_chave_cliente_uk"' })!.message).toBe('Este registro já existe.');

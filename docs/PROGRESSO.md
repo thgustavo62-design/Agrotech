@@ -9,6 +9,20 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Três sites, Academy como site próprio e cursos com certificado (2026-10-09)
+
+Pedido do dono: a Academy tem de ser **outro molde, no estilo do SENAR Play**, e a **Assistência Técnica não pode ficar junto**; são **três sites** (Assistência Técnica, Academy, Connect), separados **na tela de login**. Resumo e arquitetura: [SITES.md](SITES.md), [ACADEMY.md](ACADEMY.md).
+
+- [x] **Login único com seletor de site** (`/login?site=…`): a tela troca de texto e de cor (Assistência verde, Academy âmbar, Connect azul) e leva ao site escolhido; `/sites` para trocar depois; link "trocar de site" nos cabeçalhos da Assistência. `/produtor/login` redireciona. Roteamento por site em `lib/supabase/rotas.ts` (+ `lib/sites.ts`), com testes; as travas de conta (removida, senha provisória, 2 etapas) valem nos três (`lib/guarda-de-site.tsx`).
+- [x] **Academy removida da Assistência** (menu do escritório e portal do produtor); as telas antigas (`/app/academy`, `/produtor/universidade`) foram substituídas pelo site `/academy`. O aviso de indicação passou a apontar para `/academy/...` (migração 0048 corrige os avisos já enviados).
+- [x] **Site da Academy** (molde próprio): início com hero, busca, "continue de onde parou", indicados, temas, notícias; catálogo com filtros; página do curso (módulos, aulas, progresso, matrícula); página da aula com **roteiro do curso**, vídeo YouTube/Vimeo com **clique para carregar** (CSP `frame-src` só dos dois), artigo, material, notícia; Meus cursos; **certificado de participação imprimível**.
+- [x] **Estúdio da equipe** (`/academy/estudio`): cursos (dados, capa, módulos e aulas com ordenação, publicar/arquivar/excluir, indicar, alunos), conteúdos (incluindo **notícia** e **visibilidade por cultura**), visão geral. Mensagens das regras do banco (`22023`) chegam à tela.
+- [x] **Banco 0047 + 0048:** notícia (resumo próprio + fonte + link), visibilidade por cultura (chave calculada no banco; vale para talhões novos), **cursos, módulos, aulas, públicos, matrículas, progresso e certificados**, indicação de curso, integridade (curso sem aula não publica; aula de curso publicado não sai do ar), certificado emitido pela conta do banco com "foto" do momento. **db-test: 184** (academy, academy-cultura e academy-cursos).
+- [x] **Testes:** web 180+ (regras de curso, validação, embed de vídeo com URLs maliciosas, filtros, rotas por site); navegador: cenários `sites`, `academy_aluno` e `academy_estudio` (74 verificações: login nos três sites, redirecionamentos, vitrine, catálogo, curso, aula, vídeo só após o clique, concluir aula, certificado, Estúdio, perfis campo/consulta, celular sem rolagem lateral, CSP limpa).
+- **Limites:** o **Connect** ainda é só a entrada (fatia seguinte); não há Atlas de doenças, quiz, painel de uso nem página pública para validar certificado; carga horária do certificado é a prevista; endereços próprios por site (subdomínios) exigem domínio.
+
+---
+
 ## Academy — fatia 1: biblioteca e indicação ao produtor (2026-10-09)
 
 Primeiro módulo do plano de expansão (AgroTech 2.0). Resumo, regras e o que falta: [ACADEMY.md](ACADEMY.md).

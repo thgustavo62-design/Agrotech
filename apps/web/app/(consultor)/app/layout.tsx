@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual, recarregarPerfil } from '@/lib/supabase/server';
 import { garantirEscritorio } from '@/lib/onboarding';
@@ -53,6 +54,8 @@ export default async function LayoutConsultor({ children }: { children: React.Re
           <span className="quem-texto">
             <b>{perfil.nome ?? 'Consultor'}</b>
             {perfil.crea ? `CREA ${perfil.crea}` : 'defina seu CREA em Config.'}
+            {' · '}
+            <Link href="/sites" className="link-sair">trocar de site</Link>
             {' · '}
             <BotaoSair />
           </span>

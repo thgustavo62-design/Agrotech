@@ -1,20 +1,21 @@
 /**
  * Regras puras da Academy (a universidade do produtor): tipos, rótulos, validação do formulário e filtros.
- * O banco (0046) impõe o que é segurança (quem lê, quem escreve, https, conteúdo publicável); aqui ficam as mensagens em
+ * O banco (0046/0047) impõe o que é segurança (quem lê, quem escreve, https, conteúdo publicável); aqui ficam as mensagens em
  * linguagem de gente e a conveniência da tela. Os dois concordam e o db-test confere o lado do banco.
  */
 
-export type TipoConteudo = 'video' | 'artigo' | 'material';
+export type TipoConteudo = 'video' | 'artigo' | 'material' | 'noticia';
 export type StatusConteudo = 'rascunho' | 'publicado' | 'arquivado';
-export type Visibilidade = 'todos' | 'selecionados';
+export type Visibilidade = 'todos' | 'selecionados' | 'cultura';
 export type Nivel = 'basico' | 'intermediario' | 'avancado';
 
-export const TIPOS: TipoConteudo[] = ['video', 'artigo', 'material'];
-export const ROTULO_TIPO: Record<TipoConteudo, string> = { video: 'Vídeo', artigo: 'Artigo', material: 'Material' };
+export const TIPOS: TipoConteudo[] = ['video', 'artigo', 'material', 'noticia'];
+export const ROTULO_TIPO: Record<TipoConteudo, string> = { video: 'Vídeo', artigo: 'Artigo', material: 'Material', noticia: 'Notícia' };
 export const AJUDA_TIPO: Record<TipoConteudo, string> = {
   video: 'Um vídeo que já está na internet (YouTube, Vimeo…): cole o link.',
   artigo: 'Um texto escrito pelo seu escritório.',
   material: 'Uma cartilha, checklist ou imagem em PDF/JPG/PNG, ou um link para o material.',
+  noticia: 'Uma matéria de outro site: você escreve o resumo e aponta a fonte. Nada é copiado.',
 };
 
 export const TEMAS = ['solo', 'adubacao', 'calagem', 'pragas', 'doencas', 'irrigacao', 'colheita', 'gestao', 'seguranca', 'outro'] as const;
@@ -50,6 +51,8 @@ export interface Conteudo {
   corpo: string | null;
   arquivo_path: string | null;
   fonte: string | null;
+  data_materia: string | null;
+  regiao: string | null;
   status: StatusConteudo;
   visibilidade: Visibilidade;
   revisado_em: string | null;
@@ -69,6 +72,8 @@ export interface EntradaConteudo {
   url: string;
   corpo: string;
   fonte: string;
+  data_materia: string;
+  regiao: string;
   visibilidade: string;
 }
 
@@ -83,6 +88,8 @@ export interface DadosConteudo {
   url: string | null;
   corpo: string | null;
   fonte: string | null;
+  data_materia: string | null;
+  regiao: string | null;
   visibilidade: Visibilidade;
 }
 
@@ -106,6 +113,13 @@ export function linkSeguro(bruto: string): string | null {
   }
 }
 
+/** yyyy-mm-dd de verdade (nada de 2026-02-31). */
+function dataIsoValida(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().startsWith(s);
+}
+
 /**
  * Confere o formulário de um conteúdo. `publicar` exige que haja o que mostrar (o banco também exige: `conteudo_publicavel`);
  * `temArquivo` diz se já existe (ou está sendo enviado) um arquivo para o tipo "material".
@@ -126,11 +140,17 @@ export function validarConteudo(e: EntradaConteudo, publicar: boolean, temArquiv
   if (cultura && cultura.length > 60) return { ok: false, erro: 'O nome da cultura passa de 60 letras.' };
   const fonte = vazioParaNulo(e.fonte);
   if (fonte && fonte.length > 300) return { ok: false, erro: 'A fonte passa de 300 letras.' };
+  const regiao = vazioParaNulo(e.regiao);
+  if (regiao && regiao.length > 80) return { ok: false, erro: 'A região passa de 80 letras.' };
+
+  const dataMateria = vazioParaNulo(e.data_materia);
+  if (dataMateria && !dataIsoValida(dataMateria)) return { ok: false, erro: 'A data da matéria é inválida.' };
 
   const tema = vazioParaNulo(e.tema);
   if (tema && !(TEMAS as readonly string[]).includes(tema)) return { ok: false, erro: 'Tema inválido.' };
   if (!NIVEIS.includes(e.nivel as Nivel)) return { ok: false, erro: 'Escolha o nível.' };
-  if (e.visibilidade !== 'todos' && e.visibilidade !== 'selecionados') return { ok: false, erro: 'Escolha quem pode ver.' };
+  if (e.visibilidade !== 'todos' && e.visibilidade !== 'selecionados' && e.visibilidade !== 'cultura') return { ok: false, erro: 'Escolha quem pode ver.' };
+  if (e.visibilidade === 'cultura' && !cultura) return { ok: false, erro: 'Para mostrar só a quem tem aquela cultura, preencha o campo "Cultura".' };
 
   let duracao: number | null = null;
   if (e.duracao_min.trim() !== '') {
@@ -148,13 +168,18 @@ export function validarConteudo(e: EntradaConteudo, publicar: boolean, temArquiv
     if (tipo === 'video' && !url) return { ok: false, erro: 'Para publicar um vídeo, cole o link dele.' };
     if (tipo === 'artigo' && !corpo) return { ok: false, erro: 'Para publicar um artigo, escreva o texto.' };
     if (tipo === 'material' && !url && !temArquivo) return { ok: false, erro: 'Para publicar um material, envie o arquivo ou cole o link.' };
+    if (tipo === 'noticia') {
+      if (!url) return { ok: false, erro: 'Para publicar uma notícia, cole o link da matéria original.' };
+      if (!descricao) return { ok: false, erro: 'Para publicar uma notícia, escreva o resumo com as suas palavras.' };
+      if (!fonte) return { ok: false, erro: 'Para publicar uma notícia, diga a fonte (o site ou veículo).' };
+    }
   }
 
   return {
     ok: true,
     dados: {
       tipo, titulo, descricao, cultura, tema: tema as Tema | null, nivel: e.nivel as Nivel, duracao_min: duracao,
-      url, corpo, fonte, visibilidade: e.visibilidade as Visibilidade,
+      url, corpo, fonte, data_materia: dataMateria, regiao, visibilidade: e.visibilidade as Visibilidade,
     },
   };
 }
@@ -173,7 +198,7 @@ export interface Filtro {
 }
 
 /** Filtra a lista de conteúdos (busca em título, descrição, cultura e fonte). Filtro vazio = tudo. */
-export function filtrarConteudos<T extends Pick<Conteudo, 'titulo' | 'descricao' | 'cultura' | 'fonte' | 'tipo' | 'tema' | 'status'>>(
+export function filtrarConteudos<T extends Pick<Conteudo, 'titulo' | 'descricao' | 'cultura' | 'fonte' | 'tipo' | 'tema'> & { status?: string }>(
   lista: readonly T[],
   f: Filtro,
 ): T[] {
@@ -207,6 +232,49 @@ export function dominioDoLink(url: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+export interface EmbedDeVideo {
+  provedor: 'youtube' | 'vimeo';
+  /** endereço do player (os únicos que a CSP aceita em iframe) */
+  embed: string;
+}
+
+const ID_YOUTUBE = /^[A-Za-z0-9_-]{11}$/;
+
+/**
+ * Se o link é de um vídeo do YouTube ou do Vimeo, devolve o endereço do player para embutir; senão null (e a tela só oferece
+ * "abrir em outra aba"). O identificador é conferido letra a letra: nada do link original além dele vai para o iframe.
+ */
+export function embedDeVideo(url: string | null): EmbedDeVideo | null {
+  if (!url) return null;
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return null;
+  }
+  if (u.protocol !== 'https:') return null;
+  const host = u.hostname.replace(/^www\./, '').replace(/^m\./, '');
+  const partes = u.pathname.split('/').filter(Boolean);
+
+  if (host === 'youtu.be') {
+    const id = partes[0] ?? '';
+    return ID_YOUTUBE.test(id) ? { provedor: 'youtube', embed: `https://www.youtube-nocookie.com/embed/${id}` } : null;
+  }
+  if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+    const id = partes[0] === 'watch' ? (u.searchParams.get('v') ?? '') : ['embed', 'shorts', 'live', 'v'].includes(partes[0] ?? '') ? (partes[1] ?? '') : '';
+    return ID_YOUTUBE.test(id) ? { provedor: 'youtube', embed: `https://www.youtube-nocookie.com/embed/${id}` } : null;
+  }
+  if (host === 'vimeo.com' || host === 'player.vimeo.com') {
+    const lista = host === 'player.vimeo.com' ? partes.slice(1) : partes; // player.vimeo.com/video/123
+    const id = lista.find((p) => /^\d{5,12}$/.test(p));
+    if (!id) return null;
+    const depois = lista[lista.indexOf(id) + 1] ?? u.searchParams.get('h') ?? '';
+    const hash = /^[0-9a-f]{6,20}$/i.test(depois) ? `?h=${depois}` : '';
+    return { provedor: 'vimeo', embed: `https://player.vimeo.com/video/${id}${hash}` };
+  }
+  return null;
 }
 
 export type SituacaoIndicacao = 'indicada' | 'aberta' | 'concluida';

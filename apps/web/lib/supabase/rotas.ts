@@ -1,7 +1,11 @@
 /**
  * Regras de roteamento por sessão, sem dependência de Next/Supabase — para testar.
  * É conveniência de navegação; a barreira real é a RLS (doc §5.5) e os guardas dos layouts.
+ *
+ * O AgroTech tem três sites (lib/sites.ts): Assistência Técnica (/app e /produtor), Academy (/academy) e Connect (/connect).
+ * A entrada é uma só (/login), com a escolha do site; cada site tem a sua área protegida.
  */
+import { destinoDoSite, loginDoSite, type SiteId } from '../sites';
 
 export type Papel = 'consultor' | 'admin' | 'produtor' | null;
 
@@ -31,6 +35,18 @@ export function areaProdutor(caminho: string): boolean {
   return noSegmento(caminho, '/produtor') && !noSegmento(caminho, '/produtor/login') && !noSegmento(caminho, '/produtor/aceitar');
 }
 
+/** Os dois sites novos aceitam consultor e produtor: o que muda é o que cada um vê lá dentro. */
+export function areaAcademy(caminho: string): boolean {
+  return noSegmento(caminho, '/academy');
+}
+export function areaConnect(caminho: string): boolean {
+  return noSegmento(caminho, '/connect');
+}
+/** "Trocar de site": só para quem já entrou. */
+export function areaSites(caminho: string): boolean {
+  return caminho === '/sites';
+}
+
 export function casaDoPapel(papel: Papel): string | null {
   if (papel === 'consultor' || papel === 'admin') return '/app';
   if (papel === 'produtor') return '/produtor';
@@ -39,18 +55,23 @@ export function casaDoPapel(papel: Papel): string | null {
 
 /**
  * Para onde redirecionar (ou null para seguir). Princípios:
- *  - sem sessão, só as áreas protegidas redirecionam, cada uma para o seu login;
- *  - com sessão e papel conhecido, quem abre uma tela de entrada vai para a própria área
+ *  - sem sessão, só as áreas protegidas redirecionam, cada uma para o login do SEU site;
+ *  - com sessão e papel conhecido, quem abre uma tela de entrada vai para o site que escolheu
  *    (abrir /login numa aba nova não deve pedir login de quem já entrou);
+ *  - Assistência Técnica separa por papel (consultor × produtor); Academy e Connect recebem os dois papéis;
  *  - com sessão e papel DESCONHECIDO (perfil não carregou) nunca redireciona: o laço
  *    /app -> /produtor -> /app que isso gerava é pior que deixar o guarda do layout decidir.
+ * O resultado pode trazer query (`/login?site=academy`).
  */
-export function decidirRota(caminho: string, logado: boolean, papel: Papel): string | null {
+export function decidirRota(caminho: string, logado: boolean, papel: Papel, site: SiteId = 'assistencia'): string | null {
   if (ehPublica(caminho)) return null;
 
   if (!logado) {
-    if (areaProdutor(caminho)) return '/produtor/login';
-    if (areaConsultor(caminho)) return '/login';
+    if (areaProdutor(caminho)) return loginDoSite('assistencia', 'produtor');
+    if (areaConsultor(caminho)) return loginDoSite('assistencia');
+    if (areaAcademy(caminho)) return loginDoSite('academy');
+    if (areaConnect(caminho)) return loginDoSite('connect');
+    if (areaSites(caminho)) return loginDoSite('assistencia');
     return null;
   }
 
@@ -59,7 +80,7 @@ export function decidirRota(caminho: string, logado: boolean, papel: Papel): str
 
   if (areaConsultor(caminho) && casa !== '/app') return casa;
   if (areaProdutor(caminho) && casa !== '/produtor') return casa;
-  if (telaDeEntrada(caminho)) return casa;
+  if (telaDeEntrada(caminho)) return caminho === '/cadastro' ? casa : destinoDoSite(site, papel);
   return null;
 }
 

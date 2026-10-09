@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { decidirRota, ehPublica, papelDeValor, type Papel } from './rotas';
+import { siteDeValor } from '../sites';
 import { lerSessao, type SessaoLida } from './sessao';
 
 type CookieParaGravar = { name: string; value: string; options?: CookieOptions };
@@ -58,12 +59,14 @@ export async function atualizarSessao(req: NextRequest) {
     papel = papelDeValor(perfil?.role);
   }
 
-  const destino = decidirRota(caminho, Boolean(sessao), papel);
+  const destino = decidirRota(caminho, Boolean(sessao), papel, siteDeValor(req.nextUrl.searchParams.get('site')));
   if (!destino) return res;
 
+  // o destino pode trazer query (/login?site=academy)
+  const alvo = new URL(destino, req.url);
   const url = req.nextUrl.clone();
-  url.pathname = destino;
-  url.search = '';
+  url.pathname = alvo.pathname;
+  url.search = alvo.search;
   const redirecionamento = NextResponse.redirect(url);
   for (const c of res.cookies.getAll()) redirecionamento.cookies.set(c);
   return redirecionamento;

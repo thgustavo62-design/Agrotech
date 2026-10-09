@@ -61,6 +61,7 @@ Quando o dono disser "veja o que você acha melhor", o Claude decide, **registra
 - Texto jurídico (privacidade, termos, contrato): o Claude rascunha (`docs/LGPD-MINUTA.md`), o dono e um advogado aprovam — nada vai para as páginas públicas antes disso.
 
 ## E2. Plano de expansão (AgroTech 2.0) — o que o dono já encaminhou
+- **09/10 — Estrutura aprovada pelo dono: três sites separados (Assistência Técnica, Academy, Connect), com escolha na tela de login; a Academy no estilo de plataforma de cursos (SENAR Play), sem nada dela dentro da Assistência.** Não rediscutir; cada site tem o próprio molde.
 - **09/10 — Plano de expansão compartilhado pelo dono** (Academy, Connect, Intelligence). O próprio plano recomenda começar por um MVP de **Academy + solicitação ao consultor**; o Claude segue essa ordem, em fatias pequenas (migração + RLS + testes + documentação por fatia) e **sem tocar no motor agronômico**. Feito: Academy, fatia 1 ([ACADEMY.md](ACADEMY.md)). **Ainda perguntar antes de:** contratar serviço ou API paga (WhatsApp Business, satélite/NDVI, IA com visão), enviar mensagens a produtores fora do sistema, publicar conteúdo de terceiros, e qualquer coisa que dê a IA poder de recomendar defensivo ou emitir laudo.
 
 ## F. Fila de decisões pendentes (aguardam o dono)

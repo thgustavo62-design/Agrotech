@@ -13,7 +13,6 @@ const ITENS = [
   { href: '/produtor/financeiro', rotulo: 'Financeiro' },
   { href: '/produtor/producao', rotulo: 'Produção' },
   { href: '/produtor/documentos', rotulo: 'Documentos' },
-  { href: '/produtor/universidade', rotulo: 'Universidade' },
 ];
 
 /** Menu simples do portal do produtor — sem grupos, de propósito (UX_ARCHITECTURE.md §1.2). */

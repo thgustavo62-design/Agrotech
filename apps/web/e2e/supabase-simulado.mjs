@@ -68,19 +68,53 @@ const auditoria = [
 ];
 
 // Academy: ids em formato UUID (as páginas validam)
-const AC = { video: '62aaaaaa-0000-0000-0000-000000000001', artigo: '62aaaaaa-0000-0000-0000-000000000002', material: '62aaaaaa-0000-0000-0000-000000000003', rascunho: '62aaaaaa-0000-0000-0000-000000000004' };
+const AC = { video: '62aaaaaa-0000-0000-0000-000000000001', artigo: '62aaaaaa-0000-0000-0000-000000000002', material: '62aaaaaa-0000-0000-0000-000000000003', rascunho: '62aaaaaa-0000-0000-0000-000000000004', noticia: '62aaaaaa-0000-0000-0000-000000000005' };
+const CU = { cafe: '62cccccc-0000-0000-0000-000000000001', pragas: '62cccccc-0000-0000-0000-000000000002', rascunho: '62cccccc-0000-0000-0000-000000000003' };
 const conteudoBase = { org_id: O, autor_id: U, descricao: null, cultura: null, tema: null, nivel: 'basico', duracao_min: null, url: null, corpo: null, arquivo_path: null, fonte: null, status: 'publicado', visibilidade: 'todos', revisado_em: dia(-3) + 'T10:00:00Z', publicado_em: dia(-3) + 'T10:00:00Z', criado_em: dia(-4) + 'T10:00:00Z', atualizado_em: dia(-3) + 'T10:00:00Z' };
 const academy_conteudos = [
-  { ...conteudoBase, id: AC.video, tipo: 'video', titulo: 'Calagem na prática: quando e quanto aplicar', descricao: 'Como ler a análise e decidir a calagem.', cultura: 'Café', tema: 'calagem', duracao_min: 12, url: 'https://www.youtube.com/watch?v=exemplo', fonte: 'Produzido pelo escritório' },
+  { ...conteudoBase, id: AC.video, tipo: 'video', titulo: 'Calagem na prática: quando e quanto aplicar', descricao: 'Como ler a análise e decidir a calagem.', cultura: 'Café', tema: 'calagem', duracao_min: 12, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', fonte: 'Produzido pelo escritório' },
   { ...conteudoBase, id: AC.artigo, tipo: 'artigo', titulo: 'Adubação de cobertura no café', descricao: 'Parcelamento do nitrogênio.', cultura: 'Café', tema: 'adubacao', nivel: 'intermediario', corpo: ['Primeiro parágrafo da aula.', '', 'Segundo parágrafo, depois de uma linha em branco.'].join('\n'), visibilidade: 'selecionados' },
   { ...conteudoBase, id: AC.material, tipo: 'material', titulo: 'Cartilha: coleta de solo', tema: 'solo', url: 'https://www.embrapa.br/cartilha-coleta', fonte: 'Embrapa (link)' },
   { ...conteudoBase, id: AC.rascunho, tipo: 'video', titulo: 'Rascunho: ferrugem do cafeeiro', cultura: 'Café', tema: 'doencas', status: 'rascunho', revisado_em: null, publicado_em: null },
+  { ...conteudoBase, id: AC.noticia, tipo: 'noticia', titulo: 'Chuva volta ao Norte do ES e preocupa cafeicultores', descricao: 'Resumo do escritório: as chuvas devem voltar na próxima semana.', url: 'https://www.incaper.es.gov.br/noticia-exemplo', fonte: 'Incaper', data_materia: dia(-5), regiao: 'Norte do ES', nivel: 'basico' },
+];
+const cursoBase = { org_id: O, autor_id: U, resumo: null, descricao: null, cultura: null, tema: null, nivel: 'basico', capa_path: null, destaque: false, certificado: true, status: 'publicado', visibilidade: 'todos', revisado_em: dia(-3) + 'T10:00:00Z', publicado_em: dia(-3) + 'T10:00:00Z', criado_em: dia(-4) + 'T10:00:00Z', atualizado_em: dia(-3) + 'T10:00:00Z' };
+const academy_cursos = [
+  { ...cursoBase, id: CU.cafe, titulo: 'Calagem e adubação do café na prática', resumo: 'Da análise de solo à decisão: quanto aplicar e quando.', descricao: 'Neste curso você aprende a ler a análise de solo e a decidir calagem e adubação de cobertura.', cultura: 'Café', tema: 'calagem', destaque: true },
+  { ...cursoBase, id: CU.pragas, titulo: 'Manejo de pragas e doenças do cafeeiro', resumo: 'Reconhecer, monitorar e agir a tempo.', cultura: 'Café', tema: 'doencas', nivel: 'intermediario', publicado_em: dia(-8) + 'T10:00:00Z' },
+  { ...cursoBase, id: CU.rascunho, titulo: 'Curso em preparação', status: 'rascunho', revisado_em: null, publicado_em: null },
+];
+const MO = { a: '62dddddd-0000-0000-0000-000000000001', b: '62dddddd-0000-0000-0000-000000000002', c: '62dddddd-0000-0000-0000-000000000003' };
+const academy_curso_modulos = [
+  { id: MO.a, org_id: O, curso_id: CU.cafe, titulo: 'Entendendo a análise', posicao: 0 },
+  { id: MO.b, org_id: O, curso_id: CU.cafe, titulo: 'Adubação de cobertura', posicao: 1 },
+  { id: MO.c, org_id: O, curso_id: CU.pragas, titulo: 'Pragas e doenças', posicao: 0 },
+];
+const academy_curso_aulas = [
+  { id: '62eeeeee-0000-0000-0000-000000000001', org_id: O, curso_id: CU.cafe, modulo_id: MO.a, conteudo_id: AC.video, posicao: 0, conteudo: null },
+  { id: '62eeeeee-0000-0000-0000-000000000002', org_id: O, curso_id: CU.cafe, modulo_id: MO.a, conteudo_id: AC.material, posicao: 1, conteudo: null },
+  { id: '62eeeeee-0000-0000-0000-000000000003', org_id: O, curso_id: CU.cafe, modulo_id: MO.b, conteudo_id: AC.artigo, posicao: 0, conteudo: null },
+  { id: '62eeeeee-0000-0000-0000-000000000004', org_id: O, curso_id: CU.pragas, modulo_id: MO.c, conteudo_id: AC.noticia, posicao: 0, conteudo: null },
+];
+const academy_matriculas = [
+  { id: '62fffff1-0000-0000-0000-000000000001', org_id: O, curso_id: CU.cafe, produtor_id: produtores[0].id, criado_em: dia(-3) + 'T10:00:00Z', concluido_em: null },
+  { id: '62fffff1-0000-0000-0000-000000000002', org_id: O, curso_id: CU.pragas, produtor_id: produtores[0].id, criado_em: dia(-7) + 'T10:00:00Z', concluido_em: dia(-6) + 'T10:00:00Z' },
+];
+const academy_progresso = [
+  { produtor_id: produtores[0].id, conteudo_id: AC.video, org_id: O, iniciado_em: dia(-2) + 'T10:00:00Z', concluido_em: null },
+  { produtor_id: produtores[0].id, conteudo_id: AC.material, org_id: O, iniciado_em: dia(-5) + 'T10:00:00Z', concluido_em: dia(-4) + 'T09:00:00Z' },
+  { produtor_id: produtores[0].id, conteudo_id: AC.noticia, org_id: O, iniciado_em: dia(-7) + 'T10:00:00Z', concluido_em: dia(-6) + 'T10:00:00Z' },
+];
+const academy_certificados = [
+  { id: '62fffff2-0000-0000-0000-000000000001', org_id: O, curso_id: CU.pragas, produtor_id: produtores[0].id, codigo: 'AT-1A2B3-C4D5E', emitido_em: dia(-6) + 'T10:00:00Z', titulo_curso: 'Manejo de pragas e doenças do cafeeiro', aluno_nome: 'José da Silva Pereira', escritorio_nome: 'Campo Forte Assistência Técnica', responsavel_nome: 'Maria Souza', responsavel_crea: 'ES-12345', carga_min: 0, aulas: 1 },
 ];
 const academy_publicos = [{ conteudo_id: AC.artigo, produtor_id: produtores[0].id, org_id: O, criado_em: dia(-3) + 'T10:00:00Z' }];
 const academy_indicacoes = [
+  { id: '62bbbbbb-0000-0000-0000-000000000003', org_id: O, conteudo_id: null, curso_id: CU.cafe, produtor_id: produtores[0].id, indicado_por: U, visita_id: null, analise_id: null, mensagem: 'Faça este curso antes da safra.', criado_em: dia(-1) + 'T10:00:00Z', aberto_em: null, concluido_em: null },
   { id: '62bbbbbb-0000-0000-0000-000000000001', org_id: O, conteudo_id: AC.video, produtor_id: produtores[0].id, indicado_por: U, visita_id: null, analise_id: null, mensagem: 'Assista antes da nossa visita de quinta.', criado_em: dia(-2) + 'T10:00:00Z', aberto_em: null, concluido_em: null },
   { id: '62bbbbbb-0000-0000-0000-000000000002', org_id: O, conteudo_id: AC.material, produtor_id: produtores[0].id, indicado_por: U, visita_id: null, analise_id: null, mensagem: null, criado_em: dia(-5) + 'T10:00:00Z', aberto_em: dia(-5) + 'T11:00:00Z', concluido_em: dia(-4) + 'T09:00:00Z' },
 ];
+for (const a of academy_curso_aulas) { const c = academy_conteudos.find((x) => x.id === a.conteudo_id); a.conteudo = c ? { titulo: c.titulo, tipo: c.tipo, status: c.status, duracao_min: c.duracao_min } : null; }
 const T = {
   profiles: [{ id: U, org_id: O, role: process.env.PAPEL ?? 'consultor', nome: process.env.PAPEL === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }],
   orgs: [{ id: O, nome: 'Campo Forte Assistência Técnica', municipio: 'Colatina', uf: 'ES', plano: 'pro', cnpj: null, criado_em: dia(-200) }],
@@ -90,11 +124,12 @@ const T = {
   financeiro_categorias: [], financeiro_contas: [], financeiro_centros_custo: [], financeiro_orcamentos: [], financeiro_escrit_contas: [], financeiro_escrit_categorias: [],
   planos, assinaturas: [{ id: 's1', org_id: O, plano: 'pro', planos_id: 'pro', status: 'ativa', trial_expira_em: null, atual_ate: dia(20) }], cobrancas: [], convites_equipe: convitesEquipe, convites: [], compartilhamentos: [], safras: [], producao_registros: [],
   metricas_diarias: [], audit_log: auditoria, academy_conteudos, academy_publicos, academy_indicacoes,
+  academy_cursos, academy_curso_modulos, academy_curso_aulas, academy_curso_publicos: [], academy_matriculas, academy_progresso, academy_certificados,
 };
 
 // LAUDO_PAYLOAD=arquivo.json: extração (com recortes) para o laudo em conferência d0, para olhar a tela de conferência
 if (process.env.LAUDO_PAYLOAD) documentos[0].payload = JSON.parse(readFileSync(process.env.LAUDO_PAYLOAD, 'utf8'));
-const PLURAL = { conteudo: 'academy_conteudos',  talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos' };
+const PLURAL = { curso: 'academy_cursos', conteudo: 'academy_conteudos',  talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos' };
 
 function divide(s) { // separa por vírgula respeitando parênteses
   const out = []; let nivel = 0; let atual = '';
@@ -215,6 +250,7 @@ function atender(req, res) {
       if (['select', 'order', 'limit', 'offset', 'on_conflict', 'columns'].includes(k) || k.includes('.')) continue; // filtros em recurso aninhado: depois de montar
       const m = /^eq\.(.*)$/.exec(v); if (m) linhas = linhas.filter((r) => String(r[k]) === m[1]);
       if (v === 'is.null') linhas = linhas.filter((r) => r[k] == null);
+      if (v === 'not.is.null') linhas = linhas.filter((r) => r[k] != null);
       const cs = /^cs.{(.*)}$/.exec(v); if (cs) linhas = linhas.filter((r) => cs[1].split(',').every((x) => (r[k] ?? []).includes(x)));
       const i = /^in\.\((.*)\)$/.exec(v); if (i) { const lista = i[1].split(',').map((x) => x.replace(/"/g, '')); linhas = linhas.filter((r) => lista.includes(String(r[k]))); }
     }

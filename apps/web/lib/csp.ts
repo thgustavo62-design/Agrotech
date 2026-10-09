@@ -39,6 +39,9 @@ export function montarCsp({ nonce, supabaseUrl, desenvolvimento = false }: Opcoe
     'img-src': ["'self'", 'data:', 'blob:', ...(supa ? [supa] : []), 'https://*.tile.openstreetmap.org'],
     'font-src': ["'self'", 'data:'],
     'connect-src': ["'self'", ...(supa ? [supa] : []), ...(supaWs ? [supaWs] : []), ...(desenvolvimento ? ['ws://localhost:*', 'ws://127.0.0.1:*'] : [])],
+    // vídeos da Academy: só os dois players aceitos (YouTube em modo sem cookies e Vimeo), e só depois do clique do produtor
+    // (components/video-com-fachada.tsx). Qualquer outro iframe continua barrado.
+    'frame-src': ['https://www.youtube-nocookie.com', 'https://player.vimeo.com'],
     'worker-src': ["'self'", 'blob:'],
     'manifest-src': ["'self'"],
     'media-src': ["'self'", 'blob:', ...(supa ? [supa] : [])],

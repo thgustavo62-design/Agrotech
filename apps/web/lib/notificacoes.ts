@@ -8,7 +8,7 @@ export const ROTULO_TIPO_NOTIFICACAO: Record<string, string> = {
   documento_disponivel: 'Documento',
   atividade_vencendo: 'Atividade',
   conta_vencendo: 'Financeiro',
-  conteudo_indicado: 'Universidade',
+  conteudo_indicado: 'Academy',
 };
 
 /** Contagem de não lidas do usuário logado — usada no sino do cabeçalho (consultor e produtor). */

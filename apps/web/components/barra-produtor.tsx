@@ -3,7 +3,7 @@
 import { BarraInferior, type GrupoBarra } from './barra-mobile';
 import {
   IconeInicio, IconePropriedades, IconeTalhoes, IconeRecomendacoes, IconeMonitoramento,
-  IconeFinanceiro, IconeAnalises, IconeLaudos, IconeAcademy,
+  IconeFinanceiro, IconeAnalises, IconeLaudos,
 } from './icones';
 
 /** Mesmos destinos de NavProdutor (que no celular fica escondido). */
@@ -18,7 +18,6 @@ const GRUPOS: GrupoBarra[] = [
       { href: '/produtor/financeiro', rotulo: 'Financeiro', icone: IconeFinanceiro },
       { href: '/produtor/producao', rotulo: 'Produção', icone: IconeAnalises },
       { href: '/produtor/documentos', rotulo: 'Documentos', icone: IconeLaudos },
-      { href: '/produtor/universidade', rotulo: 'Universidade', icone: IconeAcademy },
     ],
   },
 ];

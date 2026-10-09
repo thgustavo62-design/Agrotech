@@ -27,6 +27,12 @@ describe('montarCsp', () => {
     expect(csp).toContain("form-action 'self'");
   });
 
+  it('iframe só dos dois players de vídeo da Academy (nada de coringa nem do próprio site)', () => {
+    expect(diretiva(csp, 'frame-src')).toBe('frame-src https://www.youtube-nocookie.com https://player.vimeo.com');
+    expect(diretiva(csp, 'frame-src')).not.toContain('*');
+    expect(diretiva(csp, 'frame-src')).not.toContain("'self'");
+  });
+
   it('desenvolvimento libera eval e websocket local, sem forçar https', () => {
     const dev = montarCsp({ nonce: 'n', supabaseUrl: 'http://127.0.0.1:54321', desenvolvimento: true });
     expect(diretiva(dev, 'script-src')).toContain("'unsafe-eval'");

@@ -221,7 +221,7 @@ describe('indicações', () => {
       `select titulo, link, corpo from agro.notificacoes where destinatario_user_id = '${ID.produtorA}' and tipo = 'conteudo_indicado'`);
     expect(n.rows).toHaveLength(1);
     expect(n.rows[0]!.titulo).toContain('Calagem em café');
-    expect(n.rows[0]!.link).toBe(`/produtor/universidade/${C.videoTodos}`);
+    expect(n.rows[0]!.link).toBe(`/academy/aula/${C.videoTodos}`);
     expect(n.rows[0]!.corpo).toBe('Assista antes da visita');
   });
 

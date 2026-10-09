@@ -1,8 +1,8 @@
 /* Academy (universidade do produtor): formulário do conteúdo, listas de produtores e leitura do artigo. */
-.opcoes-tipo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.opcoes-tipo label { display: block; padding: 10px 12px; border: 1px solid var(--linha); border-radius: var(--r); background: var(--papel-3); cursor: pointer; font-size: 13px; line-height: 1.35; }
+.opcoes-tipo { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.opcoes-tipo label { position: relative; display: block; padding: 10px 12px; border: 1px solid var(--linha); border-radius: var(--r); background: var(--papel-3); cursor: pointer; font-size: 13px; line-height: 1.35; }
 .opcoes-tipo label b { display: block; font-size: 14px; margin-bottom: 2px; }
-.opcoes-tipo input { position: absolute; opacity: 0; pointer-events: none; }
+.opcoes-tipo input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0; }
 .opcoes-tipo label:has(input:checked) { border-color: var(--folha, #1b7355); box-shadow: 0 0 0 2px color-mix(in srgb, var(--folha, #1b7355) 22%, transparent); background: #fff; }
 .opcoes-tipo label:has(input:focus-visible) { outline: 2px solid var(--folha, #1b7355); outline-offset: 2px; }
 
@@ -18,4 +18,4 @@
 .filtros-academy .campo.busca { flex: 2 1 240px; }
 .progresso-barra { height: 8px; border-radius: 99px; background: var(--papel-3); overflow: hidden; }
 .progresso-barra > i { display: block; height: 100%; background: var(--folha, #1b7355); }
-@media (max-width: 640px) { .opcoes-tipo { grid-template-columns: 1fr; } }
+

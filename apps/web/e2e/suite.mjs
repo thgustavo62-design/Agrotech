@@ -260,101 +260,233 @@ const cenarios = {
     await contexto.close();
   },
 
-  async academy() {
+  async sites() {
     await subir();
-    const AC = { video: '62aaaaaa-0000-0000-0000-000000000001', artigo: '62aaaaaa-0000-0000-0000-000000000002', material: '62aaaaaa-0000-0000-0000-000000000003', rascunho: '62aaaaaa-0000-0000-0000-000000000004' };
+    const AC = { video: '62aaaaaa-0000-0000-0000-000000000001' };
 
-    // agronômico: biblioteca, filtros, formulário que muda por tipo, validações do servidor, indicar
+    // a tela de login oferece os três sites e muda de cara a cada escolha
+    const anon = await pagina({ anonimo: true });
+    await anon.p.goto(SITE + '/login', { waitUntil: 'networkidle' });
+    conferir('o login oferece os três sites', (await anon.p.locator('[data-site-opcao]').count()) === 3);
+    await anon.p.click('[data-site-opcao=academy]');
+    await esperarTexto(anon.p, /Entrar na Academy/);
+    conferir('escolher Academy troca o texto e a cor da entrada', /Entrar na Academy/.test(await corpo(anon.p)) && (await anon.p.locator('.tela-auth[data-site=academy]').count()) === 1);
+    await anon.p.click('[data-site-opcao=connect]');
+    await esperarTexto(anon.p, /Entrar no Connect/);
+    conferir('escolher Connect troca de novo', /Entrar no Connect/.test(await corpo(anon.p)) && (await anon.p.locator('.tela-auth[data-site=connect]').count()) === 1);
+
+    // entrar pela Academy leva à Academy (não ao painel da Assistência)
+    await anon.p.click('[data-site-opcao=academy]');
+    await esperarTexto(anon.p, /Entrar na Academy/);
+    await anon.p.fill('input[type=email]', 'maria@exemplo.com');
+    await anon.p.fill('input[type=password]', 'senha1234');
+    await anon.p.click('button[type=submit]:has-text("Entrar")');
+    await anon.p.waitForURL(/\/academy$/, { timeout: 15000 }).catch(() => {});
+    conferir('entrar pela Academy abre o site da Academy', /\/academy$/.test(anon.p.url()) && (await anon.p.locator('.site-academy').count()) === 1, anon.p.url());
+    conferir('a Academy tem o molde próprio (barra no topo, sem menu lateral da Assistência)', (await anon.p.locator('.ac-topo').count()) === 1 && (await anon.p.locator('.lateral').count()) === 0);
+
+    // trocar de site
+    await anon.p.goto(SITE + '/sites', { waitUntil: 'networkidle' });
+    conferir('"Trocar de site" mostra os três cartões', (await anon.p.locator('.hub-cartao').count()) === 3);
+    await anon.p.locator('.hub-cartao[data-site=assistencia]').click();
+    await anon.p.waitForURL(/\/app$/, { timeout: 15000 }).catch(() => {});
+    conferir('o cartão da Assistência leva ao painel do escritório', /\/app$/.test(anon.p.url()) && (await anon.p.locator('.lateral').count()) === 1, anon.p.url());
+    conferir('o menu da Assistência não tem mais a Academy', !/\bAcademy\b/.test(await anon.p.locator('.lateral').innerText()));
+    await anon.p.goto(SITE + '/sites', { waitUntil: 'networkidle' });
+    await anon.p.locator('.hub-cartao[data-site=connect]').click();
+    await anon.p.waitForURL(/\/connect$/, { timeout: 15000 }).catch(() => {});
+    conferir('o cartão do Connect leva ao Connect', /\/connect$/.test(anon.p.url()), anon.p.url());
+    conferir('entrar/trocar de site: sem violação de CSP nem erro de JS', anon.problemas.length === 0, anon.problemas.join(' | '));
+    await anon.contexto.close();
+
+    // sem login, cada site manda para a entrada do SEU site
+    const sem = await pagina({ anonimo: true });
+    for (const [rota, site] of [['/academy', 'academy'], ['/academy/cursos', 'academy'], ['/connect', 'connect'], ['/app', 'assistencia']]) {
+      await sem.p.goto(SITE + rota, { waitUntil: 'networkidle' });
+      conferir(`sem login, ${rota} vai para a entrada do site ${site}`, sem.p.url().includes(`/login`) && sem.p.url().includes(`site=${site}`), sem.p.url());
+    }
+    await sem.p.goto(SITE + '/produtor/login', { waitUntil: 'networkidle' });
+    conferir('o login antigo do produtor continua valendo (redireciona para a entrada única)', sem.p.url().includes('/login?site=assistencia') && sem.p.url().includes('como=produtor'), sem.p.url());
+    await sem.contexto.close();
+
+    // produtor: o portal da Assistência não tem mais "Universidade"
+    const pr = await pagina({ papel: 'produtor' });
+    await pr.p.goto(SITE + '/produtor', { waitUntil: 'networkidle' });
+    conferir('o portal do produtor não tem Universidade, e oferece trocar de site', !/Universidade/.test(await corpo(pr.p)) && (await pr.p.locator('a:has-text("trocar de site")').count()) >= 1);
+    await pr.contexto.close();
+    void AC;
+  },
+
+  async academy_aluno() {
+    await subir();
+    const AC = { video: '62aaaaaa-0000-0000-0000-000000000001', artigo: '62aaaaaa-0000-0000-0000-000000000002', material: '62aaaaaa-0000-0000-0000-000000000003', rascunho: '62aaaaaa-0000-0000-0000-000000000004', noticia: '62aaaaaa-0000-0000-0000-000000000005' };
+    const CU = { cafe: '62cccccc-0000-0000-0000-000000000001', pragas: '62cccccc-0000-0000-0000-000000000002', rascunho: '62cccccc-0000-0000-0000-000000000003' };
+    const pr = await pagina({ papel: 'produtor' });
+
+    // vitrine
+    await pr.p.goto(SITE + '/academy', { waitUntil: 'networkidle' });
+    let t = await corpo(pr.p);
+    conferir('início: hero, busca e faixa de números', (await pr.p.locator('.ac-hero').count()) === 1 && /Aprenda no seu ritmo/.test(t) && (await pr.p.locator('.ac-busca-grande input').count()) === 1);
+    conferir('início: "Continue de onde parou" com o curso em andamento', /continue de onde parou/i.test(t) && /Calagem e adubação do café na prática/.test(t));
+    conferir('início: "Indicado pelo seu agrônomo" e temas', /indicado pelo seu agrônomo/i.test(t) && (await pr.p.locator('.ac-tema').count()) >= 2);
+    conferir('início: notícias do agro com fonte', /Notícias do agro/.test(t) && /Chuva volta ao Norte do ES/.test(t));
+    conferir('início: o curso em rascunho não aparece', !/Curso em preparação/.test(t));
+
+    // catálogo
+    await pr.p.goto(SITE + '/academy/cursos', { waitUntil: 'networkidle' });
+    conferir('catálogo mostra os 2 cursos publicados (não o rascunho)', (await pr.p.locator('.ac-cartao').count()) === 2 && !/Curso em preparação/.test(await corpo(pr.p)));
+    await pr.p.goto(SITE + '/academy/cursos?q=pragas', { waitUntil: 'networkidle' });
+    conferir('busca por "pragas" acha 1 curso', (await pr.p.locator('.ac-cartao').count()) === 1);
+    await pr.p.goto(SITE + '/academy/cursos?tema=calagem&nivel=basico', { waitUntil: 'networkidle' });
+    conferir('filtros de tema e nível combinam', (await pr.p.locator('.ac-cartao').count()) === 1);
+    await pr.p.goto(SITE + '/academy/cursos?q=zzzz', { waitUntil: 'networkidle' });
+    conferir('busca sem resultado explica', /Nada encontrado/.test(await corpo(pr.p)));
+
+    // página do curso
+    await pr.p.goto(SITE + '/academy/cursos/' + CU.cafe, { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
+    conferir('curso: título, carga prevista, progresso do aluno', /Calagem e adubação do café na prática/.test(t) && /1 de 3 aulas concluídas \(33%\)/.test(t));
+    conferir('curso: módulos e aulas, com a concluída marcada', (await pr.p.locator('.ac-modulo').count()) === 2 && (await pr.p.locator('.ac-linha[data-feita=true]').count()) === 1);
+    conferir('curso: o aluno continua de onde parou e vê a indicação', /Continuar o curso/.test(t) && /Indicado pelo seu agrônomo/.test(t) && /Faça este curso antes da safra/.test(t));
+    conferir('curso: avisa que o certificado é de participação', /Certificado de participação/.test(t));
+    await pr.p.goto(SITE + '/academy/cursos/' + CU.rascunho, { waitUntil: 'networkidle' });
+    conferir('curso em rascunho não abre para o aluno', !/Curso em preparação/.test(await corpo(pr.p)));
+
+    // aula em vídeo: o player só carrega depois do clique
+    await pr.p.goto(SITE + `/academy/aula/${AC.video}?curso=${CU.cafe}`, { waitUntil: 'networkidle' });
+    conferir('aula em vídeo: o player não carrega sozinho', (await pr.p.locator('.ac-video iframe').count()) === 0 && (await pr.p.locator('.ac-video-fachada').count()) === 1);
+    await pr.p.click('.ac-video-fachada');
+    await pr.p.waitForSelector('.ac-video iframe', { timeout: 5000 }).catch(() => {});
+    const origem = await pr.p.locator('.ac-video iframe').getAttribute('src').catch(() => '');
+    const permissoes = (await pr.p.locator('.ac-video iframe').getAttribute('sandbox').catch(() => null)) ?? '';
+    conferir('depois do clique, o iframe é do YouTube sem cookies e com sandbox (sem navegar a página)', (origem ?? '').startsWith('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ') && permissoes.includes('allow-scripts') && !permissoes.includes('allow-top-navigation'), `${origem} | sandbox=${permissoes}`);
+    conferir('aula: roteiro do curso ao lado, com a aula atual marcada', (await pr.p.locator('.ac-roteiro .ac-linha[data-atual=true]').count()) === 1);
+    const antes = chamadas('POST', 'academy_progresso');
+    await pr.p.click('button:has-text("Concluir e ir para a próxima")');
+    // a ação roda no servidor e redireciona: espera o POST chegar ao simulador (e a página assentar) antes de conferir
+    for (let i = 0; i < 40 && chamadas('POST', 'academy_progresso') <= antes; i++) await new Promise((r) => setTimeout(r, 150));
+    await pr.p.waitForLoadState('networkidle').catch(() => {});
+    conferir('"Concluir e ir para a próxima" grava o progresso e segue no curso', chamadas('POST', 'academy_progresso') > antes && /\/academy\/aula\//.test(pr.p.url()), `antes=${antes} depois=${chamadas('POST', 'academy_progresso')} url=${pr.p.url()}`);
+
+    // outros tipos de aula
+    await pr.p.goto(SITE + `/academy/aula/${AC.artigo}?curso=${CU.cafe}`, { waitUntil: 'networkidle' });
+    conferir('artigo: texto com parágrafos', /Primeiro parágrafo da aula/.test(await corpo(pr.p)) && /Segundo parágrafo/.test(await corpo(pr.p)));
+    await pr.p.goto(SITE + `/academy/aula/${AC.noticia}`, { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
+    conferir('notícia: resumo do escritório, fonte e link da matéria original', /Resumo do escritório/.test(t) && /Incaper/.test(t) && (await pr.p.locator('a:has-text("Ler a matéria original")').count()) === 1);
+    const rel = await pr.p.locator('a:has-text("Ler a matéria original")').getAttribute('rel');
+    conferir('link externo abre em outra aba sem repassar a origem', /noopener/.test(rel ?? ''));
+    await pr.p.goto(SITE + `/academy/aula/${AC.rascunho}`, { waitUntil: 'networkidle' });
+    conferir('aula em rascunho não abre para o aluno', !/ferrugem do cafeeiro/i.test(await corpo(pr.p)));
+
+    // meus cursos e certificado
+    await pr.p.goto(SITE + '/academy/meus-cursos', { waitUntil: 'networkidle' });
+    conferir('meus cursos: em andamento mostra o curso do café com progresso', (await pr.p.locator('.ac-cartao').count()) === 1 && /33% concluído/.test(await corpo(pr.p)));
+    await pr.p.goto(SITE + '/academy/meus-cursos?aba=concluidos', { waitUntil: 'networkidle' });
+    conferir('meus cursos: concluídos mostram o certificado', /Ver certificado/.test(await corpo(pr.p)));
+    await pr.p.goto(SITE + '/academy/meus-cursos?aba=indicados', { waitUntil: 'networkidle' });
+    conferir('meus cursos: indicados mostram curso e aula com o recado', /Faça este curso antes da safra/.test(await corpo(pr.p)) && (await pr.p.locator('.ac-cartao, .ac-aula-cartao').count()) >= 2);
+    await pr.p.goto(SITE + '/academy/certificados/62fffff2-0000-0000-0000-000000000001', { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
+    conferir('certificado: aluno, curso, responsável e código', /José da Silva Pereira/.test(t) && /Manejo de pragas e doenças do cafeeiro/.test(t) && /AT-1A2B3-C4D5E/.test(t) && /CREA ES-12345/.test(t));
+    conferir('certificado: diz que é de participação e não equivale a certificação', /não equivale a certificação acadêmica/i.test(t));
+    await pr.p.goto(SITE + '/academy/noticias', { waitUntil: 'networkidle' });
+    conferir('notícias: lista com a notícia do escritório', (await pr.p.locator('.ac-aula-cartao').count()) === 1);
+    conferir('o aluno não vê o Estúdio no menu', (await pr.p.locator('.ac-menu a:has-text("Estúdio")').count()) === 0);
+    await pr.p.goto(SITE + '/academy/estudio', { waitUntil: 'networkidle' });
+    conferir('o aluno que abre o Estúdio volta para a vitrine', /\/academy$/.test(pr.p.url()), pr.p.url());
+    conferir('site do aluno: sem violação de CSP nem erro de JS', pr.problemas.length === 0, pr.problemas.join(' | '));
+    await pr.contexto.close();
+
+    // celular: sem rolagem lateral e com o menu à mão
+    const cel = await pagina({ papel: 'produtor', largura: 390, altura: 844, celular: true });
+    for (const rota of ['/academy', '/academy/cursos', `/academy/cursos/${CU.cafe}`, `/academy/aula/${AC.artigo}?curso=${CU.cafe}`]) {
+      await cel.p.goto(SITE + rota, { waitUntil: 'networkidle' });
+      const larguras = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+      conferir(`celular: ${rota.split('?')[0].replace(/[0-9a-f-]{36}/, ':id')} não rola para o lado`, larguras.doc <= larguras.janela + 1, JSON.stringify(larguras));
+    }
+    await cel.contexto.close();
+  },
+
+  async academy_estudio() {
+    await subir();
+    const AC = { video: '62aaaaaa-0000-0000-0000-000000000001', rascunho: '62aaaaaa-0000-0000-0000-000000000004' };
+    const CU = { cafe: '62cccccc-0000-0000-0000-000000000001', rascunho: '62cccccc-0000-0000-0000-000000000003' };
+
     const ag = await pagina({ perfis: 'agronomico' });
-    await ag.p.goto(SITE + '/app/academy', { waitUntil: 'networkidle' });
-    conferir('biblioteca lista os 4 conteúdos do escritório (publicados e rascunho)', (await ag.p.locator('.lista .item').count()) === 4);
-    await ag.p.goto(SITE + '/app/academy?q=adubacao', { waitUntil: 'networkidle' });
-    conferir('a busca ignora acento ("adubacao" acha "Adubação")', (await ag.p.locator('.lista .item').count()) === 1);
-    await ag.p.goto(SITE + '/app/academy?status=rascunho', { waitUntil: 'networkidle' });
-    conferir('filtro por situação mostra só o rascunho', (await ag.p.locator('.lista .item').count()) === 1);
-    await ag.p.goto(SITE + '/app/academy?tipo=video&tema=calagem', { waitUntil: 'networkidle' });
-    conferir('filtros combinam (vídeo + calagem)', (await ag.p.locator('.lista .item').count()) === 1);
+    await ag.p.goto(SITE + '/academy', { waitUntil: 'networkidle' });
+    conferir('a equipe vê o Estúdio no menu e a vitrine como aluno (com aviso de prévia nos cursos)', (await ag.p.locator('.ac-menu a:has-text("Estúdio")').count()) === 1);
+    await ag.p.goto(SITE + '/academy/cursos/' + CU.cafe, { waitUntil: 'networkidle' });
+    conferir('a equipe vê o curso como o aluno vê, sem gravar progresso', /só são gravados para produtores/.test(await corpo(ag.p)));
+    await ag.p.goto(SITE + '/academy/meus-cursos', { waitUntil: 'networkidle' });
+    conferir('"Meus cursos" é dos alunos: a equipe é orientada ao Estúdio', /Esta área é dos alunos/.test(await corpo(ag.p)));
 
-    await ag.p.goto(SITE + '/app/academy/novo', { waitUntil: 'networkidle' });
-    conferir('vídeo pede o link e não pede texto nem arquivo', (await ag.p.locator('#url').count()) === 1 && (await ag.p.locator('#corpo').count()) === 0 && (await ag.p.locator('#arquivo').count()) === 0);
-    await ag.p.locator('.opcoes-tipo label', { hasText: 'Artigo' }).first().click();
-    conferir('artigo pede o texto e não pede link', (await ag.p.locator('#corpo').count()) === 1 && (await ag.p.locator('#url').count()) === 0);
-    await ag.p.locator('.opcoes-tipo label', { hasText: 'Material' }).first().click();
-    conferir('material pede arquivo (ou link)', (await ag.p.locator('#arquivo').count()) === 1 && (await ag.p.locator('#url').count()) === 1);
-    await ag.p.locator('.opcoes-tipo label', { hasText: 'Só os que eu escolher' }).click();
-    conferir('"só os que eu escolher" abre a lista de produtores', (await ag.p.locator('.marcar-lista input[type=checkbox]').count()) > 0);
+    await ag.p.goto(SITE + '/academy/estudio', { waitUntil: 'networkidle' });
+    let t = await corpo(ag.p);
+    conferir('estúdio: visão geral com números e o acompanhamento dos alunos', /Visão geral da Academy/.test(t) && /Quem está aprendendo/i.test(t) && /José da Silva Pereira/.test(t));
 
-    // o servidor explica o que falta (e o banco não deixa passar mesmo que a tela falhe)
-    await ag.p.locator('.opcoes-tipo label', { hasText: 'Vídeo' }).first().click();
-    await ag.p.locator('.opcoes-tipo label', { hasText: 'Todos os meus produtores' }).click();
-    await ag.p.fill('#titulo', 'Aula sem link');
-    await ag.p.click('button[name=intencao][value=publicar]');
-    await esperarTexto(ag.p, /cole o link dele/);
-    conferir('publicar vídeo sem link é recusado com mensagem clara', /cole o link dele/.test(await corpo(ag.p)), (await corpo(ag.p)).slice(0, 300));
-    await ag.p.goto(SITE + '/app/academy/novo', { waitUntil: 'networkidle' });
-    await ag.p.fill('#titulo', 'Aula com link ruim');
-    await ag.p.evaluate(() => { const u = document.querySelector('#url'); if (u) u.type = 'text'; });
-    await ag.p.fill('#url', 'http://exemplo.com/aula');
-    await ag.p.click('button[name=intencao][value=rascunho]');
-    await esperarTexto(ag.p, /começar com https/);
-    conferir('link sem https é recusado até em rascunho', /começar com https/.test(await corpo(ag.p)), (await corpo(ag.p)).slice(0, 300));
+    await ag.p.goto(SITE + '/academy/estudio/cursos', { waitUntil: 'networkidle' });
+    conferir('estúdio: lista os 3 cursos (inclusive o rascunho)', (await ag.p.locator('.lista .item').count()) === 3);
 
-    // indicar: sem escolher ninguém o servidor recusa
-    await ag.p.goto(SITE + '/app/academy/' + AC.video, { waitUntil: 'networkidle' });
-    conferir('conteúdo publicado mostra o acompanhamento de indicações', /Indicar a produtores/.test(await corpo(ag.p)));
+    await ag.p.goto(SITE + '/academy/estudio/cursos/' + CU.cafe, { waitUntil: 'networkidle' });
+    t = await corpo(ag.p);
+    conferir('curso no estúdio: dados, estrutura e alunos', /Dados do curso/.test(t) && /Módulos e aulas/.test(t) && /Alunos \(1\)/.test(t));
+    conferir('curso no estúdio: 2 módulos com 3 aulas, na ordem', (await ag.p.locator('#estrutura .ac-modulo').count()) === 2 && (await ag.p.locator('#estrutura .ac-linha').count()) === 3);
+    const largura = await ag.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+    conferir('curso no estúdio: a página cabe na tela (sem rolagem lateral)', largura.doc <= largura.janela + 1, JSON.stringify(largura));
+    conferir('curso no estúdio: pode indicar a produtores', /Indicar a produtores/.test(t) && (await ag.p.locator('button:has-text("Indicar")').count()) === 1);
     await ag.p.click('button:has-text("Indicar")');
     await esperarTexto(ag.p, /pelo menos um produtor/);
-    conferir('indicar sem escolher produtor é recusado', /pelo menos um produtor/.test(await corpo(ag.p)), (await corpo(ag.p)).slice(0, 300));
-    await ag.p.goto(SITE + '/app/academy/' + AC.rascunho, { waitUntil: 'networkidle' });
-    conferir('rascunho não oferece indicação', /Só conteúdo publicado pode ser indicado/.test(await corpo(ag.p)));
-    conferir('academy: sem violação de CSP nem erro de JS', ag.problemas.length === 0, ag.problemas.join(' | '));
+    conferir('indicar o curso sem escolher produtor é recusado', /pelo menos um produtor/.test(await corpo(ag.p)));
+
+    // criar curso: o servidor explica o erro
+    await ag.p.goto(SITE + '/academy/estudio/cursos/novo', { waitUntil: 'networkidle' });
+    await ag.p.fill('#titulo', 'ab');
+    await ag.p.click('button[name=intencao][value=rascunho]');
+    await esperarTexto(ag.p, /pelo menos 3 letras/);
+    conferir('curso com título curto é recusado com mensagem clara', /pelo menos 3 letras/.test(await corpo(ag.p)));
+    await ag.p.goto(SITE + '/academy/estudio/cursos/novo', { waitUntil: 'networkidle' });
+    await ag.p.locator('.opcoes-tipo label', { hasText: 'Quem tem a cultura' }).click();
+    await ag.p.fill('#titulo', 'Curso por cultura sem cultura');
+    await ag.p.click('button[name=intencao][value=rascunho]');
+    await esperarTexto(ag.p, /preencha o campo/);
+    conferir('"por cultura" sem a cultura é recusado', /preencha o campo "Cultura"/.test(await corpo(ag.p)));
+
+    // conteúdos (biblioteca do estúdio)
+    await ag.p.goto(SITE + '/academy/estudio/conteudos', { waitUntil: 'networkidle' });
+    conferir('biblioteca do estúdio lista os 5 conteúdos', (await ag.p.locator('.lista .item').count()) === 5);
+    await ag.p.goto(SITE + '/academy/estudio/conteudos?q=adubacao', { waitUntil: 'networkidle' });
+    conferir('a busca ignora acento', (await ag.p.locator('.lista .item').count()) === 1);
+    await ag.p.goto(SITE + '/academy/estudio/conteudos/novo', { waitUntil: 'networkidle' });
+    conferir('conteúdo: 4 tipos, incluindo Notícia', (await ag.p.locator('.opcoes-tipo').first().locator('label').count()) === 4);
+    await ag.p.locator('.opcoes-tipo label', { hasText: 'Notícia' }).first().click();
+    conferir('notícia pede resumo, fonte, data e região', (await ag.p.locator('#data_materia').count()) === 1 && (await ag.p.locator('#regiao').count()) === 1 && /Resumo com as suas palavras/.test(await corpo(ag.p)));
+    await ag.p.fill('#titulo', 'Notícia sem nada');
+    await ag.p.click('button[name=intencao][value=publicar]');
+    await esperarTexto(ag.p, /link da matéria original/);
+    conferir('publicar notícia sem link é recusado com mensagem clara', /link da matéria original/.test(await corpo(ag.p)));
+    await ag.p.goto(SITE + '/academy/estudio/conteudos/' + AC.video, { waitUntil: 'networkidle' });
+    conferir('conteúdo publicado mostra indicação e acompanhamento', /Indicar a produtores/.test(await corpo(ag.p)));
+    await ag.p.goto(SITE + '/academy/estudio/conteudos/' + AC.rascunho, { waitUntil: 'networkidle' });
+    conferir('conteúdo em rascunho não oferece indicação', /Só conteúdo publicado pode ser indicado/.test(await corpo(ag.p)));
+    conferir('estúdio: sem violação de CSP nem erro de JS', ag.problemas.length === 0, ag.problemas.join(' | '));
     await ag.contexto.close();
 
-    // campo: lê e indica, mas não cria nem edita; consulta só lê
+    // campo: indica, mas não monta
     const campo = await pagina({ perfis: 'campo' });
-    await campo.p.goto(SITE + '/app/academy', { waitUntil: 'networkidle' });
-    conferir('campo não vê "Novo conteúdo"', (await campo.p.locator('a:has-text("Novo conteúdo")').count()) === 0);
-    await campo.p.goto(SITE + '/app/academy/novo', { waitUntil: 'networkidle' });
-    conferir('campo que abre "novo" volta para a biblioteca', campo.p.url().endsWith('/app/academy'));
-    await campo.p.goto(SITE + '/app/academy/' + AC.video, { waitUntil: 'networkidle' });
-    conferir('campo vê o conteúdo só para leitura, mas pode indicar', /só consulta/.test(await corpo(campo.p)) && (await campo.p.locator('button[name=intencao]').count()) === 0 && (await campo.p.locator('button:has-text("Indicar")').count()) === 1);
+    await campo.p.goto(SITE + '/academy/estudio/cursos', { waitUntil: 'networkidle' });
+    conferir('campo não vê "Novo curso"', (await campo.p.locator('a:has-text("Novo curso")').count()) === 0);
+    await campo.p.goto(SITE + '/academy/estudio/cursos/novo', { waitUntil: 'networkidle' });
+    conferir('campo que abre "novo curso" volta para a lista', /\/academy\/estudio\/cursos$/.test(campo.p.url()), campo.p.url());
+    await campo.p.goto(SITE + '/academy/estudio/cursos/' + CU.cafe, { waitUntil: 'networkidle' });
+    conferir('campo vê o curso só para leitura, mas pode indicar', /só consulta/.test(await corpo(campo.p)) && (await campo.p.locator('button[name=intencao]').count()) === 0 && (await campo.p.locator('button:has-text("Indicar")').count()) === 1);
     await campo.contexto.close();
+
+    // consulta: lê, não indica nem edita
     const leitura = await pagina({ perfis: 'leitura' });
-    await leitura.p.goto(SITE + '/app/academy/' + AC.video, { waitUntil: 'networkidle' });
-    conferir('consulta não indica', /não indica conteúdos/.test(await corpo(leitura.p)) && (await leitura.p.locator('button:has-text("Indicar")').count()) === 0);
+    await leitura.p.goto(SITE + '/academy', { waitUntil: 'networkidle' });
+    conferir('consulta não tem o Estúdio no menu', (await leitura.p.locator('.ac-menu a:has-text("Estúdio")').count()) === 0);
     await leitura.contexto.close();
-
-    // produtor: universidade, abrir (marca "abriu"), concluir
-    const pr = await pagina({ papel: 'produtor' });
-    await pr.p.goto(SITE + '/produtor/universidade', { waitUntil: 'networkidle' });
-    const textoUni = await corpo(pr.p);
-    // o rótulo da seção sai em MAIÚSCULAS (text-transform): o texto lido do navegador vem assim
-    conferir('produtor vê o que foi indicado e o progresso', /indicado pelo seu agrônomo/i.test(textoUni) && /1 de 2 concluído/.test(textoUni));
-    conferir('a biblioteca do produtor não mostra rascunho', !/ferrugem do cafeeiro/.test(textoUni));
-    await pr.p.goto(SITE + '/produtor/universidade?q=calagem', { waitUntil: 'networkidle' });
-    conferir('o produtor também busca por palavra', (await pr.p.locator('.lista .item').count()) >= 1);
-
-    const antesAbrir = chamadas('PATCH', 'academy_indicacoes');
-    await pr.p.goto(SITE + '/produtor/universidade/' + AC.video, { waitUntil: 'networkidle' });
-    const link = pr.p.locator('a:has-text("Assistir ao vídeo")');
-    conferir('vídeo abre em outra aba, sem repassar a página de origem', (await link.getAttribute('target')) === '_blank' && /noopener/.test((await link.getAttribute('rel')) ?? ''));
-    conferir('mostra o recado do agrônomo', /Assista antes da nossa visita de quinta/.test(await corpo(pr.p)));
-    conferir('abrir uma indicação nova registra que abriu', chamadas('PATCH', 'academy_indicacoes') > antesAbrir);
-    const antesConcluir = chamadas('PATCH', 'academy_indicacoes');
-    await pr.p.click('button:has-text("Marcar como concluído")');
-    await pr.p.waitForTimeout(1200);
-    conferir('"Marcar como concluído" chega ao banco', chamadas('PATCH', 'academy_indicacoes') > antesConcluir);
-
-    await pr.p.goto(SITE + '/produtor/universidade/' + AC.artigo, { waitUntil: 'networkidle' });
-    conferir('artigo aparece como texto, com os parágrafos', /Primeiro parágrafo da aula/.test(await corpo(pr.p)) && /Segundo parágrafo/.test(await corpo(pr.p)));
-    await pr.p.goto(SITE + '/produtor/universidade/' + AC.material, { waitUntil: 'networkidle' });
-    conferir('o que já foi concluído mostra a data', /Concluído em/.test(await corpo(pr.p)));
-    // a página do portal começa a ser enviada antes da busca terminar (loading.tsx), então o status HTTP já é 200: o que vale é o conteúdo
-    await pr.p.goto(SITE + '/produtor/universidade/' + AC.rascunho, { waitUntil: 'networkidle' });
-    const textoRasc = await corpo(pr.p);
-    conferir('rascunho não abre para o produtor (nem título nem conteúdo)', !/ferrugem do cafeeiro/i.test(textoRasc) && !(await pr.p.locator('a:has-text("Assistir ao vídeo")').count()), textoRasc.slice(0, 200));
-    conferir('universidade do produtor: sem violação de CSP nem erro de JS', pr.problemas.length === 0, pr.problemas.join(' | '));
-    await pr.contexto.close();
   },
 
   async senhas() {

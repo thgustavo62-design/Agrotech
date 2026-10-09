@@ -24,7 +24,9 @@ export const MENSAGEM_GENERICA = 'Não foi possível concluir. Tente novamente e
 export function lancarDoBanco(erro: { message: string; code?: string | null }): never {
   switch (erro.code) {
     // raise exception das nossas funções/triggers (limite do plano, convite inválido…): escritas para o usuário
-    case 'P0001': throw new ErroDeUsuario(erro.message);
+    case 'P0001':
+    // regras do banco com mensagem escrita para o usuário (Academy: "adicione uma aula antes de publicar", "só conteúdo publicado pode ser indicado"…)
+    case '22023': throw new ErroDeUsuario(erro.message);
     case '42501': throw new ErroDeUsuario('Você não tem permissão para esta ação.');
     case '23505': throw new ErroDeUsuario('Este registro já existe.');
     case '23503': throw new ErroDeUsuario('Não é possível concluir: há outros registros ligados a este.');

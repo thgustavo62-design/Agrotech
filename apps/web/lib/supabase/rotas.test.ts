@@ -5,11 +5,15 @@ const token = (claims: object) =>
   `x.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.y`;
 
 describe('decidirRota — sem sessão', () => {
-  it('área do consultor vai para /login e a do produtor para /produtor/login', () => {
-    expect(decidirRota('/app', false, null)).toBe('/login');
-    expect(decidirRota('/app/talhoes/1', false, null)).toBe('/login');
-    expect(decidirRota('/produtor', false, null)).toBe('/produtor/login');
-    expect(decidirRota('/produtor/laudos/9', false, null)).toBe('/produtor/login');
+  it('cada área vai para o login do SEU site', () => {
+    expect(decidirRota('/app', false, null)).toBe('/login?site=assistencia');
+    expect(decidirRota('/app/talhoes/1', false, null)).toBe('/login?site=assistencia');
+    expect(decidirRota('/produtor', false, null)).toBe('/login?site=assistencia&como=produtor');
+    expect(decidirRota('/produtor/laudos/9', false, null)).toBe('/login?site=assistencia&como=produtor');
+    expect(decidirRota('/academy', false, null)).toBe('/login?site=academy');
+    expect(decidirRota('/academy/cursos/abc', false, null)).toBe('/login?site=academy');
+    expect(decidirRota('/connect', false, null)).toBe('/login?site=connect');
+    expect(decidirRota('/sites', false, null)).toBe('/login?site=assistencia');
   });
 
   it('telas de entrada, convites e páginas públicas seguem', () => {
@@ -44,6 +48,34 @@ describe('decidirRota — com sessão', () => {
     expect(decidirRota('/app', true, 'produtor')).toBe('/produtor');
     expect(decidirRota('/produtor/laudos', true, 'produtor')).toBeNull();
     expect(decidirRota('/produtor', true, 'consultor')).toBe('/app');
+  });
+
+  it('quem já entrou e abre o login vai para o site que escolheu', () => {
+    expect(decidirRota('/login', true, 'consultor', 'academy')).toBe('/academy');
+    expect(decidirRota('/login', true, 'produtor', 'academy')).toBe('/academy');
+    expect(decidirRota('/login', true, 'produtor', 'connect')).toBe('/connect');
+    expect(decidirRota('/login', true, 'consultor', 'connect')).toBe('/connect');
+    expect(decidirRota('/login', true, 'produtor', 'assistencia')).toBe('/produtor');
+    expect(decidirRota('/login', true, 'admin')).toBe('/app');
+    expect(decidirRota('/cadastro', true, 'consultor', 'academy')).toBe('/app'); // criar escritório é da Assistência
+  });
+
+  it('Academy e Connect recebem consultor e produtor, sem empurrar ninguém para outra área', () => {
+    for (const papel of ['consultor', 'admin', 'produtor'] as const) {
+      expect(decidirRota('/academy/cursos', true, papel), papel).toBeNull();
+      expect(decidirRota('/connect/atendimentos', true, papel), papel).toBeNull();
+      expect(decidirRota('/sites', true, papel), papel).toBeNull();
+    }
+  });
+
+  it('as áreas antigas continuam separadas por papel', () => {
+    expect(decidirRota('/app', true, 'produtor', 'academy')).toBe('/produtor');
+    expect(decidirRota('/produtor', true, 'consultor', 'academy')).toBe('/app');
+  });
+
+  it('prefixo só de texto não é o site: /academyx e /connected não pedem login', () => {
+    expect(decidirRota('/academyx', false, null)).toBeNull();
+    expect(decidirRota('/connected', false, null)).toBeNull();
   });
 
   it('papel desconhecido nunca redireciona (evita o laço /app <-> /produtor)', () => {

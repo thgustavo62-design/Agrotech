@@ -20,3 +20,6 @@
 
 /* Academy: formulário do conteúdo, listas de produtores, leitura do artigo. */
 @import './estilos/academy.css';
+
+/* Site da Academy (tema próprio, sob .site-academy). */
+@import './estilos/academy-site.css';

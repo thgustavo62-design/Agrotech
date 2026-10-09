@@ -4,7 +4,7 @@ import {
   IconeInicio, IconePendencia, IconeAgenda, IconeProdutores, IconePropriedades,
   IconeTalhoes, IconeAnalises, IconeLaudos, IconeRecomendacoes, IconeMonitoramento,
   IconeInteligencia, IconeRelatorios, IconeFinanceiro, IconeEquipe, IconeTabelas,
-  IconeAssinatura, IconeConfig, IconeAcademy,
+  IconeAssinatura, IconeConfig,
 } from '@/components/icones';
 
 /**
@@ -65,12 +65,6 @@ export const NAVEGACAO_CONSULTOR: GrupoNav[] = [
     ],
   },
   {
-    titulo: 'Relacionamento',
-    itens: [
-      { href: '/app/academy', rotulo: 'Academy', icone: IconeAcademy },
-    ],
-  },
-  {
     titulo: 'Inteligência',
     itens: [
       { href: '/app/inteligencia', rotulo: 'Indicadores', icone: IconeInteligencia },
@@ -111,7 +105,6 @@ export const ROTULOS_SEGMENTO: Record<string, string> = {
   monitoramento: 'Monitoramento',
   pendencias: 'Pendências',
   agenda: 'Agenda',
-  academy: 'Academy',
   inteligencia: 'Indicadores',
   relatorios: 'Relatórios',
   'financeiro-escritorio': 'Financeiro do escritório',
