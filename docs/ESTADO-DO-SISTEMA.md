@@ -44,7 +44,7 @@ Guias: [OPERACAO.md](OPERACAO.md) · [RECUPERACAO-DE-DESASTRE.md](RECUPERACAO-DE
 | Testes do motor agronômico e leitor de laudos | 92 passando |
 | Testes do banco (permissões, isolamento, segurança, equipe, MFA) | 92 passando |
 | CI a cada envio | passando |
-| Telas conferidas em navegador real | sim, **com um Supabase simulado** |
+| Telas conferidas em navegador real | sim, **com um Supabase simulado** — agora **automático no CI** (37 verificações) |
 | Conferido no site real (produção) | páginas públicas, login/hook, "esqueci minha senha" |
 
 ## 6. Limites conhecidos (sem rodeios)

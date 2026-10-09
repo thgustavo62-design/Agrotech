@@ -33,6 +33,9 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 - Exclusão do produtor agora apaga também os **PDFs e fotos** do Storage (antes só as linhas do banco).
 - Minuta de LGPD (mapa de dados, retenção, incidente) para revisão jurídica — [docs/LGPD-MINUTA.md](docs/LGPD-MINUTA.md).
 
+### Testes em navegador no CI
+- Nova suíte (Chromium + Supabase simulado) roda a cada envio: telas sem violação de CSP, recusas de laudo, equipe, senha provisória, segundo fator, conta desativada, fila offline. Achou e corrigiu um erro de hidratação na tela "Crie a sua senha".
+
 ### Documentação
 - README, ESTADO-DO-SISTEMA, POLITICA-DE-APROVACAO, OPERACAO, RECUPERACAO-DE-DESASTRE, decisões (ADR).
 

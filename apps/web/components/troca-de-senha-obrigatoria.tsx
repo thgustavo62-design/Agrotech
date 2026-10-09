@@ -24,7 +24,8 @@ export function TrocaDeSenhaObrigatoria({ nome }: { nome: string | null }) {
       <Cartao olho="Primeiro acesso" titulo="Nova senha">
         <FormSenha aoConcluir={() => router.refresh()} />
       </Cartao>
-      <p style={{ textAlign: 'center', marginTop: 14 }}><BotaoSair className="link-sair" rotulo="Sair" /></p>
+      {/* <div>, não <p>: o botão é um <form>, que o navegador não aceita dentro de <p> (quebrava a hidratação) */}
+      <div style={{ textAlign: 'center', marginTop: 14 }}><BotaoSair className="link-sair" rotulo="Sair" /></div>
     </main>
   );
 }

@@ -42,6 +42,31 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: chave-de-build
           NEXT_PUBLIC_APP_URL: http://localhost:3000
 
+  navegador:
+    name: telas em navegador real (simulador)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # build apontando para o Supabase SIMULADO (e2e/supabase-simulado.mjs): nada daqui toca o banco real
+      - run: npm run build --workspace @agrotech/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: x
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3111
+          SUPABASE_SERVICE_ROLE_KEY: chave-de-teste
+      - run: npm run e2e --workspace @agrotech/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: x
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3111
+          SUPABASE_SERVICE_ROLE_KEY: chave-de-teste
+
   rls:
     name: políticas RLS (pgTAP)
     runs-on: ubuntu-latest

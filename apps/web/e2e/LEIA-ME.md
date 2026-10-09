@@ -1,6 +1,17 @@
-# Verificação visual em celular
+# Testes em navegador
 
-Ferramentas para ver e medir o app em tela pequena **sem Supabase real**. Não rodam no CI (precisam de navegador).
+## Suíte automática (roda no CI)
+
+`npm run e2e` (a partir de `apps/web`, depois de um `next build` apontando para o simulador — veja o cabeçalho de
+`suite.mjs`) sobe o Supabase **simulado** e o app, abre o Chromium e confere 37 coisas em 9 cenários: CSP sem violações
+nas 15 telas, cadastro de empregado, senha esquecida, remoção, análise incompleta / 20–40 cm / sem CREA recusadas
+(inclusive com o botão forçado), senha provisória, segundo fator (pedir e ativar), conta desativada, links de senha,
+visita offline que vai para a fila e é enviada sozinha. `node e2e/suite.mjs mfa provisoria` roda só alguns cenários.
+Falha em qualquer verificação derruba o job do CI (`navegador`). Pelo simulador, **não** prova nada do Supabase real.
+
+# Verificação visual em celular (manual)
+
+Ferramentas para ver e medir o app em tela pequena **sem Supabase real**. Não rodam no CI (são para olhar, não para passar/falhar).
 
 ```bash
 npm i -D playwright && npx playwright install chromium     # uma vez

@@ -9,6 +9,14 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Suíte de navegador no CI (2026-10-08)
+
+- [x] `apps/web/e2e/suite.mjs` + job `navegador` do CI: Playwright/Chromium contra o Supabase **simulado** — 37 verificações em 9 cenários (CSP em 15 telas, equipe, recusas de laudo, senha provisória, segundo fator, conta desativada, links de senha, fila offline). Antes esses scripts eram manuais e soltos.
+- [x] A suíte achou um defeito real na primeira execução: a tela "Crie a sua senha" tinha um `<form>` dentro de um `<p>` (HTML inválido) → erro de hidratação do React (#418). Corrigido.
+- **Limite:** prova o app contra o simulador, não contra o Supabase real; não cobre o Asaas nem as Edge Functions.
+
+---
+
 ## AgroTech v2 — dois produtos, uma infra
 
 **As 11 fases do roteiro pedido estão implementadas (concluído em
