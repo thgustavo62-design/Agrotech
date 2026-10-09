@@ -15,6 +15,7 @@ const FRASE: Record<Permissao, string> = {
   'dados.excluir': 'excluir dados',
   'academy.gerenciar': 'criar e publicar conteúdos da Academy',
   'academy.indicar': 'indicar conteúdos da Academy aos produtores',
+  'atendimento.gerir': 'atender os pedidos dos produtores',
 };
 
 /**

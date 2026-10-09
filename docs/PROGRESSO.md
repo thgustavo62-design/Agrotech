@@ -9,6 +9,19 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Connect — fatia 1: pedido do produtor e fila de atendimento (2026-10-09)
+
+Segundo site do plano de expansão (pedido "continue"). O produtor pede ajuda ao técnico com foto e acompanha; a equipe atende numa fila com responsável, prazo e histórico. Funcionamento e regras: [CONNECT.md](CONNECT.md).
+
+- [x] **Banco (0049):** `atendimentos`, `atendimento_mensagens` (com **nota interna**), `atendimento_arquivos`, `atendimento_eventos` (histórico só por gatilho); permissão nova **`atendimento.gerir`** (Proprietário, Agronômico, Campo); o produtor não escolhe situação/responsável/prazo, no máximo 10 pedidos abertos; bucket privado `atendimentos`; avisos novos (`atendimento_novo|atribuido|resposta|status`); avaliação por função do banco. **31 testes** no db-test (agora 215 no total).
+- [x] **Site do produtor:** início, novo pedido (tipo, descrição, propriedade/talhão, até 5 fotos reduzidas no celular), meus pedidos, pedido com conversa/histórico, responder (reabre o resolvido), avaliar, avisos.
+- [x] **Site da equipe:** fila em colunas com resumo e filtros, atendimento com nota interna, situação, responsável/prioridade/prazo, assumir, retorno na agenda, link do WhatsApp (clique da pessoa), novo atendimento em nome do produtor. Perfis sem a permissão só consultam.
+- [x] **LGPD:** excluir o produtor apaga também os arquivos do bucket `atendimentos` (`lib/lgpd-arquivos.ts`, com teste).
+- [x] **Testes:** `lib/connect.test.ts` (regras puras) e 2 cenários de navegador (`connect_produtor`, `connect_equipe`); o simulador do Supabase ganhou as tabelas do Connect, Storage e filtro `like`.
+- [ ] **Depois:** suspeita fitossanitária com fotos (origem `atlas`), botão "Pedir ajuda" nas telas de laudo/visita, painel de qualidade (tempo de resposta, avaliações), notificação por e-mail/WhatsApp (pede aprovação — serviço pago e mensagem externa).
+
+---
+
 ## Três sites, Academy como site próprio e cursos com certificado (2026-10-09)
 
 Pedido do dono: a Academy tem de ser **outro molde, no estilo do SENAR Play**, e a **Assistência Técnica não pode ficar junto**; são **três sites** (Assistência Técnica, Academy, Connect), separados **na tela de login**. Resumo e arquitetura: [SITES.md](SITES.md), [ACADEMY.md](ACADEMY.md).

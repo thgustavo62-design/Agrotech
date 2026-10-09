@@ -36,7 +36,7 @@ export async function listarPasta(admin: ArmazenamentoAdmin, bucket: string, pas
 
 export async function removerArquivosDoProdutor(
   admin: ArmazenamentoAdmin,
-  alvo: { orgId: string | null; produtorId: string; fotosDeVisitas: readonly string[] },
+  alvo: { orgId: string | null; produtorId: string; fotosDeVisitas: readonly string[]; arquivosDePedidos?: readonly string[] },
 ): Promise<ResultadoRemocao> {
   const r: ResultadoRemocao = { removidos: 0, falhas: 0, detalhes: [] };
   const porBucket = new Map<string, string[]>();
@@ -52,6 +52,8 @@ export async function removerArquivosDoProdutor(
     juntar(bucket, caminhos);
   }
   juntar('visitas', alvo.fotosDeVisitas);
+  // fotos e PDFs dos pedidos do Connect: atendimentos/{org}/{pedido}/… — também só existem no banco até o delete
+  if ((alvo.arquivosDePedidos ?? []).length > 0) juntar('atendimentos', alvo.arquivosDePedidos ?? []);
 
   for (const [bucket, caminhos] of porBucket) {
     for (let i = 0; i < caminhos.length; i += LOTE) {

@@ -45,6 +45,13 @@ describe('removerArquivosDoProdutor', () => {
     });
   });
 
+  it('apaga também os anexos dos pedidos do Connect (bucket atendimentos), sem tocar nos de outros pedidos', async () => {
+    const s = falso({ ...base, atendimentos: [`${ORG}/ped1/a.jpg`, `${ORG}/ped1/b.pdf`, `${ORG}/ped9/de-outro.jpg`] });
+    const r = await removerArquivosDoProdutor(s, { orgId: ORG, produtorId: P, fotosDeVisitas: [], arquivosDePedidos: [`${ORG}/ped1/a.jpg`, `${ORG}/ped1/b.pdf`] });
+    expect(r).toMatchObject({ falhas: 0 });
+    expect(s.restantes().atendimentos).toEqual([`${ORG}/ped9/de-outro.jpg`]);
+  });
+
   it('pagina pastas grandes (mais de 100 arquivos)', async () => {
     const muitos = Array.from({ length: 230 }, (_, i) => `${ORG}/${P}/f${i}.pdf`);
     const s = falso({ laudos: muitos });

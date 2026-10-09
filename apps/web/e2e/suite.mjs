@@ -81,6 +81,11 @@ async function pagina({ papel = 'consultor', perfis = 'proprietario', anonimo = 
 const corpo = (p) => p.locator('body').innerText();
 /** espera o texto aparecer (avisos de server action chegam depois do redirect); não falha: quem confere é `conferir` */
 const esperarTexto = (p, re) => p.waitForFunction((src) => new RegExp(src).test(document.body.innerText), re.source, { timeout: 8000 }).catch(() => {});
+/** espera uma escrita chegar ao simulador (a server action roda no servidor e redireciona) */
+async function esperarEscrita(metodo, rota, antes, ms = 6000) {
+  const fim = Date.now() + ms;
+  while (Date.now() < fim && chamadas(metodo, rota) <= antes) await new Promise((r) => setTimeout(r, 150));
+}
 const ID_ANALISE = (n) => `a000000${n}-0000-0000-0000-000000000000`;
 
 // ================== cenários ==================
@@ -487,6 +492,194 @@ const cenarios = {
     await leitura.p.goto(SITE + '/academy', { waitUntil: 'networkidle' });
     conferir('consulta não tem o Estúdio no menu', (await leitura.p.locator('.ac-menu a:has-text("Estúdio")').count()) === 0);
     await leitura.contexto.close();
+  },
+
+  async connect_produtor() {
+    await subir();
+    const AT = { folhas: '63aaaaaa-0000-0000-0000-000000000001', calagem: '63aaaaaa-0000-0000-0000-000000000002', laudo: '63aaaaaa-0000-0000-0000-000000000003', broca: '63aaaaaa-0000-0000-0000-000000000004' };
+    const pr = await pagina({ papel: 'produtor' });
+
+    // início
+    await pr.p.goto(SITE + '/connect', { waitUntil: 'networkidle' });
+    let t = await corpo(pr.p);
+    conferir('início: convite para pedir ajuda e botão "Fazer um pedido"', (await pr.p.locator('.cn-hero').count()) === 1 && /Como podemos ajudar, José\?/.test(t) && (await pr.p.locator('a:has-text("Fazer um pedido")').count()) === 1);
+    conferir('início: destaca o pedido em que o técnico espera resposta', /O técnico precisa de uma informação sua/.test(await pr.p.locator('.cn-destaque').innerText().catch(() => '')) && /Dúvida sobre a calagem/.test(await pr.p.locator('.cn-destaque').innerText().catch(() => '')));
+    conferir('início: só os pedidos do próprio produtor (3), nunca o de outro', (await pr.p.locator('.cn-pedido').count()) === 3 && !/Assunto de outro produtor|Visita para avaliar a broca/.test(t));
+    conferir('menu do produtor: Início, Meus pedidos, Novo pedido e Avisos (com contagem)', (await pr.p.locator('.cn-menu a').count()) === 4 && (await pr.p.locator('.cn-contagem').count()) === 1 && (await pr.p.locator('.cn-menu a:has-text("Fila")').count()) === 0);
+
+    // lista
+    await pr.p.goto(SITE + '/connect/pedidos', { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
+    conferir('meus pedidos: 2 em aberto e 1 resolvido, na linguagem do produtor', /Em aberto \(2\)/.test(t) && /Resolvidos e arquivados \(1\)/.test(t) && /Precisamos de você/.test(t) && /Em atendimento/.test(t) && !/Em acompanhamento|Aguardando o produtor/.test(t));
+
+    // pedido com conversa: nota interna e dados da equipe nunca aparecem
+    await pr.p.goto(SITE + '/connect/pedidos/' + AT.folhas, { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
+    conferir('pedido: 2 mensagens (a nota interna da equipe não aparece)', (await pr.p.locator('.cn-msg').count()) === 2 && !/nota interna|nitrogênio/i.test(t));
+    await pr.p.locator('.cn-anexos img').first().scrollIntoViewIfNeeded();
+    await pr.p.waitForFunction(() => { const i = document.querySelector('.cn-anexos img'); return Boolean(i && i.complete); }, null, { timeout: 5000 }).catch(() => {});
+    conferir('pedido: a foto enviada carrega (link assinado sob a CSP)', await pr.p.evaluate(() => { const i = document.querySelector('.cn-anexos img'); return Boolean(i && i.complete && i.naturalWidth > 0); }));
+    conferir('pedido: histórico mostra situação e prazo, mas não responsável nem prioridade', /Situação: Em atendimento/.test(t) && /Prazo previsto/.test(t) && !/Responsável|Prioridade/.test(await pr.p.locator('.cn-tempo').innerText().catch(() => '')));
+    conferir('pedido: a equipe aparece como "Seu técnico" (sem nome de colega)', /Seu técnico/.test(t) && !/Carlos Pereira/.test(t));
+    let antes = chamadas('POST', 'atendimento_mensagens');
+    await pr.p.fill('.cn-resposta textarea', 'Segue mais informação sobre o talhão.');
+    await pr.p.click('.cn-resposta button[type=submit]');
+    await esperarEscrita('POST', 'atendimento_mensagens', antes);
+    await esperarTexto(pr.p, /Segue mais informação sobre o talhão/);
+    conferir('responder grava a mensagem e ela aparece na conversa', chamadas('POST', 'atendimento_mensagens') > antes && /Segue mais informação sobre o talhão/.test(await corpo(pr.p)));
+
+    // precisa de resposta: responder tira da fila de espera
+    await pr.p.goto(SITE + '/connect/pedidos/' + AT.calagem, { waitUntil: 'networkidle' });
+    conferir('pedido aguardando o produtor avisa que ele precisa responder', /O técnico precisa de uma informação sua — responda abaixo/.test(await corpo(pr.p)));
+    await pr.p.fill('.cn-resposta textarea', 'Foi em março.');
+    await pr.p.click('.cn-resposta button[type=submit]');
+    await esperarTexto(pr.p, /Foi em março/);
+    conferir('responder volta o pedido para "Em atendimento"', /Em atendimento/.test(await pr.p.locator('.cn-selos').innerText()) && !/Precisamos de você/.test(await pr.p.locator('.cn-selos').innerText()));
+
+    // avaliação do atendimento resolvido
+    await pr.p.goto(SITE + '/connect/pedidos/' + AT.laudo, { waitUntil: 'networkidle' });
+    conferir('pedido resolvido pede a avaliação', /Como foi o atendimento\?/.test(await corpo(pr.p)) && (await pr.p.locator('.cn-estrelas input').count()) === 5);
+    antes = chamadas('POST', 'rpc/avaliar_atendimento');
+    await pr.p.click('.cn-estrelas label:has-text("5")');
+    await pr.p.fill('.cn-avaliacao textarea', 'Atendimento rápido.');
+    await pr.p.click('.cn-avaliacao button[type=submit]');
+    await esperarEscrita('POST', 'rpc/avaliar_atendimento', antes);
+    await esperarTexto(pr.p, /Você avaliou com/);
+    conferir('avaliar grava a nota (uma vez) e agradece', chamadas('POST', 'rpc/avaliar_atendimento') > antes && /Você avaliou com 5 de 5/.test(await corpo(pr.p)) && (await pr.p.locator('.cn-estrelas').count()) === 0);
+
+    // novo pedido, com foto
+    await pr.p.goto(SITE + '/connect/pedidos/novo', { waitUntil: 'networkidle' });
+    conferir('novo pedido: 5 tipos, propriedade/talhão e campo de foto', (await pr.p.locator('.cn-categoria').count()) === 5 && (await pr.p.locator('select[name=talhao_id] option').count()) > 1 && (await pr.p.locator('.cn-anexos-campo input[type=file]').count()) >= 1);
+    await pr.p.goto(SITE + '/connect/pedidos/novo?categoria=problema_lavoura', { waitUntil: 'networkidle' });
+    conferir('o tipo pode vir marcado pelo link (?categoria=)', await pr.p.locator('.cn-categoria input[value=problema_lavoura]').isChecked());
+    await pr.p.fill('input[name=assunto]', 'Mancha nas folhas do café');
+    await pr.p.fill('textarea[name=descricao]', 'Apareceu depois da chuva.');
+    await pr.p.setInputFiles('.cn-anexos-campo input[type=file]:not([hidden])', { name: 'folha.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') });
+    await esperarTexto(pr.p, /1 arquivo\(s\) prontos para enviar/);
+    conferir('a foto é preparada no navegador antes de enviar', /1 arquivo\(s\) prontos para enviar/.test(await corpo(pr.p)));
+    antes = chamadas('POST', 'atendimentos');
+    const antesArq = chamadas('POST', 'atendimento_arquivos');
+    await pr.p.click('button:has-text("Enviar pedido")');
+    await esperarEscrita('POST', 'atendimento_arquivos', antesArq);
+    await pr.p.waitForURL(/\/connect\/pedidos\/63/, { timeout: 8000 }).catch(() => {});
+    conferir('pedido criado, foto enviada e registrada, e a pessoa vai para a página do pedido', chamadas('POST', 'atendimentos') > antes && chamadas('POST', 'atendimento_arquivos') > antesArq && /Mancha nas folhas do café/.test(await corpo(pr.p)), pr.p.url());
+
+    // avisos
+    await pr.p.goto(SITE + '/connect/avisos', { waitUntil: 'networkidle' });
+    conferir('avisos: só os do atendimento, com "marcar todos como lidos"', (await pr.p.locator('.cn-aviso').count()) === 2 && (await pr.p.locator('button:has-text("Marcar todos como lidos")').count()) === 1);
+
+    // o produtor não entra nas telas da equipe
+    await pr.p.goto(SITE + '/connect/fila', { waitUntil: 'networkidle' });
+    conferir('a fila é da equipe: o produtor volta ao início', /\/connect$/.test(pr.p.url()), pr.p.url());
+    await pr.p.goto(SITE + '/connect/atendimentos/' + AT.folhas, { waitUntil: 'networkidle' });
+    conferir('o link da equipe leva o produtor ao pedido dele', pr.p.url().endsWith('/connect/pedidos/' + AT.folhas), pr.p.url());
+    await pr.p.goto(SITE + '/connect/pedidos/' + AT.broca, { waitUntil: 'networkidle' });
+    conferir('pedido de outro produtor não abre', !/Visita para avaliar a broca/.test(await corpo(pr.p)));
+    conferir('site Connect do produtor: sem violação de CSP nem erro de JS', pr.problemas.length === 0, pr.problemas.join(' | '));
+    await pr.contexto.close();
+
+    // celular
+    const cel = await pagina({ papel: 'produtor', largura: 390, altura: 844, celular: true });
+    for (const rota of ['/connect', '/connect/pedidos', '/connect/pedidos/novo', '/connect/pedidos/' + AT.folhas, '/connect/avisos']) {
+      await cel.p.goto(SITE + rota, { waitUntil: 'networkidle' });
+      const larguras = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+      conferir(`celular: ${rota.replace(/[0-9a-f-]{36}/, ':id')} não rola para o lado`, larguras.doc <= larguras.janela + 1, JSON.stringify(larguras));
+    }
+    await cel.contexto.close();
+  },
+
+  async connect_equipe() {
+    await subir();
+    const AT = { folhas: '63aaaaaa-0000-0000-0000-000000000001', broca: '63aaaaaa-0000-0000-0000-000000000004' };
+    const CARLOS = 'c1000000-0000-0000-0000-000000000002';
+    const eq = await pagina({ perfis: 'agronomico' });
+
+    await eq.p.goto(SITE + '/connect', { waitUntil: 'networkidle' });
+    conferir('a equipe cai direto na fila de atendimento', /\/connect\/fila$/.test(eq.p.url()), eq.p.url());
+    conferir('menu da equipe: Fila, Novo atendimento e Avisos', (await eq.p.locator('.cn-menu a:has-text("Fila de atendimento")').count()) === 1 && (await eq.p.locator('.cn-menu a:has-text("Novo atendimento")').count()) === 1 && (await eq.p.locator('.cn-menu a:has-text("Meus pedidos")').count()) === 0);
+    conferir('fila: 5 colunas e todos os 5 pedidos do escritório', (await eq.p.locator('.cn-coluna').count()) === 5 && (await eq.p.locator('.cn-card').count()) === 5);
+    const resumo = (await eq.p.locator('.cn-resumo > *').allInnerTexts()).map((x) => x.replace(/\s+/g, ' ').trim());
+    conferir('resumo: 4 em aberto, 2 sem responsável, 1 prazo vencido, 1 urgente', resumo[0]?.startsWith('4') && resumo[1]?.startsWith('2') && resumo[2]?.startsWith('1') && resumo[3]?.startsWith('1'), resumo.join(' | '));
+    const broca = eq.p.locator('.cn-card', { hasText: 'Visita para avaliar a broca' });
+    conferir('o pedido urgente e vencido aparece destacado, sem responsável', (await broca.getAttribute('class'))?.includes('cn-card-atrasado') && /Sem responsável/.test(await broca.innerText()) && /Venceu/.test(await broca.innerText()) && /urgente/.test(await broca.innerText()));
+    await eq.p.goto(SITE + '/connect/fila?quem=sem_responsavel', { waitUntil: 'networkidle' });
+    conferir('filtro "sem responsável" mostra 2', (await eq.p.locator('.cn-card').count()) === 2);
+    await eq.p.goto(SITE + '/connect/fila?atrasados=1', { waitUntil: 'networkidle' });
+    conferir('filtro "só atrasados" mostra 1', (await eq.p.locator('.cn-card').count()) === 1);
+    await eq.p.goto(SITE + '/connect/fila?q=folhas+jose', { waitUntil: 'networkidle' });
+    conferir('busca por assunto e produtor (sem acento) acha o pedido', (await eq.p.locator('.cn-card').count()) === 1);
+
+    // atendimento: tudo à vista, inclusive a nota interna
+    await eq.p.goto(SITE + '/connect/atendimentos/' + AT.folhas, { waitUntil: 'networkidle' });
+    let t = await corpo(eq.p);
+    conferir('atendimento: 3 mensagens, a nota interna marcada', (await eq.p.locator('.cn-msg').count()) === 3 && (await eq.p.locator('.cn-msg-interna').count()) === 1 && /nitrogênio/.test(t));
+    const tempo = await eq.p.locator('.cn-tempo').innerText();
+    conferir('atendimento: histórico com responsável e prioridade (nome da pessoa)', /Responsável: Carlos Pereira/.test(tempo) && /Prioridade: alta/.test(tempo));
+    const whats = await eq.p.locator('a:has-text("WhatsApp")').getAttribute('href').catch(() => '');
+    conferir('botão do WhatsApp abre a conversa com o número do produtor e o texto pronto', /^https:\/\/wa\.me\/5527990123405\?text=Ol%C3%A1%2C%20Jos%C3%A9/.test(whats ?? ''), whats ?? '');
+    conferir('atendimento: link para o cadastro do produtor', (await eq.p.locator('a:has-text("Ver cadastro")').count()) === 1);
+
+    // responder com nota interna
+    let antes = chamadas('POST', 'atendimento_mensagens');
+    await eq.p.fill('.cn-resposta textarea', 'Combinar visita na quinta.');
+    await eq.p.check('input[name=interna]');
+    await eq.p.click('.cn-resposta button[type=submit]');
+    await esperarEscrita('POST', 'atendimento_mensagens', antes);
+    await esperarTexto(eq.p, /Combinar visita na quinta/);
+    conferir('resposta como nota interna fica marcada para a equipe', chamadas('POST', 'atendimento_mensagens') > antes && (await eq.p.locator('.cn-msg-interna').count()) === 2);
+
+    // situação, responsável/prazo, assumir e retorno
+    antes = chamadas('PATCH', 'atendimentos');
+    await eq.p.selectOption('select[aria-label="Situação do pedido"]', 'resolvido');
+    await eq.p.click('button:has-text("Mudar")');
+    await esperarEscrita('PATCH', 'atendimentos', antes);
+    // o texto "Resolvido" já existe na lista de situações: espera o SELO mudar
+    await eq.p.locator('.cn-selos', { hasText: 'Resolvido' }).waitFor({ timeout: 8000 }).catch(() => {});
+    conferir('mudar a situação grava e o selo muda', chamadas('PATCH', 'atendimentos') > antes && /Resolvido/.test(await eq.p.locator('.cn-selos').innerText()));
+    antes = chamadas('PATCH', 'atendimentos');
+    await eq.p.selectOption('select[name=responsavel_id]', CARLOS);
+    await eq.p.selectOption('select[name=prioridade]', 'urgente');
+    await eq.p.fill('input[name=vencimento]', '2030-01-15');
+    await eq.p.click('button:has-text("Salvar")');
+    await esperarEscrita('PATCH', 'atendimentos', antes);
+    await eq.p.locator('.cn-selos', { hasText: 'urgente' }).waitFor({ timeout: 8000 }).catch(() => {});
+    conferir('responsável, prioridade e prazo são salvos de uma vez', chamadas('PATCH', 'atendimentos') > antes && /urgente/.test(await eq.p.locator('.cn-selos').innerText()));
+    antes = chamadas('PATCH', 'atendimentos');
+    await eq.p.click('button:has-text("Assumir este atendimento")');
+    await esperarEscrita('PATCH', 'atendimentos', antes);
+    conferir('"Assumir" grava a mudança de responsável', chamadas('PATCH', 'atendimentos') > antes);
+    antes = chamadas('POST', 'agenda_eventos');
+    await eq.p.fill('input[name=data]', '2030-02-01');
+    await eq.p.click('button:has-text("Marcar")');
+    await esperarEscrita('POST', 'agenda_eventos', antes);
+    await esperarTexto(eq.p, /Retorno marcado na agenda/);
+    conferir('retorno vai para a agenda do escritório com aviso na tela', chamadas('POST', 'agenda_eventos') > antes && /Retorno marcado na agenda/.test(await corpo(eq.p)));
+
+    // novo atendimento: passo 1 (escolher o produtor)
+    await eq.p.goto(SITE + '/connect/atendimentos/novo', { waitUntil: 'networkidle' });
+    conferir('novo atendimento: primeiro escolhe o produtor', (await eq.p.locator('select[name=produtor] option').count()) > 3);
+    await eq.p.goto(SITE + '/connect/atendimentos/novo?produtor=nao-e-um-id', { waitUntil: 'networkidle' });
+    conferir('produtor inválido volta à escolha', (await eq.p.locator('select[name=produtor]').count()) === 1);
+    await eq.p.goto(SITE + '/connect/pedidos', { waitUntil: 'networkidle' });
+    conferir('a equipe que abre a tela do produtor volta para a fila', /\/connect\/fila$/.test(eq.p.url()), eq.p.url());
+    conferir('site Connect da equipe: sem violação de CSP nem erro de JS', eq.problemas.length === 0, eq.problemas.join(' | '));
+    await eq.contexto.close();
+
+    // perfil que só consulta (financeiro): vê, mas não atende
+    const fin = await pagina({ perfis: 'financeiro' });
+    await fin.p.goto(SITE + '/connect/atendimentos/' + AT.folhas, { waitUntil: 'networkidle' });
+    t = await corpo(fin.p);
+    conferir('perfil sem permissão só consulta: sem resposta e sem painel de gestão', /só consulta/.test(t) && (await fin.p.locator('.cn-resposta').count()) === 0 && (await fin.p.locator('button:has-text("Mudar")').count()) === 0);
+    await fin.contexto.close();
+
+    // celular
+    const cel = await pagina({ perfis: 'agronomico', largura: 390, altura: 844, celular: true });
+    for (const rota of ['/connect/fila', '/connect/atendimentos/' + AT.folhas, '/connect/atendimentos/novo']) {
+      await cel.p.goto(SITE + rota, { waitUntil: 'networkidle' });
+      const larguras = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+      conferir(`celular: ${rota.replace(/[0-9a-f-]{36}/, ':id')} não rola para o lado`, larguras.doc <= larguras.janela + 1, JSON.stringify(larguras));
+    }
+    await cel.contexto.close();
   },
 
   async senhas() {

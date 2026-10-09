@@ -6,7 +6,7 @@ Um login, três sites, cada um com o próprio molde (menu, cores, telas). Quem e
 |---|---|---|---|
 | **Assistência Técnica** | Carteira, visitas, análises, laudos, recomendações, financeiro do escritório; e o portal do produtor (lavoura, laudos, atividades) | `/app` (escritório) · `/produtor` (produtor) | Menu lateral, verde |
 | **Academy** | Cursos, aulas, certificados; Estúdio da equipe | `/academy` | Barra no topo, vitrine de cursos, âmbar/terra — ver [ACADEMY.md](ACADEMY.md) |
-| **Connect** | Pedidos do produtor ao técnico, fila de atendimento, retorno | `/connect` | Azul — em construção |
+| **Connect** | Pedidos do produtor ao técnico (com foto), fila de atendimento, conversa, retorno, avaliação | `/connect` | Barra azul no topo; produtor: pedidos · equipe: fila — ver [CONNECT.md](CONNECT.md) |
 
 ## Como funciona
 

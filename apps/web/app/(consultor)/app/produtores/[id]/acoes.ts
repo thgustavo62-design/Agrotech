@@ -111,12 +111,15 @@ async function excluirProdutorImpl(fd: FormData) {
     .select('storage_path, visita:visita_id!inner(talhao:talhao_id!inner(propriedade:propriedade_id!inner(produtor_id)))')
     .eq('visita.talhao.propriedade.produtor_id', id);
   const fotosDeVisitas = (fotos ?? []).map((x) => String(x.storage_path));
+  // idem para os anexos dos pedidos do Connect (bucket atendimentos)
+  const { data: anexos } = await sb.schema('agro').from('atendimento_arquivos').select('storage_path').eq('produtor_id', id);
+  const arquivosDePedidos = (anexos ?? []).map((x) => String(x.storage_path));
 
   const { error } = await sb.schema('agro').from('produtores').delete().eq('id', id);
   if (error) lancarDoBanco(error);
 
   const pendencias = [
-    ...(await eliminarArquivosDoProdutor(sb, id, perfil?.org_id ?? null, fotosDeVisitas)),
+    ...(await eliminarArquivosDoProdutor(sb, id, perfil?.org_id ?? null, fotosDeVisitas, arquivosDePedidos)),
     ...(contaAuth ? await eliminarContaDoProdutor(sb, contaAuth, id, perfil?.org_id ?? null) : []),
   ];
   // os dados de negócio já foram apagados: o que ficou pendente precisa ser dito, não escondido
@@ -165,7 +168,7 @@ async function eliminarContaDoProdutor(sb: SupabaseClient, userId: string, produ
 }
 
 /** Apaga PDFs e fotos do produtor no Storage (o delete do banco só apaga as linhas). Devolve o que ficou pendente. */
-async function eliminarArquivosDoProdutor(sb: SupabaseClient, produtorId: string, orgId: string | null, fotosDeVisitas: string[]): Promise<string[]> {
+async function eliminarArquivosDoProdutor(sb: SupabaseClient, produtorId: string, orgId: string | null, fotosDeVisitas: string[], arquivosDePedidos: string[]): Promise<string[]> {
   const registrarArquivos = (dados: Record<string, unknown>) =>
     registrar(sb, { acao: 'produtor.arquivos_lgpd', entidade: 'produtores', entidade_id: produtorId, org_id: orgId, dados });
 
@@ -174,7 +177,7 @@ async function eliminarArquivosDoProdutor(sb: SupabaseClient, produtorId: string
     await registrarArquivos({ resultado: 'pendente: SUPABASE_SERVICE_ROLE_KEY ausente' });
     return ['os PDFs e fotos do produtor não puderam ser removidos do armazenamento (service role não configurada).'];
   }
-  const r = await removerArquivosDoProdutor(admin, { orgId, produtorId, fotosDeVisitas });
+  const r = await removerArquivosDoProdutor(admin, { orgId, produtorId, fotosDeVisitas, arquivosDePedidos });
   await registrarArquivos({ removidos: r.removidos, falhas: r.falhas, detalhes: r.detalhes.slice(0, 5) });
   return r.falhas > 0 ? [`${r.falhas} arquivo(s) não foram removidos do armazenamento (${r.detalhes[0] ?? 'erro desconhecido'}).`] : [];
 }

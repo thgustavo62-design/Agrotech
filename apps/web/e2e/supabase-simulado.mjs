@@ -29,7 +29,7 @@ const nomes = ['José da Silva Pereira', 'Maria Aparecida Souza', 'Antônio Carl
 const mun = ['Colatina', 'Baixo Guandu', 'Marilândia', 'São Domingos do Norte', 'Pancas', 'Itaguaçu'];
 const produtores = nomes.map((nome, i) => ({
   id: `p000000${i + 1}-0000-0000-0000-000000000000`, org_id: O, nome, email: `contato${i + 1}@exemplo.com`,
-  telefone: `(27) 99${i}12-34${i}5`, municipio: mun[i], user_id: i === 0 ? U : (i === 1 ? 'pu000001' : null), cpf_cnpj: `123.456.78${i}-00`, criado_em: dia(-90 + i * 10),
+  telefone: `(27) 99${i}12-34${i}5`, fone: `(27) 99${i}12-34${i}5`, municipio: mun[i], user_id: i === 0 ? U : (i === 1 ? 'pu000001' : null), cpf_cnpj: `123.456.78${i}-00`, criado_em: dia(-90 + i * 10),
 }));
 const propriedades = produtores.map((p, i) => ({ id: `r000000${i + 1}-0000-0000-0000-000000000000`, produtor_id: p.id, nome: ['Sítio Boa Vista', 'Fazenda Santa Rita', 'Chácara Esperança', 'Sítio Córrego Fundo', 'Fazenda Três Irmãos', 'Sítio Alto Verde'][i], municipio: mun[i], area_ha: 12 + i * 7, lat: -19.5 - i / 10, lng: -40.6 - i / 10 }));
 const culturas = ['cafe-conilon', 'cafe-conilon', 'milho', 'cafe-arabica', 'pimenta-do-reino', 'cafe-conilon', 'eucalipto', 'cafe-conilon'];
@@ -115,6 +115,39 @@ const academy_indicacoes = [
   { id: '62bbbbbb-0000-0000-0000-000000000002', org_id: O, conteudo_id: AC.material, produtor_id: produtores[0].id, indicado_por: U, visita_id: null, analise_id: null, mensagem: null, criado_em: dia(-5) + 'T10:00:00Z', aberto_em: dia(-5) + 'T11:00:00Z', concluido_em: dia(-4) + 'T09:00:00Z' },
 ];
 for (const a of academy_curso_aulas) { const c = academy_conteudos.find((x) => x.id === a.conteudo_id); a.conteudo = c ? { titulo: c.titulo, tipo: c.tipo, status: c.status, duracao_min: c.duracao_min } : null; }
+// Connect: pedidos do produtor (ids em formato UUID, as páginas validam). O simulador não tem RLS: para o produtor,
+// `atender` filtra por produtor e esconde nota interna (ver CONNECT_PRODUTOR abaixo).
+const AT = { folhas: '63aaaaaa-0000-0000-0000-000000000001', calagem: '63aaaaaa-0000-0000-0000-000000000002', laudo: '63aaaaaa-0000-0000-0000-000000000003', broca: '63aaaaaa-0000-0000-0000-000000000004', de_outro: '63aaaaaa-0000-0000-0000-000000000005' };
+const atBase = { org_id: O, propriedade_id: null, talhao_id: null, criado_por: U, descricao: null, categoria: 'duvida', prioridade: 'normal', status: 'novo', origem: 'portal', vencimento: null, resolvido_em: null, avaliacao: null, avaliacao_comentario: null, avaliado_em: null, responsavel_id: null };
+const atendimentos = [
+  { ...atBase, id: AT.folhas, produtor_id: produtores[0].id, assunto: 'Folhas amareladas no talhão da frente', descricao: 'Começou há uma semana, depois da chuva forte.', categoria: 'problema_lavoura', prioridade: 'alta', status: 'em_acompanhamento', responsavel_id: COLEGAS[0].id, vencimento: dia(2), talhao_id: talhoes[0].id, propriedade_id: propriedades[0].id, ultima_interacao_em: dia(-1) + 'T10:00:00Z', criado_em: dia(-3) + 'T08:00:00Z' },
+  { ...atBase, id: AT.calagem, produtor_id: produtores[0].id, assunto: 'Dúvida sobre a calagem', status: 'aguardando_produtor', responsavel_id: COLEGAS[0].id, ultima_interacao_em: dia(-2) + 'T10:00:00Z', criado_em: dia(-6) + 'T08:00:00Z' },
+  { ...atBase, id: AT.laudo, produtor_id: produtores[0].id, assunto: 'Pedido de laudo da safra', categoria: 'documento', status: 'resolvido', responsavel_id: COLEGAS[0].id, resolvido_em: dia(-1) + 'T10:00:00Z', ultima_interacao_em: dia(-1) + 'T10:00:00Z', criado_em: dia(-8) + 'T08:00:00Z' },
+  { ...atBase, id: AT.broca, produtor_id: produtores[2].id, assunto: 'Visita para avaliar a broca', categoria: 'pedido_visita', prioridade: 'urgente', vencimento: dia(-3), ultima_interacao_em: dia(-5) + 'T10:00:00Z', criado_em: dia(-5) + 'T08:00:00Z' },
+  { ...atBase, id: AT.de_outro, produtor_id: produtores[1].id, assunto: 'Assunto de outro produtor', ultima_interacao_em: dia(-1) + 'T10:00:00Z', criado_em: dia(-1) + 'T08:00:00Z' },
+];
+for (const a of atendimentos) a.produtores_id = a.produtor_id; // o simulador resolve `produtores(nome)` pela coluna <alvo>_id
+const msg = (n, at, tipo, corpo, quando, interna = false) => ({ id: `63bbbbbb-0000-0000-0000-00000000000${n}`, org_id: O, atendimento_id: at, produtor_id: produtores[0].id, autor_id: tipo === 'equipe' ? COLEGAS[0].id : U, autor_tipo: tipo, corpo, interna, criado_em: quando });
+const atendimento_mensagens = [
+  msg(1, AT.folhas, 'produtor', 'Boa tarde! As folhas estão amarelando nas pontas.', dia(-3) + 'T09:00:00Z'),
+  msg(2, AT.folhas, 'equipe', 'Boa tarde, José. Consegue mandar uma foto da folha?', dia(-2) + 'T09:00:00Z'),
+  msg(3, AT.folhas, 'equipe', 'Suspeita de falta de nitrogênio — conferir a última análise antes de responder.', dia(-2) + 'T09:30:00Z', true),
+  msg(4, AT.calagem, 'equipe', 'Qual foi a data da última calagem?', dia(-2) + 'T10:00:00Z'),
+];
+const atendimento_arquivos = [
+  { id: '63cccccc-0000-0000-0000-000000000001', org_id: O, atendimento_id: AT.folhas, mensagem_id: null, produtor_id: produtores[0].id, autor_id: U, storage_path: `${O}/${AT.folhas}/folha.jpg`, nome: 'folha.jpg', mime: 'image/jpeg', bytes: 52000, interna: false, criado_em: dia(-3) + 'T08:00:00Z' },
+];
+const atendimento_eventos = [
+  { id: '63dddddd-0000-0000-0000-000000000001', org_id: O, atendimento_id: AT.folhas, produtor_id: produtores[0].id, tipo: 'criado', de: null, para: 'novo', autor_id: U, criado_em: dia(-3) + 'T08:00:00Z' },
+  { id: '63dddddd-0000-0000-0000-000000000002', org_id: O, atendimento_id: AT.folhas, produtor_id: produtores[0].id, tipo: 'responsavel', de: null, para: COLEGAS[0].id, autor_id: COLEGAS[0].id, criado_em: dia(-3) + 'T08:30:00Z' },
+  { id: '63dddddd-0000-0000-0000-000000000003', org_id: O, atendimento_id: AT.folhas, produtor_id: produtores[0].id, tipo: 'status', de: 'novo', para: 'em_acompanhamento', autor_id: COLEGAS[0].id, criado_em: dia(-2) + 'T09:00:00Z' },
+  { id: '63dddddd-0000-0000-0000-000000000004', org_id: O, atendimento_id: AT.folhas, produtor_id: produtores[0].id, tipo: 'prazo', de: null, para: dia(2), autor_id: COLEGAS[0].id, criado_em: dia(-2) + 'T09:10:00Z' },
+  { id: '63dddddd-0000-0000-0000-000000000005', org_id: O, atendimento_id: AT.folhas, produtor_id: produtores[0].id, tipo: 'prioridade', de: 'normal', para: 'alta', autor_id: COLEGAS[0].id, criado_em: dia(-2) + 'T09:11:00Z' },
+];
+notificacoes.push(
+  { id: 'n63a', org_id: O, destinatario_user_id: U, tipo: 'atendimento_resposta', titulo: 'O técnico respondeu: Folhas amareladas no talhão da frente', corpo: 'Boa tarde, José. Consegue mandar uma foto da folha?', link: `/connect/pedidos/${AT.folhas}`, lida_em: null, criado_em: new Date(hoje.getTime() - 3600000).toISOString() },
+  { id: 'n63b', org_id: O, destinatario_user_id: U, tipo: 'atendimento_status', titulo: 'O técnico precisa de uma informação sua: Dúvida sobre a calagem', corpo: null, link: `/connect/pedidos/${AT.calagem}`, lida_em: dia(-1) + 'T10:00:00Z', criado_em: new Date(hoje.getTime() - 86400000).toISOString() },
+);
 const T = {
   profiles: [{ id: U, org_id: O, role: process.env.PAPEL ?? 'consultor', nome: process.env.PAPEL === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }],
   orgs: [{ id: O, nome: 'Campo Forte Assistência Técnica', municipio: 'Colatina', uf: 'ES', plano: 'pro', cnpj: null, criado_em: dia(-200) }],
@@ -125,11 +158,13 @@ const T = {
   planos, assinaturas: [{ id: 's1', org_id: O, plano: 'pro', planos_id: 'pro', status: 'ativa', trial_expira_em: null, atual_ate: dia(20) }], cobrancas: [], convites_equipe: convitesEquipe, convites: [], compartilhamentos: [], safras: [], producao_registros: [],
   metricas_diarias: [], audit_log: auditoria, academy_conteudos, academy_publicos, academy_indicacoes,
   academy_cursos, academy_curso_modulos, academy_curso_aulas, academy_curso_publicos: [], academy_matriculas, academy_progresso, academy_certificados,
+  atendimentos, atendimento_mensagens, atendimento_arquivos, atendimento_eventos,
 };
+const TABELAS_CONNECT = ['atendimentos', 'atendimento_mensagens', 'atendimento_arquivos', 'atendimento_eventos'];
 
 // LAUDO_PAYLOAD=arquivo.json: extração (com recortes) para o laudo em conferência d0, para olhar a tela de conferência
 if (process.env.LAUDO_PAYLOAD) documentos[0].payload = JSON.parse(readFileSync(process.env.LAUDO_PAYLOAD, 'utf8'));
-const PLURAL = { curso: 'academy_cursos', conteudo: 'academy_conteudos',  talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos' };
+const PLURAL = { curso: 'academy_cursos', conteudo: 'academy_conteudos',  talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos', produtores: 'produtores' };
 
 function divide(s) { // separa por vírgula respeitando parênteses
   const out = []; let nivel = 0; let atual = '';
@@ -173,6 +208,13 @@ const painel = {
 };
 
 const jwt = assinar;
+let seq = 0;
+const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+/** lê o corpo da requisição como JSON (vazio = {}) e entrega ao tratador */
+function corpoJson(req, tratador) {
+  let c = ''; req.on('data', (d) => { c += d; });
+  req.on('end', () => { let b = {}; try { b = c ? JSON.parse(c) : {}; } catch { /* corpo não é JSON (upload): ignora */ } tratador(b); });
+}
 
 // LATENCIA_MS simula a ida e volta até o Supabase (ex.: 80); LOG=1 imprime cada chamada com o instante.
 const LATENCIA = Number(process.env.LATENCIA_MS ?? 0);
@@ -240,15 +282,36 @@ function atender(req, res) {
     if (fn === 'painel_consultor') return json(painel);
     if (fn === 'tenho_feature') return json(true);
     if (fn === 'producao_visivel_consultor' || fn === 'casar_produtor') return json([]);
+    if (fn === 'avaliar_atendimento') { // regras da função do banco (0049), no essencial
+      return corpoJson(req, (b) => {
+        const a = T.atendimentos.find((x) => x.id === b.p_id);
+        if (!a) return json({ code: '42501', message: 'Pedido não encontrado.' }, 403);
+        if (a.status !== 'resolvido') return json({ code: '22023', message: 'Só dá para avaliar depois que o pedido for resolvido.' }, 400);
+        if (a.avaliado_em) return json({ code: '22023', message: 'Este atendimento já foi avaliado.' }, 400);
+        Object.assign(a, { avaliacao: b.p_nota, avaliacao_comentario: b.p_comentario ?? null, avaliado_em: new Date().toISOString() });
+        json(null);
+      });
+    }
     return json(null);
   }
+
+  // Storage: envio de anexos, links assinados e a imagem de teste (1x1) que o link assinado devolve
+  if (url.pathname.startsWith('/storage/v1/object/sign/') && req.method === 'POST') {
+    return corpoJson(req, (b) => json((b.paths ?? []).map((p) => ({ path: p, signedURL: `/object/sign/atendimentos/${p}?token=t`, error: null }))));
+  }
+  if (url.pathname.startsWith('/storage/v1/object/sign/')) { res.writeHead(200, { 'content-type': 'image/png' }); return res.end(PNG_1X1); }
+  if (url.pathname.startsWith('/storage/v1/object/') && (req.method === 'POST' || req.method === 'PUT')) { req.resume(); return json({ Key: url.pathname.replace('/storage/v1/object/', ''), Id: 'obj' }); }
+  if (url.pathname.startsWith('/storage/v1/object/') && req.method === 'DELETE') return corpoJson(req, () => json([]));
 
   if (url.pathname.startsWith('/rest/v1/')) {
     const tabela = url.pathname.split('/').pop();
     let linhas = [...(T[tabela] ?? [])];
+    // o simulador não tem RLS: para o produtor, as tabelas do Connect mostram só o que o banco mostraria
+    if (papel === 'produtor' && TABELAS_CONNECT.includes(tabela)) linhas = linhas.filter((r) => r.produtor_id === produtores[0].id && !r.interna);
     for (const [k, v] of url.searchParams) {
       if (['select', 'order', 'limit', 'offset', 'on_conflict', 'columns'].includes(k) || k.includes('.')) continue; // filtros em recurso aninhado: depois de montar
       const m = /^eq\.(.*)$/.exec(v); if (m) linhas = linhas.filter((r) => String(r[k]) === m[1]);
+      const lk = /^like\.(.*)$/.exec(v); if (lk) { const re = new RegExp('^' + lk[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*') + '$'); linhas = linhas.filter((r) => re.test(String(r[k] ?? ''))); }
       if (v === 'is.null') linhas = linhas.filter((r) => r[k] == null);
       if (v === 'not.is.null') linhas = linhas.filter((r) => r[k] != null);
       const cs = /^cs.{(.*)}$/.exec(v); if (cs) linhas = linhas.filter((r) => cs[1].split(',').every((x) => (r[k] ?? []).includes(x)));
@@ -257,6 +320,33 @@ function atender(req, res) {
     const lim = Number(url.searchParams.get('limit')); if (lim) linhas = linhas.slice(0, lim);
     const total = linhas.length;
     const extra = { 'content-range': total ? `0-${total - 1}/${total}` : '*/0' };
+    if (TABELAS_CONNECT.includes(tabela) && (req.method === 'POST' || req.method === 'PATCH')) {
+      // as tabelas do Connect guardam de verdade (com os efeitos dos gatilhos do 0049, no essencial): a tela seguinte já mostra o resultado
+      return corpoJson(req, (b) => {
+        const agora = new Date().toISOString();
+        if (req.method === 'POST') {
+          const novas = (Array.isArray(b) ? b : [b]).map((r) => {
+            const nova = { id: `63${String(++seq).padStart(6, '0')}-0000-0000-0000-000000000000`, criado_em: agora, ...r };
+            if (tabela === 'atendimentos') Object.assign(nova, { ...atBase, ...r, id: nova.id, status: 'novo', origem: papel === 'produtor' ? 'portal' : 'equipe', ultima_interacao_em: agora, produtores_id: r.produtor_id, criado_em: agora });
+            if (tabela === 'atendimento_mensagens') {
+              nova.autor_id = U; nova.autor_tipo = papel === 'produtor' ? 'produtor' : 'equipe'; if (papel === 'produtor') nova.interna = false;
+              const at = T.atendimentos.find((x) => x.id === nova.atendimento_id);
+              if (at) { at.ultima_interacao_em = agora; if (nova.autor_tipo === 'produtor' && ['aguardando_produtor', 'resolvido'].includes(at.status)) at.status = 'em_acompanhamento'; if (nova.autor_tipo === 'equipe' && !nova.interna && ['novo', 'em_triagem'].includes(at.status)) at.status = 'em_acompanhamento'; }
+            }
+            T[tabela].push(nova);
+            return nova;
+          });
+          const um = String(req.headers.accept ?? '').includes('vnd.pgrst.object');
+          if (!String(req.headers.prefer ?? '').includes('return=representation')) { res.writeHead(201, { 'content-type': 'application/json' }); return res.end('[]'); }
+          return json(um ? novas[0] : novas, 201);
+        }
+        for (const r of linhas) {
+          if (tabela === 'atendimentos' && b.status && b.status !== r.status) { r.resolvido_em = b.status === 'resolvido' ? agora : null; }
+          Object.assign(r, b);
+        }
+        json(linhas);
+      });
+    }
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       const quer = String(req.headers.prefer ?? '').includes('return=representation');
       res.writeHead(req.method === 'POST' ? 201 : 200, { 'content-type': 'application/json' });
