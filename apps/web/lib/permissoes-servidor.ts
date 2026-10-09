@@ -13,6 +13,8 @@ const FRASE: Record<Permissao, string> = {
   'plano.gerenciar': 'gerenciar o plano e a cobrança',
   'escritorio.editar': 'alterar os dados do escritório',
   'dados.excluir': 'excluir dados',
+  'academy.gerenciar': 'criar e publicar conteúdos da Academy',
+  'academy.indicar': 'indicar conteúdos da Academy aos produtores',
 };
 
 /**
