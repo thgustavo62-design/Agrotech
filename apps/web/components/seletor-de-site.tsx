@@ -1,6 +1,14 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { SITES, SITES_ORDEM, type SiteId } from '@/lib/sites';
+import { IconeAcademy, IconeLaudos, IconeProdutores } from '@/components/icones';
+
+const ICONE: Record<SiteId, ReactNode> = {
+  assistencia: <IconeLaudos />,
+  academy: <IconeAcademy />,
+  connect: <IconeProdutores />,
+};
 
 /**
  * "Para onde você quer ir?" — a escolha do site na tela de login. Não navega: avisa a página, que troca o texto e as cores
@@ -13,6 +21,7 @@ export function SeletorDeSite({ ativo, aoEscolher }: { ativo: SiteId; aoEscolher
       <div className="seletor-site-opcoes">
         {SITES_ORDEM.map((id) => (
           <button key={id} type="button" aria-pressed={ativo === id} onClick={() => aoEscolher(id)} data-site-opcao={id}>
+            <span className="seletor-icone" aria-hidden="true">{ICONE[id]}</span>
             <b>{SITES[id].nome}</b>
             <small>{SITES[id].chamada}</small>
           </button>

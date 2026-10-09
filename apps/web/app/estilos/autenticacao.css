@@ -9,63 +9,112 @@
 .tela-login label { margin-top: 12px; }
 .tela-login .btn { width: 100%; justify-content: center; margin-top: 18px; }
 
-/* ---------- tela de autenticação (vitrine dividida — login/cadastro) ---------- */
+/* ---------- tela de autenticação: foto de fundo inteira, texto à esquerda, cartões flutuantes no meio e o cartão do formulário
+   sobre uma cunha diagonal à direita. Cada site troca foto, cores e cartões (data-site). ---------- */
 .tela-auth {
+  --auth-gradiente: linear-gradient(100deg, rgba(4,22,14,.90) 0%, rgba(6,32,22,.70) 42%, rgba(6,30,20,.42) 100%);
+  --auth-destaque: #7fe3af; --auth-rotulo: #8fd2ac; --auth-texto: #d3e7dc; --auth-icone-fundo: rgba(20,69,54,.85); --auth-icone: #8fe0b7;
+  --auth-cunha: linear-gradient(90deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+  position: relative; isolation: isolate; overflow: hidden;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  background: var(--papel);
-}
-.tela-auth-foto {
-  position: relative;
-  display: flex; flex-direction: column;
-  padding: 44px 46px;
-  color: #eaf3ee;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .8fr) minmax(420px, 500px);
+  background-color: #0a1f17;
+  background-image: var(--auth-gradiente), var(--auth-foto, none);
   background-size: cover; background-position: center;
 }
-.tela-auth-marca { display: flex; align-items: center; gap: 13px; }
-.tela-auth-marca b { display: block; font-size: 23px; font-weight: 800; letter-spacing: -.03em; color: #fff; }
-.tela-auth-marca span { display: block; margin-top: 1px; font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #8fd2ac; }
-.tela-auth-risco { width: 40px; height: 2px; background: #4fb286; border: none; margin: 26px 0 22px; opacity: .8; }
-.tela-auth-corpo { margin-top: auto; padding-top: 34px; max-width: 480px; }
-.tela-auth-corpo h1 { font-size: 33px; line-height: 1.16; color: #fff; margin: 0 0 14px; }
-.tela-auth-corpo h1 em { font-style: normal; color: #7fe3af; }
-.tela-auth-corpo > p { font-size: 14.5px; color: #cfe3d7; margin: 0 0 30px; max-width: 400px; }
-.tela-auth-recursos { display: flex; flex-direction: column; gap: 16px; }
-.recurso-auth { display: flex; align-items: flex-start; gap: 13px; }
-.recurso-auth-icone {
-  flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  background: #144536; color: #8fe0b7;
+.tela-auth-cunha {
+  position: absolute; z-index: -1; top: 0; right: 0; bottom: 0; width: max(46vw, 640px);
+  clip-path: polygon(24% 0, 100% 0, 100% 100%, 0 100%);
+  background: var(--auth-cunha); backdrop-filter: blur(5px);
 }
-.recurso-auth b { display: block; font-size: 14px; color: #fff; font-weight: 700; }
-.recurso-auth p { margin: 2px 0 0; font-size: 12.5px; color: #bfd8ca; line-height: 1.4; }
+.tela-auth-foto {
+  position: relative; display: flex; flex-direction: column;
+  padding: 44px 0 44px clamp(28px, 6vw, 92px);
+  color: #eaf3ee;
+}
+.tela-auth-marca { display: flex; align-items: center; gap: 13px; }
+.tela-auth-marca b { display: block; font-size: 25px; font-weight: 800; letter-spacing: -.03em; color: #fff; line-height: 1.1; }
+.tela-auth-marca span { display: block; margin-top: 5px; font-size: 11px; font-weight: 700; letter-spacing: .26em; text-transform: uppercase; color: var(--auth-rotulo); }
+.tela-auth-eyebrow { margin: 34px 0 0; font-size: 10.5px; font-weight: 600; letter-spacing: .34em; text-transform: uppercase; color: rgba(255,255,255,.72); }
+.tela-auth-corpo { margin-top: auto; margin-bottom: auto; padding-top: 22px; max-width: 470px; }
+.tela-auth-corpo h1 { font-size: clamp(32px, 3.4vw, 46px); line-height: 1.07; letter-spacing: -.035em; color: #fff; margin: 0 0 18px; }
+.tela-auth-corpo h1 em { font-style: normal; color: var(--auth-destaque); }
+.tela-auth-corpo > p { font-size: 15.5px; line-height: 1.5; color: var(--auth-texto); margin: 0 0 30px; max-width: 430px; }
+.tela-auth-recursos { display: flex; flex-direction: column; gap: 18px; }
+.recurso-auth { display: flex; align-items: center; gap: 15px; }
+.recurso-auth-icone {
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--auth-icone-fundo); color: var(--auth-icone); border: 1px solid rgba(255,255,255,.08);
+}
+.recurso-auth-icone svg { width: 22px; height: 22px; }
+.recurso-auth b { display: block; font-size: 15px; color: #fff; font-weight: 700; }
+.recurso-auth p { margin: 2px 0 0; font-size: 13px; color: var(--auth-texto); line-height: 1.4; }
+
+/* cartões de vidro no meio: só enfeite (o que o site oferece) */
+.tela-auth-flutuantes { position: relative; min-height: 560px; align-self: center; }
+.fl {
+  position: absolute; display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 16px; color: #fff;
+  background: rgba(8,22,16,.46); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(14px);
+  box-shadow: 0 14px 40px rgba(0,0,0,.28); min-width: 190px; max-width: 290px;
+}
+.fl-icone { flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--auth-icone-fundo); color: var(--auth-icone); }
+.fl-icone svg { width: 20px; height: 20px; }
+.fl b { display: block; font-size: 13.5px; line-height: 1.25; }
+.fl small { display: block; font-size: 11.5px; color: rgba(255,255,255,.75); line-height: 1.3; margin-top: 1px; }
+.fl-1 { top: 4%; left: 2%; }
+.fl-2 { top: 54%; right: -4%; }
+.fl-3 { bottom: 3%; left: 6%; }
+.fl-foto {
+  position: absolute; top: 20%; left: 8%; width: 58%; aspect-ratio: 4 / 5; border-radius: 22px; transform: rotate(-3deg);
+  background-size: cover; background-position: center; border: 3px solid rgba(255,255,255,.55); box-shadow: 0 24px 60px rgba(0,0,0,.4);
+}
+.fl-tempo { flex-direction: column; align-items: stretch; gap: 10px; min-width: 230px; }
+.fl-tempo > div { display: flex; align-items: center; gap: 11px; }
+.fl-passo { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.2); font-size: 12px; }
+.fl-passo[data-feito="true"] { background: #3ccf8e; color: #04281b; font-weight: 800; }
+.fl-passo[data-agora="true"] { background: var(--folha); box-shadow: 0 0 0 4px rgba(96,165,250,.35); }
 
 .tela-auth-lado {
+  grid-column: -2 / -1; /* sempre a última coluna, com ou sem os cartões do meio */
   display: flex; align-items: center; justify-content: center;
-  padding: 40px 24px; overflow-y: auto;
+  padding: 40px clamp(20px, 3vw, 52px) 40px 20px; overflow-y: auto;
 }
 .tela-auth-cartao {
-  width: 100%; max-width: 420px; background: var(--papel-2);
-  border: 1px solid var(--linha); border-radius: var(--r);
-  box-shadow: var(--sombra-alta); padding: 30px;
+  width: 100%; max-width: 440px; background: #fbfdfc;
+  border: 1px solid rgba(255,255,255,.7); border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.34); padding: 28px 30px 30px;
 }
+.tela-auth-logo-cartao { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; }
+.tela-auth-logo-cartao b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; color: var(--tinta); }
+.tela-auth-logo-cartao span { display: block; margin-top: 3px; font-size: 10.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: var(--folha); }
 .tela-auth-abas {
   display: flex; gap: 4px; padding: 4px;
   background: var(--papel-3); border: 1px solid var(--linha);
-  border-radius: 11px; margin-bottom: 26px;
+  border-radius: 11px; margin: 4px 0 22px;
 }
 .tela-auth-aba {
-  flex: 1; text-align: center; padding: 9px 0; border-radius: 8px;
+  flex: 1; text-align: center; padding: 10px 0; border-radius: 8px;
   font-size: 13.5px; font-weight: 700; color: var(--grafite);
 }
 .tela-auth-aba:hover { text-decoration: none; }
 .tela-auth-aba[data-ativa="true"] { background: var(--folha); color: #fff; box-shadow: var(--sombra); }
-.tela-auth-cartao h1 { font-size: 22px; margin-bottom: 6px; }
-.tela-auth-cartao > p.legenda { color: var(--grafite); font-size: 13px; margin: 0 0 22px; }
-.tela-auth-cartao form label { margin-top: 12px; }
+.tela-auth-cartao h1 { font-size: 25px; letter-spacing: -.03em; margin: 0 0 6px; }
+.tela-auth-cartao > p.legenda { color: var(--grafite); font-size: 14px; margin: 0 0 20px; line-height: 1.45; }
+.tela-auth-cartao form label { margin-top: 13px; font-weight: 700; }
+.tela-auth-cartao .campo-auth input { padding: 12px 14px 12px 38px; border-radius: 10px; background: #f4f7f6; }
 .tela-auth-cartao .btn { width: 100%; justify-content: center; margin-top: 20px; }
-.tela-auth-rodape { margin-top: 18px; text-align: center; font-size: 12.5px; color: var(--grafite); }
+.tela-auth-cartao .btn.verde { padding: 13px 16px; font-size: 15.5px; border-radius: 10px; background: var(--folha); border-color: var(--folha); }
+.tela-auth-cartao .btn.verde:hover:not(:disabled) { background: var(--folha-escura); border-color: var(--folha-escura); }
+.tela-auth-cartao .btn.verde::after { content: "\2192"; margin-left: auto; font-size: 18px; }
+.tela-auth-cartao .btn.verde { justify-content: center; position: relative; }
+.tela-auth-cartao .btn.verde::after { position: absolute; right: 18px; }
+.tela-auth-rodape { margin-top: 18px; text-align: center; font-size: 12.5px; color: var(--grafite); line-height: 1.5; }
+.tela-auth-ajuda { display: flex; align-items: center; gap: 12px; margin-top: 4px; padding: 13px 14px; border: 1px solid var(--linha); border-radius: 12px; background: #fff; }
+.tela-auth-ajuda > span { flex-shrink: 0; color: var(--folha); display: grid; }
+.tela-auth-ajuda b { display: block; font-size: 13.5px; color: var(--tinta); }
+.tela-auth-ajuda small { display: block; font-size: 12.5px; color: var(--grafite); line-height: 1.4; margin-top: 1px; }
 
 .campo-auth { position: relative; }
 .campo-auth-icone {
@@ -90,49 +139,60 @@
 .tela-auth-ou::before, .tela-auth-ou::after { content: ""; flex: 1; height: 1px; background: var(--linha); }
 .btn-google {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 10px 0; border: 1px solid var(--linha-forte); border-radius: var(--r-p);
-  background: #fff; color: var(--tinta); font-size: 13.5px; font-weight: 700;
+  padding: 12px 0; border: 1px solid var(--linha-forte); border-radius: 10px;
+  background: #fff; color: var(--tinta); font-size: 14px; font-weight: 700;
 }
 .btn-google:hover { background: var(--papel-3); }
 
-@media (max-width: 880px) {
-  .tela-auth { grid-template-columns: 1fr; }
-  .tela-auth-foto { display: none; }
-  .tela-auth-cartao { box-shadow: none; border: none; padding: 0; }
-}
-
-/* ---------- um login, três sites: cada site com as próprias cores ---------- */
-.tela-auth { --auth-gradiente: linear-gradient(160deg, rgba(6,26,18,.55) 0%, rgba(8,34,24,.72) 45%, rgba(6,26,18,.93) 100%); }
+/* ---------- um login, três sites: cada site com foto, cores e cartões próprios ---------- */
+.tela-auth[data-site="assistencia"] { --auth-foto: url(/banners/tecnico-campo.jpg); }
+.tela-auth[data-site="assistencia"][data-produtor="true"] { --auth-foto: url(/banners/vale-verde.jpg); }
 .tela-auth[data-site="academy"] {
-  --auth-gradiente: linear-gradient(160deg, rgba(48,28,4,.50) 0%, rgba(66,38,5,.72) 45%, rgba(38,22,3,.94) 100%);
-  --folha: #b45309; --folha-clara: #fdecd3; --folha-escura: #8a3f06;
+  --auth-foto: url(/banners/cafe-cereja.jpg);
+  --auth-gradiente: linear-gradient(100deg, rgba(8,24,12,.90) 0%, rgba(10,34,16,.68) 42%, rgba(24,22,6,.40) 100%);
+  --auth-destaque: #f2c14e; --auth-rotulo: #f2c14e; --auth-texto: #e6dfc9; --auth-icone-fundo: rgba(18,58,34,.88); --auth-icone: #f2c14e;
+  --folha: #0f5a38; --folha-clara: #e2f3e9; --folha-escura: #0a4429;
 }
-.tela-auth[data-site="academy"] .tela-auth-marca span { color: #fcd38a; }
-.tela-auth[data-site="academy"] .tela-auth-risco { background: #f59e0b; }
-.tela-auth[data-site="academy"] .tela-auth-corpo h1 em { color: #fcd34d; }
-.tela-auth[data-site="academy"] .tela-auth-corpo > p, .tela-auth[data-site="academy"] .recurso-auth p { color: #f1dfc4; }
+.tela-auth[data-site="academy"] .tela-auth-logo-cartao span { color: #d99a1e; }
 .tela-auth[data-site="connect"] {
-  --auth-gradiente: linear-gradient(160deg, rgba(8,24,56,.52) 0%, rgba(10,32,74,.74) 45%, rgba(6,18,44,.94) 100%);
-  --folha: #1d4ed8; --folha-clara: #dbe7ff; --folha-escura: #173ea8;
+  --auth-foto: url(/banners/campo-aereo.jpg);
+  --auth-gradiente: linear-gradient(100deg, rgba(4,16,40,.90) 0%, rgba(6,26,58,.66) 44%, rgba(6,22,50,.34) 100%);
+  --auth-destaque: #7db0ff; --auth-rotulo: #9cc4ff; --auth-texto: #d3e1f7; --auth-icone-fundo: rgba(14,42,92,.88); --auth-icone: #7db0ff;
+  --auth-cunha: linear-gradient(90deg, #f4f7fb, #eaf0f6);
+  --folha: #1456f0; --folha-clara: #e4edff; --folha-escura: #0f43bd;
 }
-.tela-auth[data-site="connect"] .tela-auth-marca span { color: #9cc4ff; }
-.tela-auth[data-site="connect"] .tela-auth-risco { background: #60a5fa; }
-.tela-auth[data-site="connect"] .tela-auth-corpo h1 em { color: #93c5fd; }
-.tela-auth[data-site="connect"] .tela-auth-corpo > p, .tela-auth[data-site="connect"] .recurso-auth p { color: #cfe0ff; }
+.tela-auth[data-site="connect"] .tela-auth-cunha { backdrop-filter: none; }
 
-.seletor-site { margin-bottom: 18px; }
-.seletor-site > span { display: block; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--grafite); margin-bottom: 8px; }
+.seletor-site { margin-bottom: 20px; }
+.seletor-site > span { display: block; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--grafite); margin-bottom: 9px; }
 .seletor-site-opcoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .seletor-site button {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
-  padding: 10px 11px; border: 1px solid var(--linha-forte); border-radius: var(--r); background: var(--papel-2);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left;
+  padding: 11px 11px 12px; border: 1px solid var(--linha-forte); border-radius: 12px; background: #fff;
   color: var(--tinta); cursor: pointer; font: inherit; line-height: 1.25;
 }
-.seletor-site button b { font-size: 13.5px; }
-.seletor-site button small { font-size: 11.5px; color: var(--grafite); }
-.seletor-site button[aria-pressed="true"] { border-color: var(--folha); box-shadow: 0 0 0 2px color-mix(in srgb, var(--folha) 25%, transparent); background: var(--folha-clara); }
+.seletor-site button .seletor-icone { display: grid; color: var(--tinta); margin-bottom: 4px; }
+.seletor-site button .seletor-icone svg { width: 22px; height: 22px; }
+.seletor-site button b { font-size: 13px; }
+.seletor-site button small { font-size: 11px; color: var(--grafite); }
+.seletor-site button[aria-pressed="true"] { border-color: var(--folha); border-width: 2px; padding: 10px 10px 11px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--folha) 16%, transparent); background: var(--folha-clara); }
+.seletor-site button[aria-pressed="true"] .seletor-icone, .seletor-site button[aria-pressed="true"] b { color: var(--folha); }
 .seletor-site button:focus-visible { outline: 2px solid var(--folha); outline-offset: 2px; }
-@media (max-width: 520px) { .seletor-site-opcoes { grid-template-columns: 1fr; } .seletor-site button small { display: none; } }
+@media (max-width: 520px) { .seletor-site-opcoes { grid-template-columns: 1fr; } .seletor-site button small { display: none; } .seletor-site button { flex-direction: row; align-items: center; gap: 10px; } .seletor-site button .seletor-icone { margin: 0; } }
+
+/* telas médias: some o enfeite do meio, ficam o texto e o cartão */
+@media (max-width: 1240px) {
+  .tela-auth { grid-template-columns: minmax(0, 1fr) minmax(400px, 480px); }
+  .tela-auth-flutuantes { display: none; }
+  .tela-auth-foto { padding-left: clamp(24px, 4vw, 56px); }
+}
+/* celular e tablet em pé: só o cartão (tela de entrar não precisa de decoração) */
+@media (max-width: 880px) {
+  .tela-auth { grid-template-columns: 1fr; background: var(--papel); background-image: none; }
+  .tela-auth-foto, .tela-auth-cunha { display: none; }
+  .tela-auth-lado { padding: 24px 18px; }
+  .tela-auth-cartao { box-shadow: none; border: none; padding: 0; background: transparent; max-width: 460px; }
+}
 
 /* ---------- "Trocar de site": a escolha de quem já entrou ---------- */
 .hub { min-height: 100vh; padding: 28px 22px 60px; max-width: 1080px; margin: 0 auto; }

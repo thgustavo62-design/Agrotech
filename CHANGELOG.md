@@ -5,6 +5,7 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 
 ## 2026-10-09
 
+- **Nova tela de entrada** nos três sites: foto da lavoura em tela cheia, texto da marca, cartões de vidro com o que o site oferece e o cartão de login com ícones na escolha do site. Cada site com foto, cores e texto próprios (Academy: "Bem-vindo de volta", "Entrar na Academy").
 - **Connect (novo):** o produtor **pede ajuda ao técnico com foto** e acompanha a resposta; a equipe atende numa **fila** com responsável, prazo, prioridade e histórico, conversa com **nota interna** (o produtor não vê) e atalho do WhatsApp (o clique é seu). O produtor avalia o atendimento resolvido. Excluir um produtor (LGPD) apaga também as fotos dos pedidos. Migração `0049`. Ver [docs/CONNECT.md](docs/CONNECT.md).
 - **Três sites, uma conta:** a tela de login agora pergunta **para onde você quer ir** — Assistência Técnica, Academy ou Connect — e cada um tem o próprio molde. "Trocar de site" no topo. A Academy saiu de dentro da Assistência Técnica. Ver [docs/SITES.md](docs/SITES.md).
 - **Academy como site de cursos** (estilo plataforma de cursos): vitrine, catálogo com filtros, **cursos com módulos e aulas**, progresso, matrícula automática, vídeo do YouTube/Vimeo dentro da página (só depois do clique) e **certificado de participação** imprimível ao concluir. Equipe monta tudo no **Estúdio** (cursos, conteúdos, notícias com fonte, visibilidade por cultura, indicação a produtores, acompanhamento dos alunos). Ver [docs/ACADEMY.md](docs/ACADEMY.md). Migrações 0047 e 0048.

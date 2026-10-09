@@ -101,3 +101,13 @@ export const IconeGoogle = (p: SVGProps<SVGSVGElement>) => (
 export const IconeAcademy = (p: Props) => (
   <svg {...base(p)}><path d="M2.5 9 12 4.5 21.5 9 12 13.5 2.5 9Z" /><path d="M6 11.2V16c0 1.4 2.7 2.8 6 2.8s6-1.4 6-2.8v-4.8" /><path d="M21.5 9v5.5" /></svg>
 );
+
+export const IconePlay = (p: Props) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M10 8.5v7l6-3.5-6-3.5Z" /></svg>
+);
+export const IconeCamera = (p: Props) => (
+  <svg {...base(p)}><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.4-2h5.2L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-9Z" /><circle cx="12" cy="13" r="3.4" /></svg>
+);
+export const IconeSuporte = (p: Props) => (
+  <svg {...base(p)}><path d="M4.5 13v-1a7.5 7.5 0 0 1 15 0v1" /><rect x="3.5" y="13" width="4" height="6" rx="1.6" /><rect x="16.5" y="13" width="4" height="6" rx="1.6" /><path d="M18.5 19c0 1.4-1.6 2-4 2" /></svg>
+);

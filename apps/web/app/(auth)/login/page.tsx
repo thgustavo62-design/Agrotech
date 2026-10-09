@@ -6,23 +6,26 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { criarClienteNavegador } from '@/lib/supabase/client';
 import { siteDeValor, type SiteId } from '@/lib/sites';
-import { TelaAuth, type RecursoAuth } from '@/components/tela-auth';
+import { AndamentoFlutuante, CartaoFlutuante, FotoFlutuante, TelaAuth, type RecursoAuth } from '@/components/tela-auth';
 import { CampoAuth, CampoSenha } from '@/components/campo-auth';
 import { SeletorDeSite } from '@/components/seletor-de-site';
 import { FOTO_CAFE, FOTO_CONSULTOR, FOTO_PRODUTOR } from '@/components/banner-hero';
 import {
-  IconeAcademy, IconeAgenda, IconeAnalises, IconeCadeado, IconeEmail, IconeFinanceiro, IconeGoogle, IconeLaudos,
-  IconeMonitoramento, IconeProdutores, IconeTalhoes,
+  IconeAcademy, IconeAgenda, IconeAnalises, IconeCadeado, IconeCamera, IconePlay, IconePropriedades, IconeSuporte, IconeEmail, IconeFinanceiro, IconeGoogle, IconeLaudos,
+  IconeMonitoramento, IconeProdutores, IconeRecomendacoes, IconeTalhoes,
 } from '@/components/icones';
 
 interface TextoDoSite {
   imagem: string;
   tagline: string;
+  eyebrow: string;
   headline: ReactNode;
   descricao: string;
   recursos: RecursoAuth[];
   titulo: string;
   legenda: string;
+  botao: string;
+  flutuantes: ReactNode;
 }
 
 /** O que cada site diz na entrada. Assistência Técnica muda o texto para quem é produtor (o destino vem do papel da conta). */
@@ -31,36 +34,64 @@ function textoDoSite(site: SiteId, produtor: boolean): TextoDoSite {
     return {
       imagem: FOTO_CAFE,
       tagline: 'Academy',
-      headline: <>Aprenda no seu ritmo, <em>com o que o seu agrônomo escolheu.</em></>,
-      descricao: 'Cursos, aulas em vídeo e texto e certificados de participação, no celular ou no computador.',
+      eyebrow: 'Conhecimento que gera resultados',
+      headline: <>Aprenda, evolua e aplique <em>no campo.</em></>,
+      descricao: 'Cursos, aulas práticas, conteúdos técnicos e certificados para você levar mais produtividade para a sua lavoura.',
       recursos: [
-        { icone: <IconeAcademy />, titulo: 'Cursos e trilhas', descricao: 'Aulas organizadas em módulos, do básico ao avançado.' },
-        { icone: <IconeLaudos />, titulo: 'Indicado para você', descricao: 'O que o seu agrônomo recomenda depois de uma visita ou de um laudo.' },
-        { icone: <IconeAnalises />, titulo: 'Certificado', descricao: 'Ao concluir um curso você emite o certificado de participação.' },
+        { icone: <IconeAcademy />, titulo: 'Cursos e trilhas', descricao: 'Do básico ao avançado, no seu ritmo.' },
+        { icone: <IconeLaudos />, titulo: 'Conteúdo prático', descricao: 'Vídeos, materiais e o que o seu agrônomo indica para o dia a dia no campo.' },
+        { icone: <IconeAnalises />, titulo: 'Certificação', descricao: 'Conclua os cursos e receba seu certificado de participação.' },
       ],
-      titulo: 'Entrar na Academy',
-      legenda: 'Use o mesmo e-mail e a mesma senha da sua conta AgroTech.',
+      titulo: 'Bem-vindo de volta',
+      legenda: 'Acesse sua conta para continuar aprendendo.',
+      botao: 'Entrar na Academy',
+      flutuantes: (
+        <>
+          <FotoFlutuante imagem={FOTO_CONSULTOR} />
+          <CartaoFlutuante posicao={1} icone={<IconePlay />} titulo="Aulas em vídeo" texto="Quando e onde quiser" />
+          <CartaoFlutuante posicao={2} icone={<IconeMonitoramento />} titulo="Conteúdo técnico" texto="Aplicado à realidade do campo" />
+          <CartaoFlutuante posicao={3} icone={<IconeRecomendacoes />} titulo="Recomendações" texto="Para cada cultura" />
+        </>
+      ),
     };
   }
   if (site === 'connect') {
     return {
       imagem: FOTO_CONSULTOR,
       tagline: 'Connect',
+      eyebrow: 'Proximidade que gera resultados',
       headline: <>Fale com o seu técnico e <em>acompanhe cada pedido.</em></>,
       descricao: 'Peça ajuda com fotos, diga onde está o problema e veja o andamento até o retorno.',
       recursos: [
-        { icone: <IconeMonitoramento />, titulo: 'Pedidos com foto', descricao: 'Mostre o problema da lavoura sem precisar escrever muito.' },
+        { icone: <IconeCamera />, titulo: 'Pedidos com foto', descricao: 'Mostre o problema da lavoura sem precisar escrever muito.' },
         { icone: <IconeAgenda />, titulo: 'Andamento e retorno', descricao: 'Saiba quem está cuidando, o prazo e quando o técnico volta.' },
         { icone: <IconeProdutores />, titulo: 'Tudo em um histórico', descricao: 'Visitas, pedidos e orientações juntos, por produtor.' },
       ],
       titulo: 'Entrar no Connect',
       legenda: 'Use o mesmo e-mail e a mesma senha da sua conta AgroTech.',
+      botao: 'Entrar',
+      flutuantes: (
+        <>
+          <FotoFlutuante imagem={FOTO_CAFE} />
+          <CartaoFlutuante posicao={1} icone={<IconeCamera />} titulo="Pedido com foto" texto="Problema identificado na lavoura" />
+          <CartaoFlutuante posicao={2} icone={<IconePropriedades />} titulo="Localização do pedido" texto="Propriedade do produtor" />
+          <AndamentoFlutuante
+            posicao={3}
+            passos={[
+              { titulo: 'Pedido recebido', texto: 'Seu técnico foi avisado', estado: 'feito' },
+              { titulo: 'Em atendimento', texto: 'Técnico analisando', estado: 'agora' },
+              { titulo: 'Retorno previsto', texto: 'Com data e prazo', estado: 'depois' },
+            ]}
+          />
+        </>
+      ),
     };
   }
   if (produtor) {
     return {
       imagem: FOTO_PRODUTOR,
-      tagline: 'Assistência Técnica · Sua lavoura',
+      tagline: 'Assistência Técnica',
+      eyebrow: 'Sua lavoura, perto do seu técnico',
       headline: <>Seus talhões, análises e resultados <em>em um só lugar.</em></>,
       descricao: 'Acompanhe o trabalho do seu técnico e a situação da sua lavoura direto do celular.',
       recursos: [
@@ -70,11 +101,21 @@ function textoDoSite(site: SiteId, produtor: boolean): TextoDoSite {
       ],
       titulo: 'Entrar na sua conta',
       legenda: 'Entrada do produtor. O acesso é criado pelo seu técnico.',
+      botao: 'Entrar',
+      flutuantes: (
+        <>
+          <FotoFlutuante imagem={FOTO_CAFE} />
+          <CartaoFlutuante posicao={1} icone={<IconeTalhoes />} titulo="Seus talhões" texto="Área, cultura e situação" />
+          <CartaoFlutuante posicao={2} icone={<IconeAnalises />} titulo="Análises de solo" texto="Resultados em linguagem simples" />
+          <CartaoFlutuante posicao={3} icone={<IconeFinanceiro />} titulo="Financeiro da lavoura" texto="Custos e receitas" />
+        </>
+      ),
     };
   }
   return {
     imagem: '/banners/tecnico-campo.jpg',
     tagline: 'Assistência Técnica',
+    eyebrow: 'Conhecimento que gera resultados',
     headline: <>Gestão técnica, visitas, análises e laudos <em>em um só lugar.</em></>,
     descricao: 'Mais produtividade para o seu dia a dia no campo com uma plataforma completa e fácil de usar.',
     recursos: [
@@ -84,6 +125,14 @@ function textoDoSite(site: SiteId, produtor: boolean): TextoDoSite {
     ],
     titulo: 'Entrar na sua conta',
     legenda: 'Acesse o painel do seu escritório.',
+    botao: 'Entrar',
+    flutuantes: (
+      <>
+        <CartaoFlutuante posicao={1} icone={<IconeAgenda />} titulo="Visitas de campo" texto="Agenda e roteirização" />
+        <CartaoFlutuante posicao={2} icone={<IconeAnalises />} titulo="Laudos e análises" texto="Registro simplificado" />
+        <CartaoFlutuante posicao={3} icone={<IconeProdutores />} titulo="Produtores e propriedades" texto="Todas as informações em um só lugar" />
+      </>
+    ),
   };
 }
 
@@ -162,6 +211,10 @@ function Login() {
       seletor={<SeletorDeSite ativo={site} aoEscolher={escolher} />}
       imagem={t.imagem}
       tagline={t.tagline}
+      eyebrow={t.eyebrow}
+      flutuantes={t.flutuantes}
+      logoNoCartao={site !== 'connect'}
+      produtor={produtor}
       headline={t.headline}
       descricao={t.descricao}
       recursos={t.recursos}
@@ -181,7 +234,7 @@ function Login() {
         {erro ? <p style={{ color: 'var(--c-mb)', fontSize: 13, marginTop: 12 }}>{erro}</p> : null}
         {aviso ? <p role="status" style={{ color: 'var(--folha)', fontSize: 13, marginTop: 12 }}>{aviso}</p> : null}
         <button type="submit" className="btn verde" disabled={carregando}>
-          {carregando ? 'Entrando…' : 'Entrar'}
+          {carregando ? 'Entrando…' : t.botao}
         </button>
         <p className="tela-auth-rodape" style={{ marginTop: 10 }}>
           <button type="button" className="link-sair" style={{ color: 'var(--folha)' }} onClick={esqueciSenha}>Esqueci minha senha</button>
@@ -200,9 +253,22 @@ function Login() {
           </p>
         </>
       ) : (
-        <p className="tela-auth-rodape">
-          Ainda não tem acesso? Peça ao seu técnico ou ao escritório que cuida da sua assistência.
-        </p>
+        <>
+          <div className="tela-auth-ou">ou</div>
+          {site === 'academy' ? (
+            <div className="tela-auth-ajuda">
+              <span aria-hidden="true"><IconeSuporte width={26} height={26} /></span>
+              <div>
+                <b>Ainda não tem acesso?</b>
+                <small>Fale com seu técnico ou com o escritório que cuida da sua assistência.</small>
+              </div>
+            </div>
+          ) : (
+            <p className="tela-auth-rodape" style={{ marginTop: 0 }}>
+              Ainda não tem acesso? Peça ao seu técnico ou ao escritório que cuida da sua assistência.
+            </p>
+          )}
+        </>
       )}
     </TelaAuth>
   );
