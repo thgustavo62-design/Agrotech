@@ -48,7 +48,7 @@ Guias: [OPERACAO.md](OPERACAO.md) · [RECUPERACAO-DE-DESASTRE.md](RECUPERACAO-DE
 | Conferido no site real (produção) | páginas públicas, login/hook, "esqueci minha senha" |
 
 ## 6. Limites conhecidos (sem rodeios)
-1. **Leitor de laudos:** provado com 1 laudo real (Água Limpa) e textos que imitam outros layouts. Falta testar PDFs reais de outros laboratórios (**precisa dos seus**).
+1. **Leitor de laudos:** provado com 1 laudo real (Água Limpa) e PDFs sintéticos de 4 estilos (SP/resina/mmolc, MG/Mehlich, cmol(c), lista) — a falha relatada em 09/10 (laudos de outros laboratórios não liam) foi corrigida com um leitor por unidades. Falta testar PDFs reais de outros laboratórios (**precisa dos seus**).
 2. **Regra de gessagem e profundidade** foi decidida por mim por delegação; **um agrônomo responsável deve revisar** os limites antes de vender para vários escritórios.
 3. **Verificação em duas etapas, senha provisória e as funções do Supabase** foram testadas no simulador e no banco de testes, **não no Supabase real**. Antes de ligar o segundo fator na sua conta: deixe outro proprietário cadastrado e saiba que a recuperação é pelo painel do Supabase.
 4. **Cobrança Asaas** nunca foi testada com conta real. O código foi endurecido (o pagamento só ativa o escritório e o plano certos, valor errado não ativa, nada se perde), mas **falta o ensaio no sandbox do Asaas** (conta sua) antes de cobrar de verdade. **Edge Functions** não estão publicadas (precisam de um token seu).

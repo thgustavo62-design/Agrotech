@@ -3,6 +3,11 @@
 O que mudou no AgroTech, mais recente primeiro. Detalhe técnico de cada entrega: [docs/PROGRESSO.md](docs/PROGRESSO.md).
 Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produção só depois dos testes.
 
+## 2026-10-09
+
+- **Leitura de laudos de outros laboratórios:** novo leitor por linha, guiado pelas unidades (mmolc/dm³, cmol(c)/dm³, g/kg…), que não depende de o laudo dizer "Mehlich". Antes, esses PDFs caíam em "nenhum perfil reconhecido". Livros e guias continuam recusados.
+- Laudo cuja leitura (OCR) foi interrompida não fica mais preso em "lendo…": após 3 min a conferência abre para lançar à mão.
+
 ## 2026-10-08
 
 ### Segurança e acesso

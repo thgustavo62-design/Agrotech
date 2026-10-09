@@ -6,6 +6,7 @@ import { parseNumeroBR, norm } from './numero.js';
 import { dentroDaFaixa } from './sanidade.js';
 import { ehLaudoEmTabela, extrairLote, extrairDeOcr } from './lote/index.js';
 import { extrairTabelaHorizontal } from './horizontal.js';
+import { lerLinhaALinha } from './linha-a-linha.js';
 
 /**
  * Depois do rótulo, uma linha de laudo traz só: separadores/guia pontilhada, no máximo UMA unidade conhecida e
@@ -155,8 +156,26 @@ export function extrairDeTexto(
     if (h && plaus >= MINIMO_VALIDOS) return h;
   }
 
+  // Laboratório fora dos perfis (sem "Mehlich"/"cmolc" no texto, mmolc, resina…) ou perfil que não leu o bastante:
+  // leitor por linha, guiado pelas unidades impressas. As mesmas travas contra livros/guias valem lá dentro.
+  const lerGenerica = (): ExtracaoLaudo | null => {
+    const g = perfis === PERFIS ? lerLinhaALinha(texto) : null;
+    if (!g) return null;
+    return {
+      perfil: 'linha-a-linha',
+      laboratorio: null,
+      fonte: 'texto',
+      campos: g.campos,
+      identificacao: extrairIdentificacao(linhas, linhasNorm, PERFIS[0] as PerfilLab),
+      confianca_media: g.confianca_media,
+      avisos: g.avisos,
+    };
+  };
+
   const perfil = detectarPerfil(texto, perfis);
   if (!perfil) {
+    const generica = lerGenerica();
+    if (generica) return generica;
     return {
       perfil: null,
       laboratorio: null,
@@ -180,6 +199,8 @@ export function extrairDeTexto(
   const reconhecidos = NUCLEO.filter((k) => campos[k] != null).length;
   const plausiveis = NUCLEO.filter((k) => campos[k]?.valor != null).length;
   if (plausiveis < MINIMO_VALIDOS || reconhecidos < MINIMO_RECONHECIDOS) {
+    const generica = lerGenerica();
+    if (generica) return generica;
     return { perfil: null, laboratorio: null, campos: {}, identificacao: {}, confianca_media: 0, avisos: [NAO_E_LAUDO] };
   }
   const confianca_media = validos.length
