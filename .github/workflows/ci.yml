@@ -41,16 +41,12 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://exemplo.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: chave-de-build
           NEXT_PUBLIC_APP_URL: http://localhost:3000
-      # O OCR de laudo escaneado carrega WASM/worker por caminho dinâmico: se o rastreamento do Next não os incluir, o
-      # deploy "funciona" mas o documento fica preso em "lendo…". Confere no build Linux (o mesmo do Vercel).
-      - name: OCR — arquivos no pacote publicado
-        run: |
-          node -e "
-          const f=JSON.parse(require('fs').readFileSync('apps/web/.next/server/app/(consultor)/app/laudos/novo/page.js.nft.json','utf8')).files;
-          const n=(re)=>f.filter(x=>re.test(x)).length;
-          const r={wasm:n(/tesseract-core.*\.wasm\$/),worker:n(/worker-script/),modelo:n(/por\.traineddata/),canvas:n(/canvas-linux-x64-gnu/)};
-          console.log(r);
-          if(!r.wasm||!r.worker||!r.modelo||!r.canvas){console.error('arquivos do OCR fora do pacote publicado');process.exit(1);}"
+      # O OCR de laudo escaneado roda num worker que carrega WASM e dependências por caminho dinâmico: se o rastreamento do
+      # Next não os incluir, o deploy 'funciona' mas o documento fica preso em 'lendo…'. Este passo copia SÓ o que o build
+      # rastreou para uma pasta isolada e roda o OCR lá (Linux = mesmo sistema do Vercel).
+      - name: OCR — o pacote publicado faz OCR sozinho
+        run: node e2e/verificar-pacote-ocr.mjs
+        working-directory: apps/web
       - name: OCR — leitura de um PDF escaneado de ponta a ponta
         run: npx vitest run lib/ocr-pdf.test.ts
         working-directory: apps/web
