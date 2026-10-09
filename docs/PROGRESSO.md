@@ -9,6 +9,18 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Academy — fatia 1: biblioteca e indicação ao produtor (2026-10-09)
+
+Primeiro módulo do plano de expansão (AgroTech 2.0). Resumo, regras e o que falta: [ACADEMY.md](ACADEMY.md).
+
+- [x] **Banco (`0046`):** `academy_conteudos` (vídeo por link, artigo, material; rascunho → publicado → arquivado; revisor registrado pelo banco), `academy_publicos` (selecionados), `academy_indicacoes` (indicada → abriu → concluiu, com aviso no sino); permissões `academy.gerenciar` e `academy.indicar` (espelho em `permissoes.ts`); bucket privado `academy`. RLS: tenant + perfil (restritivas) + o produtor só lê publicado e destinado a ele. **32 testes de isolamento** (`academy.test.ts`): entre escritórios, entre produtores do mesmo escritório, permissões por perfil, o que o produtor pode marcar, regras de arquivo, LGPD. db-test: 139.
+- [x] **Escritório:** `/app/academy` (lista, métricas, busca sem acento e filtros), `/app/academy/novo`, `/app/academy/[id]` (formulário que muda por tipo; salvar rascunho/publicar/arquivar/excluir; selecionar produtores; indicar com recado; acompanhar quem abriu e concluiu). Ações de servidor com mensagens em linguagem de gente; auditoria.
+- [x] **Portal do produtor:** `/produtor/universidade` ("Indicado pelo seu agrônomo" com progresso + biblioteca com busca) e a página do conteúdo (abrir registra que abriu; "Marcar como concluído").
+- [x] **Testes:** regras puras (`lib/academy.test.ts`), suíte de navegador com o cenário `academy` (29 verificações: formulário por tipo, validações do servidor, perfis campo/consulta, produtor abre/conclui, rascunho não aparece, sem violação de CSP) — a suíte inteira está em 66 verificações. O simulador do Supabase ganhou dados da Academy e devolve as linhas atingidas por PATCH/DELETE quando o app pede `return=representation`.
+- **Limites:** vídeo abre em outra aba (embutir exige abrir a CSP); cultura é só etiqueta; ainda sem Atlas de doenças, cursos/trilhas, quiz, certificados, nem o botão "Indicar" dentro das telas de visita e laudo (a tela de indicação já aceita o contexto por parâmetros). O bucket `academy` entra na lista de arquivos sem backup.
+
+---
+
 ## Recorte do laudo ao lado de cada valor (2026-10-09)
 
 - [x] Na conferência de laudo **escaneado**, cada campo mostra o trecho da IMAGEM do laudo de onde o valor veio: o rótulo da linha + o número ampliado e circulado em vermelho. O técnico compara o impresso com o lido sem procurar no PDF — é onde a conferência humana falhava. Em laudo de várias amostras, mostra o número da coluna da amostra aberta.

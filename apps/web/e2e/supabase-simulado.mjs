@@ -67,6 +67,20 @@ const auditoria = [
   { id: 1, org_id: O, user_id: U, acao: 'escritorio.editado', dados: null, criado_em: dia(-9) + 'T10:00:00Z' },
 ];
 
+// Academy: ids em formato UUID (as páginas validam)
+const AC = { video: '62aaaaaa-0000-0000-0000-000000000001', artigo: '62aaaaaa-0000-0000-0000-000000000002', material: '62aaaaaa-0000-0000-0000-000000000003', rascunho: '62aaaaaa-0000-0000-0000-000000000004' };
+const conteudoBase = { org_id: O, autor_id: U, descricao: null, cultura: null, tema: null, nivel: 'basico', duracao_min: null, url: null, corpo: null, arquivo_path: null, fonte: null, status: 'publicado', visibilidade: 'todos', revisado_em: dia(-3) + 'T10:00:00Z', publicado_em: dia(-3) + 'T10:00:00Z', criado_em: dia(-4) + 'T10:00:00Z', atualizado_em: dia(-3) + 'T10:00:00Z' };
+const academy_conteudos = [
+  { ...conteudoBase, id: AC.video, tipo: 'video', titulo: 'Calagem na prática: quando e quanto aplicar', descricao: 'Como ler a análise e decidir a calagem.', cultura: 'Café', tema: 'calagem', duracao_min: 12, url: 'https://www.youtube.com/watch?v=exemplo', fonte: 'Produzido pelo escritório' },
+  { ...conteudoBase, id: AC.artigo, tipo: 'artigo', titulo: 'Adubação de cobertura no café', descricao: 'Parcelamento do nitrogênio.', cultura: 'Café', tema: 'adubacao', nivel: 'intermediario', corpo: ['Primeiro parágrafo da aula.', '', 'Segundo parágrafo, depois de uma linha em branco.'].join('\n'), visibilidade: 'selecionados' },
+  { ...conteudoBase, id: AC.material, tipo: 'material', titulo: 'Cartilha: coleta de solo', tema: 'solo', url: 'https://www.embrapa.br/cartilha-coleta', fonte: 'Embrapa (link)' },
+  { ...conteudoBase, id: AC.rascunho, tipo: 'video', titulo: 'Rascunho: ferrugem do cafeeiro', cultura: 'Café', tema: 'doencas', status: 'rascunho', revisado_em: null, publicado_em: null },
+];
+const academy_publicos = [{ conteudo_id: AC.artigo, produtor_id: produtores[0].id, org_id: O, criado_em: dia(-3) + 'T10:00:00Z' }];
+const academy_indicacoes = [
+  { id: '62bbbbbb-0000-0000-0000-000000000001', org_id: O, conteudo_id: AC.video, produtor_id: produtores[0].id, indicado_por: U, visita_id: null, analise_id: null, mensagem: 'Assista antes da nossa visita de quinta.', criado_em: dia(-2) + 'T10:00:00Z', aberto_em: null, concluido_em: null },
+  { id: '62bbbbbb-0000-0000-0000-000000000002', org_id: O, conteudo_id: AC.material, produtor_id: produtores[0].id, indicado_por: U, visita_id: null, analise_id: null, mensagem: null, criado_em: dia(-5) + 'T10:00:00Z', aberto_em: dia(-5) + 'T11:00:00Z', concluido_em: dia(-4) + 'T09:00:00Z' },
+];
 const T = {
   profiles: [{ id: U, org_id: O, role: process.env.PAPEL ?? 'consultor', nome: process.env.PAPEL === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }],
   orgs: [{ id: O, nome: 'Campo Forte Assistência Técnica', municipio: 'Colatina', uf: 'ES', plano: 'pro', cnpj: null, criado_em: dia(-200) }],
@@ -75,12 +89,12 @@ const T = {
   tabelas_referencia: [], financeiro_lancamentos: lancamentos, financeiro_escrit_lancamentos: lancamentos.map((l) => ({ ...l, produtor_id: null })),
   financeiro_categorias: [], financeiro_contas: [], financeiro_centros_custo: [], financeiro_orcamentos: [], financeiro_escrit_contas: [], financeiro_escrit_categorias: [],
   planos, assinaturas: [{ id: 's1', org_id: O, plano: 'pro', planos_id: 'pro', status: 'ativa', trial_expira_em: null, atual_ate: dia(20) }], cobrancas: [], convites_equipe: convitesEquipe, convites: [], compartilhamentos: [], safras: [], producao_registros: [],
-  metricas_diarias: [], audit_log: auditoria,
+  metricas_diarias: [], audit_log: auditoria, academy_conteudos, academy_publicos, academy_indicacoes,
 };
 
 // LAUDO_PAYLOAD=arquivo.json: extração (com recortes) para o laudo em conferência d0, para olhar a tela de conferência
 if (process.env.LAUDO_PAYLOAD) documentos[0].payload = JSON.parse(readFileSync(process.env.LAUDO_PAYLOAD, 'utf8'));
-const PLURAL = { talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos' };
+const PLURAL = { conteudo: 'academy_conteudos',  talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos' };
 
 function divide(s) { // separa por vírgula respeitando parênteses
   const out = []; let nivel = 0; let atual = '';
@@ -207,7 +221,11 @@ function atender(req, res) {
     const lim = Number(url.searchParams.get('limit')); if (lim) linhas = linhas.slice(0, lim);
     const total = linhas.length;
     const extra = { 'content-range': total ? `0-${total - 1}/${total}` : '*/0' };
-    if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(201, { 'content-type': 'application/json' }); return res.end('[]'); }
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const quer = String(req.headers.prefer ?? '').includes('return=representation');
+      res.writeHead(req.method === 'POST' ? 201 : 200, { 'content-type': 'application/json' });
+      return res.end(quer && req.method !== 'POST' ? JSON.stringify(linhas) : '[]');
+    }
     if (req.method === 'HEAD') { res.writeHead(200, extra); return res.end(); }
     let montadas = linhas.map((r) => montar(r, url.searchParams.get('select')));
     // filtro em recurso aninhado (ex.: analise.talhao_id=eq.X, com !inner no select)

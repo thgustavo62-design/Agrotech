@@ -5,6 +5,8 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 
 ## 2026-10-09
 
+- **Academy (nova):** a universidade do produtor. O escritório publica vídeos (por link), artigos e materiais, escolhe quem vê, **indica** a um produtor depois de uma visita ou de um laudo e acompanha se ele abriu e concluiu. O produtor tem a área "Universidade" no portal e recebe aviso. Só o que foi publicado e é para ele aparece; rascunho nunca. Detalhes em [docs/ACADEMY.md](docs/ACADEMY.md). Migração 0046.
+
 - **Recorte do laudo ao lado de cada valor:** na conferência de laudo escaneado, cada campo mostra o trecho da imagem do laudo (rótulo + número ampliado e circulado). Dá para comparar o impresso com o lido sem procurar no PDF.
 
 - **Extração de laudos mais confiável:** teste de robustez com erros de OCR simulados (252 mil valores, nenhum erro sem marca); novas conferências (V%, m%, t, pH água × CaCl₂, faixas usuais de solo); a conta da soma de bases não apaga mais um desacordo entre leituras.

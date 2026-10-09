@@ -17,3 +17,6 @@
 @import './estilos/complementos.css';
 /* Central de configurações: menu de seções, equipe e permissões, seletor de perfis, matriz. */
 @import './estilos/configuracoes.css';
+
+/* Academy: formulário do conteúdo, listas de produtores, leitura do artigo. */
+@import './estilos/academy.css';

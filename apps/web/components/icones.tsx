@@ -97,3 +97,7 @@ export const IconeGoogle = (p: SVGProps<SVGSVGElement>) => (
     <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .95 4.97l3 2.33C4.66 5.17 6.65 3.58 9 3.58Z" />
   </svg>
 );
+
+export const IconeAcademy = (p: Props) => (
+  <svg {...base(p)}><path d="M2.5 9 12 4.5 21.5 9 12 13.5 2.5 9Z" /><path d="M6 11.2V16c0 1.4 2.7 2.8 6 2.8s6-1.4 6-2.8v-4.8" /><path d="M21.5 9v5.5" /></svg>
+);
