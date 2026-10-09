@@ -58,10 +58,10 @@ export async function carregarConferencia(id: string, amostraPedida: string | un
 
   // OCR em segundo plano: a página se atualiza sozinha até o resultado chegar
   if (doc.status === 'extraindo') {
-    // O OCR tem teto de 60 s no servidor. Passou de 3 min = a leitura foi interrompida (limite de tempo, queda): em vez
+    // O OCR tem teto de 60 s no servidor (e se dá 50 s de orçamento). Passou de ~100 s = a leitura foi interrompida (limite de tempo, queda): em vez
     // de ficar "lendo…" para sempre, libera a conferência para lançar os valores à mão (o mesmo caminho do OCR que falha).
     const criado = Date.parse((data as { criado_em?: string }).criado_em ?? '');
-    if (!Number.isFinite(criado) || Date.now() - criado < 3 * 60_000) return { tipo: 'extraindo', doc };
+    if (!Number.isFinite(criado) || Date.now() - criado < 100_000) return { tipo: 'extraindo', doc };
     doc.erro = 'A leitura automática deste PDF foi interrompida — lance os valores manualmente na conferência.';
     doc.status = 'revisao';
     await sb.schema('agro').from('documentos').update({ status: 'revisao', erro: doc.erro }).eq('id', id).eq('status', 'extraindo');

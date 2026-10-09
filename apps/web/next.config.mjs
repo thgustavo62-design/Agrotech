@@ -6,6 +6,16 @@ const nextConfig = {
   // OCR de laudo escaneado: binário nativo e WASM não podem ser empacotados pelo Next
   serverExternalPackages: ['@napi-rs/canvas', 'tesseract.js', 'unpdf'],
   // visita com até 6 fotos já reduzidas no navegador (~0,3–0,8 MB cada); o padrão de 1 MB não cabe
+  // O tesseract carrega o motor WASM e o worker por caminho dinâmico: o rastreamento do Next não os vê e o OCR morria no
+  // deploy (documento preso em 'lendo…'). Aqui entram explicitamente, junto com o modelo de idioma (ocr/) e o binário do canvas.
+  outputFileTracingIncludes: {
+    '/app/laudos/novo': [
+      './ocr/**/*',
+      '../../node_modules/tesseract.js/**/*',
+      '../../node_modules/tesseract.js-core/**/*',
+      '../../node_modules/@napi-rs/canvas*/**/*',
+    ],
+  },
   experimental: { serverActions: { bodySizeLimit: '12mb' } },
 };
 

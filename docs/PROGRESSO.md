@@ -9,6 +9,15 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## OCR de laudo escaneado preso em "lendo…" na produção (2026-10-09)
+
+- [x] **Causa:** o tesseract carrega o motor WASM e o worker por caminho dinâmico; o rastreamento de arquivos do Next não os incluía (0 arquivos .wasm no pacote da página de envio), então no deploy o OCR morria ao iniciar e o documento ficava em "lendo…" sem registrar erro. No Windows funcionava (os arquivos estão em node_modules).
+- [x] **Correção:** `outputFileTracingIncludes` para a rota `/app/laudos/novo` (tesseract.js, tesseract.js-core, binário do canvas, modelo de idioma); modelo `apps/web/ocr/por.traineddata` (2,4 MB) embutido no repositório, sem download em tempo de execução; **orçamento de tempo** de 38 s para o OCR (a 1ª resolução sempre roda, as outras só se couberem; a resolução 2 sozinha leu os 42 valores do laudo real); limite duro de 50 s que grava o erro em vez de pendurar; conferência se libera sozinha após ~100 s.
+- [x] **CI (Linux = mesmo sistema do Vercel):** confere no build que WASM, worker, modelo e binário Linux do canvas estão no pacote; roda o OCR de um PDF só de imagem de ponta a ponta (`apps/web/lib/ocr-pdf.test.ts`, rodado com `OCR_SMOKE=1`).
+- **Não provado:** o OCR no Vercel de verdade (sem acesso aos logs de produção) — o primeiro envio de um escaneado depois do deploy é o teste.
+
+---
+
 ## Leitura de laudos de outros laboratórios (2026-10-09)
 
 - [x] **Causa da falha:** o leitor de uma-determinação-por-linha só entrava se o texto trouxesse "Mehlich" **e** "cmolc", e exigia o rótulo colado no número. Laudos de outros laboratórios (resina, mmolc/dm³, "cmol(c)/dm³", "Cálcio (Ca) 3,1", "pH (CaCl2)") caíam em "nenhum perfil reconhecido". Reproduzido com 4 PDFs sintéticos (`packages/agro-core/test/gerar-laudos-teste.mjs`): 0 de 4 liam.

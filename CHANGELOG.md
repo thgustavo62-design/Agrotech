@@ -6,6 +6,7 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 ## 2026-10-09
 
 - **Leitura de laudos de outros laboratórios:** novo leitor por linha, guiado pelas unidades (mmolc/dm³, cmol(c)/dm³, g/kg…), que não depende de o laudo dizer "Mehlich". Antes, esses PDFs caíam em "nenhum perfil reconhecido". Livros e guias continuam recusados.
+- **Laudo escaneado não ficava preso em "lendo…" por falha do deploy:** os arquivos do motor de OCR não iam para o servidor. Agora vão, o modelo de idioma vem junto, o OCR tem limite de tempo e o CI testa a leitura no Linux.
 - Laudo cuja leitura (OCR) foi interrompida não fica mais preso em "lendo…": após 3 min a conferência abre para lançar à mão.
 
 ## 2026-10-08
