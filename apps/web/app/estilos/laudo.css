@@ -22,3 +22,6 @@
 .conferi input { width: 16px; height: 16px; margin: 0; flex: none; }
 .conferi-geral { display: flex; align-items: flex-start; gap: 9px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--linha); border-radius: var(--r); background: var(--papel-3); font-size: 13.5px; cursor: pointer; }
 .conferi-geral input { width: 18px; height: 18px; margin: 1px 0 0; flex: none; }
+
+/* Trecho da imagem do laudo ao lado do valor lido: o técnico compara o impresso com o extraído sem procurar no PDF. */
+.recorte { display: block; width: 100%; max-width: 420px; height: auto; margin: 4px 0 6px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; }

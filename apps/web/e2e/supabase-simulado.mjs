@@ -3,6 +3,7 @@
 //   PAPEL=consultor|produtor node e2e/supabase-simulado.mjs
 import http from 'node:http';
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 // Chaves ASSIMÉTRICAS (ES256) como nos projetos novos do Supabase: o app valida o token localmente com o JWKS.
 // SIMETRICO=1 emite tokens HS256 (projeto antigo): aí o app cai na validação pela rede (getUser).
@@ -77,6 +78,8 @@ const T = {
   metricas_diarias: [], audit_log: auditoria,
 };
 
+// LAUDO_PAYLOAD=arquivo.json: extração (com recortes) para o laudo em conferência d0, para olhar a tela de conferência
+if (process.env.LAUDO_PAYLOAD) documentos[0].payload = JSON.parse(readFileSync(process.env.LAUDO_PAYLOAD, 'utf8'));
 const PLURAL = { talhao: 'talhoes', produtor: 'produtores', propriedade: 'propriedades', analise: 'analises', visita: 'visitas', documento: 'documentos', consultor: 'profiles', org: 'orgs', recomendacao: 'recomendacoes', planos: 'planos' };
 
 function divide(s) { // separa por vírgula respeitando parênteses

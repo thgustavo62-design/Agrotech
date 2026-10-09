@@ -19,6 +19,8 @@ export type Extracao = {
   identificacao: Record<string, string | null>;
   confianca_media: number;
   avisos: string[];
+  /** Trecho da imagem do laudo (JPEG em data URL) de onde veio cada valor; chave `${amostra, ou 0}:${campo}`. Só em laudo escaneado. */
+  recortes?: Record<string, string>;
 };
 
 /** [chave do campo, rótulo, unidade] na ordem em que aparecem no formulário. */
@@ -52,6 +54,16 @@ export function paraDataInput(bruto: string | null | undefined): string {
 export function escolherAmostra(amostras: AmostraExtraida[], pedida: number, confirmadas: Set<number>): AmostraExtraida | undefined {
   if (amostras.length < 2) return undefined;
   return amostras.find((a) => a.indice === pedida) ?? amostras.find((a) => !confirmadas.has(a.indice)) ?? amostras[0];
+}
+
+/** Os recortes de UMA amostra, indexados pelo campo (a extração guarda `${amostra}:${campo}`). */
+export function recortesDaAmostra(recortes: Record<string, string> | undefined, indice: number): Record<string, string> {
+  const saida: Record<string, string> = {};
+  for (const [chave, url] of Object.entries(recortes ?? {})) {
+    const [amostra, campo] = chave.split(':');
+    if (Number(amostra) === indice && campo) saida[campo] = url;
+  }
+  return saida;
 }
 
 /** Abaixo disso o valor vai destacado e só é aceito depois de corrigido ou marcado como conferido pelo técnico. */

@@ -7,6 +7,7 @@ import { PdfOriginal } from './PdfOriginal';
 import { CadastroAssistido } from './CadastroAssistido';
 import { DadosDaColeta } from './DadosDaColeta';
 import { ParametrosExtraidos } from './ParametrosExtraidos';
+import { recortesDaAmostra } from '@/lib/laudo-conferencia';
 
 /** Conferência lado a lado: PDF original | formulário com o que foi extraído. */
 export function Conferencia({
@@ -41,7 +42,7 @@ export function Conferencia({
           {multi && atual ? <input type="hidden" name="amostra_indice" value={atual.indice} /> : null}
           <CadastroAssistido produtorNoLaudo={ident.produtor} talhoes={talhoes} candidatos={candidatos} />
           <DadosDaColeta dataNoLaudo={ident.data} laboratorio={doc.laboratorio} />
-          <ParametrosExtraidos campos={campos} extras={extras} />
+          <ParametrosExtraidos campos={campos} extras={extras} recortes={recortesDaAmostra(extracao?.recortes, atual?.indice ?? 0)} />
 
           {extracao?.avisos?.length ? (
             <div className="aviso" style={{ marginBottom: 14 }}>

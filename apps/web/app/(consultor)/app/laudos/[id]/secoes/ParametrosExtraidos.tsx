@@ -2,10 +2,16 @@ import { Cartao, Tag } from '@/components/ui';
 import { CAMPOS, EXTRAS_IMPRESSOS, campoExigeConferencia, tomConfianca, type Extracao, type AmostraExtraida } from '@/lib/laudo-conferencia';
 
 /** Um campo por parâmetro, com a confiança da leitura; o técnico corrige o que estiver errado. */
-export function ParametrosExtraidos({ campos, extras }: { campos: Extracao['campos']; extras: AmostraExtraida['extras'] }) {
+export function ParametrosExtraidos({ campos, extras, recortes = {} }: {
+  campos: Extracao['campos'];
+  extras: AmostraExtraida['extras'];
+  /** campo → trecho da imagem do laudo (só em laudo escaneado): confere o impresso com o lido sem procurar no PDF */
+  recortes?: Record<string, string>;
+}) {
+  const comRecorte = Object.keys(recortes).length > 0;
   return (
     <Cartao olho="Parâmetros extraídos" titulo="Confira campo a campo">
-      <div className="grade g4">
+      <div className={comRecorte ? 'grade g2' : 'grade g4'}>
         {CAMPOS.map(([chave, rot, un]) => {
           const c = campos[chave];
           const { tom, txt } = tomConfianca(c?.confianca);
@@ -13,6 +19,11 @@ export function ParametrosExtraidos({ campos, extras }: { campos: Extracao['camp
           return (
             <div className={duvidoso ? 'campo duvidoso' : 'campo'} key={chave}>
               <label htmlFor={chave}>{rot} <span className="un">{un}</span></label>
+              {recortes[chave] ? (
+                // data URL gerado no servidor: next/image não otimiza data URL, então <img> simples
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="recorte" src={recortes[chave]} alt={`Trecho do laudo: ${rot}`} />
+              ) : null}
               <input className="mono" id={chave} name={chave} inputMode="decimal" autoComplete="off"
                 defaultValue={c?.valor ?? ''} />
               <div style={{ marginTop: 5 }}><Tag tom={tom}>{txt}</Tag></div>

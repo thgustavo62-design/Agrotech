@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { extrairDeLeiturasOcr } from '@agrotech/agro-core/parsers';
-import { lerPdfEscaneado, ORCAMENTO_OCR_MS } from '@/lib/ocr-pdf';
+import { lerPdfEscaneadoDetalhado, ORCAMENTO_OCR_MS } from '@/lib/ocr-pdf';
+import { montarRecortes } from '@/lib/recortes-imagem';
 
 /** Folga além do orçamento do OCR antes de desistir: ainda sobra tempo na função para gravar o erro. */
 const LIMITE_TOTAL_MS = ORCAMENTO_OCR_MS + 12_000;
@@ -17,14 +18,16 @@ export async function processarLaudoEscaneado(sb: SupabaseClient, documentoId: s
     const travou = new Promise<never>((_, rejeitar) => {
       relogio = setTimeout(() => rejeitar(new Error('a leitura demorou demais')), LIMITE_TOTAL_MS);
     });
-    const leituras = await Promise.race([lerPdfEscaneado(pdf), travou]);
+    const { leituras, paginas } = await Promise.race([lerPdfEscaneadoDetalhado(pdf), travou]);
     const extracao = extrairDeLeiturasOcr(leituras);
+    // trecho da imagem do laudo ao lado de cada valor, para a conferência humana (falha aqui não derruba a leitura)
+    const recortes = await montarRecortes(extracao, paginas);
     const lido = extracao.confianca_media > 0;
     await doc.update({
       status: 'revisao',
       laboratorio: extracao.laboratorio,
       texto_extraido: leituras[0] ?? '',
-      payload: extracao,
+      payload: { ...extracao, recortes },
       confianca_media: extracao.confianca_media,
       processado_em: new Date().toISOString(),
       erro: lido ? null : 'O OCR não conseguiu ler os valores deste PDF — lance-os manualmente na conferência.',

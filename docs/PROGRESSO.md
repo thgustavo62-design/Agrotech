@@ -9,6 +9,15 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Recorte do laudo ao lado de cada valor (2026-10-09)
+
+- [x] Na conferência de laudo **escaneado**, cada campo mostra o trecho da IMAGEM do laudo de onde o valor veio: o rótulo da linha + o número ampliado e circulado em vermelho. O técnico compara o impresso com o lido sem procurar no PDF — é onde a conferência humana falhava. Em laudo de várias amostras, mostra o número da coluna da amostra aberta.
+- Como: o OCR guarda a imagem da página e as linhas/palavras com posição (só da 1ª resolução); `lib/recortes-laudo.ts` acha a linha de cada campo (pela linha impressa guardada ou pelo reconhecedor de linhas da tabela) e a palavra do valor (últimas N numéricas = N amostras; senão pelos dígitos); `lib/recortes-imagem.ts` monta o JPEG pequeno (~7 KB) em data URL, guardado no `payload` do documento (~250 KB por laudo de 3 amostras). Falha ao montar recorte nunca derruba a leitura.
+- Conferido no laudo real: 42 recortes (14 campos × 3 amostras) batendo com o impresso, e na tela de conferência (sem violação de CSP). Testes: `recortes-laudo.test.ts`. `e2e/supabase-simulado.mjs` aceita `LAUDO_PAYLOAD=arquivo.json` para abrir a conferência com uma extração real.
+- **Limite:** só laudo escaneado (PDF com texto nativo não tem recorte); se o OCR não localizar a linha do campo, ele aparece sem recorte (como antes).
+
+---
+
 ## Confiabilidade da extração de laudos (2026-10-09)
 
 **Princípio:** nenhuma leitura automática chega a 100%. O que o sistema garante é que **erro de leitura não passa em silêncio**: o que ele não consegue verificar é marcado e só entra por decisão explícita de uma pessoa.

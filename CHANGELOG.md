@@ -5,6 +5,8 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 
 ## 2026-10-09
 
+- **Recorte do laudo ao lado de cada valor:** na conferência de laudo escaneado, cada campo mostra o trecho da imagem do laudo (rótulo + número ampliado e circulado). Dá para comparar o impresso com o lido sem procurar no PDF.
+
 - **Extração de laudos mais confiável:** teste de robustez com erros de OCR simulados (252 mil valores, nenhum erro sem marca); novas conferências (V%, m%, t, pH água × CaCl₂, faixas usuais de solo); a conta da soma de bases não apaga mais um desacordo entre leituras.
 - **Trava de conferência:** valor de baixa confiança só entra se você corrigir ou marcar "conferi com o laudo"; laudo lido por OCR exige confirmar que conferiu com o PDF. Validado no servidor e registrado na auditoria.
 

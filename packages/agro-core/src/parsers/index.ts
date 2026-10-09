@@ -5,6 +5,7 @@ export { PERFIS, detectarPerfil } from './perfis.js';
 export { extrairDeTexto, extrairDeLeiturasOcr } from './extrair.js';
 export { extrairTabelaHorizontal } from './horizontal.js';
 export { extrairLote, ehLaudoEmTabela, type FonteTexto } from './lote/index.js';
+export { LINHAS } from './lote/formato.js';
 export {
   CONFIANCA_MAX_LLM, ESQUEMA_LAUDO, montarPrompt, interpretarResposta, normalizarComLLM,
 } from './normalizar.js';
