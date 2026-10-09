@@ -5,6 +5,7 @@ import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { registrar } from '@/lib/audit';
 import { hojeISO } from '@/lib/formato';
 import { comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
+import { CAMPOS, pendenciasDeConferencia, type Extracao } from '@/lib/laudo-conferencia';
 
 const num = (fd: FormData, k: string): number | null => {
   const v = String(fd.get(k) ?? '').trim().replace(',', '.');
@@ -24,6 +25,26 @@ async function confirmarLaudoImpl(fd: FormData) {
   const sb = await criarClienteServidor();
   const perfil = await perfilAtual();
 
+  // laudo com várias amostras (tabela por colunas): cada confirmação vira uma análise
+  const total = Math.max(1, Math.trunc(num(fd, 'total_amostras') ?? 1));
+  const indice = total > 1 ? Math.trunc(num(fd, 'amostra_indice') ?? 0) : null;
+  if (total > 1 && (!indice || indice < 1 || indice > total)) throw new ErroDeUsuario('Amostra inválida.');
+
+  // Trava de conferência (no servidor, não só na tela): nenhuma leitura automática é 100%, então o que o leitor marcou como
+  // duvidoso só entra se o técnico corrigiu o número ou marcou "conferi com o laudo"; e laudo lido por OCR exige a
+  // confirmação geral. Sem isso, um erro de leitura virava recomendação de calagem/adubação sem ninguém ter olhado.
+  const { data: docExtraido } = await sb.schema('agro').from('documentos').select('payload').eq('id', documento_id).maybeSingle();
+  const extracao = (docExtraido?.payload ?? null) as Extracao | null;
+  if (extracao?.fonte === 'ocr' && fd.get('conferido_geral') !== 'on') {
+    throw new ErroDeUsuario('Este laudo foi lido por OCR: marque que você conferiu os valores com o PDF ao lado.');
+  }
+  const conferidos = new Set(CAMPOS.map(([k]) => k).filter((k) => fd.get(`conferido_${k}`) === 'on'));
+  const enviados = Object.fromEntries(CAMPOS.map(([k]) => [k, num(fd, k)]));
+  const pendentes = pendenciasDeConferencia(extracao, indice, enviados, conferidos);
+  if (pendentes.length > 0) {
+    throw new ErroDeUsuario(`Confira com o laudo e marque "conferi" (ou corrija o valor): ${pendentes.join(', ')}.`);
+  }
+
   const dados = {
     talhao_id,
     documento_id,
@@ -39,11 +60,6 @@ async function confirmarLaudoImpl(fd: FormData) {
     prnt: num(fd, 'prnt') ?? 85,
     incorporacao: num(fd, 'incorporacao') ?? 20,
   };
-
-  // laudo com várias amostras (tabela por colunas): cada confirmação vira uma análise
-  const total = Math.max(1, Math.trunc(num(fd, 'total_amostras') ?? 1));
-  const indice = total > 1 ? Math.trunc(num(fd, 'amostra_indice') ?? 0) : null;
-  if (total > 1 && (!indice || indice < 1 || indice > total)) throw new ErroDeUsuario('Amostra inválida.');
 
   const { data: analise, error } = await sb.schema('agro').from('analises')
     .insert({ ...dados, amostra_indice: indice }).select('id').single();
@@ -65,7 +81,7 @@ async function confirmarLaudoImpl(fd: FormData) {
     entidade: 'analises',
     entidade_id: analise.id,
     org_id: perfil?.org_id ?? null,
-    dados: { documento_id, talhao_id, amostra_indice: indice, total_amostras: total },
+    dados: { documento_id, talhao_id, amostra_indice: indice, total_amostras: total, campos_conferidos: [...conferidos], conferido_geral: fd.get('conferido_geral') === 'on' },
   });
 
   // ainda há amostras: volta à conferência para a próxima; senão abre a análise

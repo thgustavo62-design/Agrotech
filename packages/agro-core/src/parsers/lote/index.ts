@@ -3,7 +3,7 @@ import { dentroDaFaixa } from '../sanidade.js';
 import { ehLaudoEmTabela, identificarLab, LINHAS } from './formato.js';
 import { lerPassada } from './leitura.js';
 import { votar } from './votacao.js';
-import { arbitrarTotais, conferirCoerencia } from './coerencia.js';
+import { arbitrarTotais, conferirCoerencia, conferirIdentidades, marcarValoresIncomuns } from './coerencia.js';
 import type { Candidato, FonteTexto } from './tipos.js';
 
 /**
@@ -67,7 +67,11 @@ export function extrairLote(textos: string[], fonte: FonteTexto = 'texto'): Extr
     return { indice: a.indice, numero_lab: maisComum(usaveis.map((p) => p.amostras[col]?.numero_lab)), rotulo: maisComum(usaveis.map((p) => p.amostras[col]?.rotulo)), campos, extras };
   });
 
-  for (const a of amostras) conferirCoerencia(a, avisos);
+  for (const a of amostras) {
+    conferirCoerencia(a, avisos);
+    conferirIdentidades(a, avisos);
+    marcarValoresIncomuns(a, avisos);
+  }
 
   // identificação: a primeira passada que trouxer cada campo
   const identificacao: Record<string, string | null> = {};

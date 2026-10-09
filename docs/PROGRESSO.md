@@ -9,6 +9,19 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Confiabilidade da extração de laudos (2026-10-09)
+
+**Princípio:** nenhuma leitura automática chega a 100%. O que o sistema garante é que **erro de leitura não passa em silêncio**: o que ele não consegue verificar é marcado e só entra por decisão explícita de uma pessoa.
+
+- [x] **Medido, não suposto:** `agro-core/test/robustez-ocr.test.ts` estraga números das 4 leituras REAIS do laudo (vírgula perdida, dígito trocado/sumido/sobrando; 25% dos números em até 3 das 4 leituras) em centenas de rodadas e conta erros que saem com confiança alta. Com 1.500 rodadas (252 mil valores): **0 erros sem marca**; ~99,7% dos valores saem certos e o resto vai marcado. No laudo real do usuário (PDF escaneado, rodado pelo caminho do servidor): **42 de 42 certos, 0 errados**, 8 marcados.
+- [x] **Falha achada pelo teste e corrigida:** a conferência aritmética (SB = Ca+Mg+K, tolerância ±0,03) elevava a 0,95 valores em que as leituras DISCORDAVAM (1,25 × 1,26 fecham a mesma soma) — 2 erros confiantes em 33.600. Agora a conta só confirma valores em que as leituras concordam.
+- [x] **Novas defesas (só derrubam a confiança, nunca a elevam):** identidades impressas V% = SB/T, t = SB+Al, m% = Al/t; pH em água × CaCl₂ (diferença usual 0,2–1,2); **faixas usuais** por parâmetro (Zn > 30, M.O. > 8, B > 3… marcam para conferência — "possível mas raro" é onde dígito perdido aparece).
+- [x] **Trava de conferência no servidor** (`pendenciasDeConferencia`, `confirmarLaudo`): valor com confiança < 90% só é aceito se o técnico **corrigiu o número** ou marcou "conferi com o laudo" (caixa ao lado do campo, destacado); laudo lido por OCR exige a confirmação geral "conferi todos os valores com o PDF ao lado". A auditoria registra quais campos foram conferidos.
+- **Limite honesto:** se o OCR errar **do mesmo jeito em todas as leituras** e o valor cair numa faixa normal sem identidade que o confirme (ex.: Fe 19,38 lido 19,88), nenhuma regra enxerga — no pior caso simulado (mesmo erro nas 4 leituras) 159 de 240 erros ficam sem marca. Por isso a confirmação geral por pessoa é obrigatória em OCR. No laudo real as leituras erraram de formas diferentes e a votação resolveu.
+- **Para chegar mais perto:** mais laudos reais de outros laboratórios (cada layout novo é um teste novo); leitura de texto nativo quando o PDF tiver (sem OCR, sem esse risco); pré-processamento de imagem como leitura independente.
+
+---
+
 ## OCR de laudo escaneado preso em "lendo…" na produção (2026-10-09)
 
 - [x] **Causa:** o tesseract carrega o motor WASM e o worker por caminho dinâmico; o rastreamento de arquivos do Next não os incluía (0 arquivos .wasm no pacote da página de envio), então no deploy o OCR morria ao iniciar e o documento ficava em "lendo…" sem registrar erro. No Windows funcionava (os arquivos estão em node_modules).

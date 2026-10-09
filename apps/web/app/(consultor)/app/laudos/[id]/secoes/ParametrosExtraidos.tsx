@@ -1,5 +1,5 @@
 import { Cartao, Tag } from '@/components/ui';
-import { CAMPOS, EXTRAS_IMPRESSOS, tomConfianca, type Extracao, type AmostraExtraida } from '@/lib/laudo-conferencia';
+import { CAMPOS, EXTRAS_IMPRESSOS, campoExigeConferencia, tomConfianca, type Extracao, type AmostraExtraida } from '@/lib/laudo-conferencia';
 
 /** Um campo por parâmetro, com a confiança da leitura; o técnico corrige o que estiver errado. */
 export function ParametrosExtraidos({ campos, extras }: { campos: Extracao['campos']; extras: AmostraExtraida['extras'] }) {
@@ -9,12 +9,18 @@ export function ParametrosExtraidos({ campos, extras }: { campos: Extracao['camp
         {CAMPOS.map(([chave, rot, un]) => {
           const c = campos[chave];
           const { tom, txt } = tomConfianca(c?.confianca);
+          const duvidoso = campoExigeConferencia(c);
           return (
-            <div className="campo" key={chave}>
+            <div className={duvidoso ? 'campo duvidoso' : 'campo'} key={chave}>
               <label htmlFor={chave}>{rot} <span className="un">{un}</span></label>
               <input className="mono" id={chave} name={chave} inputMode="decimal" autoComplete="off"
                 defaultValue={c?.valor ?? ''} />
               <div style={{ marginTop: 5 }}><Tag tom={tom}>{txt}</Tag></div>
+              {duvidoso ? (
+                <label className="conferi" title={c?.origem}>
+                  <input type="checkbox" name={`conferido_${chave}`} required /> conferi com o laudo
+                </label>
+              ) : null}
             </div>
           );
         })}

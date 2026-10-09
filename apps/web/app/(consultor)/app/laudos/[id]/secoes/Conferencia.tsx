@@ -49,6 +49,13 @@ export function Conferencia({
             </div>
           ) : null}
 
+          {extracao?.fonte === 'ocr' ? (
+            <label className="conferi-geral">
+              <input type="checkbox" name="conferido_geral" required />
+              <span>Conferi todos os valores acima com o PDF ao lado. <b>Este laudo foi lido por OCR</b>: a leitura automática não é infalível, e o que for confirmado aqui vira recomendação de calagem e adubação.</span>
+            </label>
+          ) : null}
+
           <div className="barra-acao">
             <button className="btn verde" type="submit">
               {multi && atual ? `Confirmar amostra ${atual.indice} de ${amostras.length}` : 'Confirmar e interpretar'}

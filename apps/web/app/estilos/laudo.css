@@ -15,3 +15,10 @@
   main.vista { padding: 0; max-width: none; }
   .cartao, table, .regua-linha { break-inside: avoid; }
 }
+
+/* Conferência do laudo: valor duvidoso fica destacado e exige "conferi com o laudo" (validado também no servidor). */
+.campo.duvidoso input:not([type='checkbox']) { border-color: var(--c-mb, #b45309); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-mb, #b45309) 18%, transparent); }
+.conferi { display: flex; align-items: center; gap: 7px; margin-top: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.conferi input { width: 16px; height: 16px; margin: 0; flex: none; }
+.conferi-geral { display: flex; align-items: flex-start; gap: 9px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--linha); border-radius: var(--r); background: var(--papel-3); font-size: 13.5px; cursor: pointer; }
+.conferi-geral input { width: 18px; height: 18px; margin: 1px 0 0; flex: none; }

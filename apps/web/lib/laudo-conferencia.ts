@@ -53,3 +53,34 @@ export function escolherAmostra(amostras: AmostraExtraida[], pedida: number, con
   if (amostras.length < 2) return undefined;
   return amostras.find((a) => a.indice === pedida) ?? amostras.find((a) => !confirmadas.has(a.indice)) ?? amostras[0];
 }
+
+/** Abaixo disso o valor vai destacado e só é aceito depois de corrigido ou marcado como conferido pelo técnico. */
+export const LIMIAR_CONFERENCIA = 0.9;
+
+export function campoExigeConferencia(c: CampoExtraido | undefined): boolean {
+  return c != null && c.valor != null && c.confianca < LIMIAR_CONFERENCIA;
+}
+
+/**
+ * Campos duvidosos que o técnico nem corrigiu nem marcou como "conferi". Devolve os rótulos para a mensagem.
+ * É a trava de fim de linha: nenhuma leitura automática é 100%, então o que o sistema não consegue garantir só entra
+ * por decisão explícita de uma pessoa (corrigir o número também conta — digitar é conferir).
+ */
+export function pendenciasDeConferencia(
+  extracao: Extracao | null,
+  indice: number | null,
+  enviados: Record<string, number | null>,
+  conferidos: Set<string>,
+): string[] {
+  if (!extracao) return [];
+  const campos = (indice != null ? extracao.amostras?.find((a) => a.indice === indice)?.campos : undefined) ?? extracao.campos;
+  return CAMPOS
+    .filter(([chave]) => campoExigeConferencia(campos[chave]))
+    .filter(([chave]) => {
+      const original = campos[chave]!.valor as number;
+      const enviado = enviados[chave];
+      const corrigido = enviado == null || Math.abs(enviado - original) > 1e-9;
+      return !corrigido && !conferidos.has(chave);
+    })
+    .map(([, rotulo]) => rotulo);
+}

@@ -23,6 +23,7 @@ export const LINHAS: LinhaDef[] = [
   { chave: 'al', re: /aluminio\s*-\s*extrator/, analise: true },
   { chave: 'h_al', re: /h\s*\+\s*a[li1]\s*-\s*smp/, analise: true },
   { chave: 'sb', re: /soma de bases/, analise: false },
+  { chave: 't_efetiva', re: /capacidade de troca cationica efetiva/, analise: false },
   { chave: 't_ctc', re: /ph 7\s*\(/, analise: false },
   { chave: 'v_pct', re: /indice de saturacao em bases/, analise: false },
   { chave: 'm_pct', re: /saturacao em aluminio/, analise: false },
