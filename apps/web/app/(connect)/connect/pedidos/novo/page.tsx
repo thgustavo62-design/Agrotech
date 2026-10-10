@@ -8,11 +8,11 @@ import { FormPedido } from '@/components/connect/form-pedido';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Novo pedido · AgroTech Connect' };
 
-export default async function NovoPedido({ searchParams }: { searchParams: Promise<{ categoria?: string }> }) {
+export default async function NovoPedido({ searchParams }: { searchParams: Promise<{ categoria?: string; assunto?: string; talhao?: string }> }) {
   const perfil = await perfilAtual();
   if (perfil?.role === 'consultor' || perfil?.role === 'admin') redirect('/connect/atendimentos/novo');
 
-  const { categoria } = await searchParams;
+  const { categoria, assunto, talhao } = await searchParams;
   const inicial = (CATEGORIAS as string[]).includes(categoria ?? '') ? (categoria as CategoriaPedido) : 'duvida';
   const sb = await criarClienteServidor();
   const { propriedades, talhoes } = await carregarLocais(sb);
@@ -22,7 +22,7 @@ export default async function NovoPedido({ searchParams }: { searchParams: Promi
       <p className="cn-migalha"><Link href="/connect">Connect</Link> / Novo pedido</p>
       <h1>Novo pedido</h1>
       <p className="cn-sub">Quanto mais você contar (e mostrar), mais rápido o técnico consegue ajudar. Pode mandar foto direto do celular.</p>
-      <FormPedido propriedades={propriedades} talhoes={talhoes} categoriaInicial={inicial} />
+      <FormPedido propriedades={propriedades} talhoes={talhoes} categoriaInicial={inicial} assuntoInicial={assunto?.slice(0, 160)} talhaoInicial={talhao} />
     </main>
   );
 }

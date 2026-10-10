@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { linkPedirAjuda } from '@/lib/connect';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { f, dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
@@ -52,6 +54,7 @@ export default async function TalhoesProdutor() {
                     </small>
                   </div>
                   <Tag tom={e.tom}>{e.txt}</Tag>
+                  <Link className="btn sec mini" href={linkPedirAjuda({ assunto: `Ajuda no ${t.nome}`, categoria: 'problema_lavoura', talhaoId: t.talhao_id })}>pedir ajuda</Link>
                 </div>
               );
             })}

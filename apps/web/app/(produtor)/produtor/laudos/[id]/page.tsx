@@ -6,6 +6,7 @@ import { dataBR } from '@/lib/formato';
 import { LaudoView, type ContextoLaudo } from '@/components/laudo-view';
 import { BotaoImprimir } from '@/components/botao-imprimir';
 import { baixarLaudoPdf } from '@/lib/baixar-laudo-pdf';
+import { linkPedirAjuda } from '@/lib/connect';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,7 @@ export default async function LaudoProdutor({ params }: { params: Promise<{ id: 
             <button className="btn verde" type="submit">Baixar PDF</button>
           </form>
           <BotaoImprimir />
+          <Link className="btn sec" href={linkPedirAjuda({ assunto: `Dúvida sobre o laudo de ${ctx.emitidaEm}`, categoria: 'duvida' })}>Tirar dúvida com o técnico</Link>
           <Link className="btn sec" href="/produtor">Voltar</Link>
         </div>
       </div>

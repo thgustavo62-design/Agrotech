@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { nomeCultura } from '@/lib/culturas';
+import { linkPedirAjuda } from '@/lib/connect';
 import { Cartao, Vazio } from '@/components/ui';
 import { BannerHero, FOTO_PRODUTOR } from '@/components/banner-hero';
 
@@ -42,6 +43,7 @@ export default async function RecomendacoesProdutor() {
                   <small>{nomeCultura(r.analise?.talhao?.cultura ?? null)} · emitida em {dataBR(r.emitida_em.slice(0, 10))}</small>
                 </div>
                 <Link className="btn sec mini" href={`/produtor/laudos/${r.id}`}>ver laudo</Link>
+                <Link className="btn sec mini" href={linkPedirAjuda({ assunto: `Dúvida sobre a recomendação — ${r.analise?.talhao?.nome ?? 'talhão'}`, categoria: 'duvida' })}>tirar dúvida</Link>
               </div>
             ))}
           </div>

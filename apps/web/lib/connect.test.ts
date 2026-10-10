@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   agruparPorStatus, diasParado, estaAtrasado, filtrarFila, linkWhatsApp, nomeSeguroDeAnexo, ordenarFila, resumirFila,
-  descreverEvento, textoParaWhatsApp, validarMensagem, validarPedido, dataValida, type PedidoDaFila,
+  descreverEvento, linkPedirAjuda, textoParaWhatsApp, validarMensagem, validarPedido, dataValida, type PedidoDaFila,
 } from './connect';
 
 const pedido = (o: Partial<PedidoDaFila> & { id: string; assunto?: string; produtor?: string }): PedidoDaFila & { assunto: string; produtor: string } => ({
@@ -130,6 +130,19 @@ describe('histórico', () => {
     expect(descreverEvento({ tipo: 'prazo', de: null, para: '2026-10-20' }, 'produtor')).toBe('Prazo previsto: 20/10/2026');
     expect(descreverEvento({ tipo: 'responsavel', de: null, para: 'u1' }, 'produtor', nomes)).toBeNull();
     expect(descreverEvento({ tipo: 'prioridade', de: 'normal', para: 'alta' }, 'produtor')).toBeNull();
+  });
+});
+
+describe('link para pedir ajuda', () => {
+  const T = '63aaaaaa-0000-0000-0000-000000000001';
+  it('leva assunto, tipo e talhão válidos', () => {
+    expect(linkPedirAjuda({ assunto: 'Dúvida sobre o laudo', categoria: 'duvida', talhaoId: T }))
+      .toBe(`/connect/pedidos/novo?categoria=duvida&assunto=D%C3%BAvida+sobre+o+laudo&talhao=${T}`);
+  });
+  it('descarta o que não é seguro e corta o assunto em 160 letras', () => {
+    expect(linkPedirAjuda({})).toBe('/connect/pedidos/novo');
+    expect(linkPedirAjuda({ talhaoId: 'x" onmouseover=', categoria: 'astrologia' as never })).toBe('/connect/pedidos/novo');
+    expect(decodeURIComponent(linkPedirAjuda({ assunto: 'a'.repeat(300) }).split('assunto=')[1]!).length).toBe(160);
   });
 });
 

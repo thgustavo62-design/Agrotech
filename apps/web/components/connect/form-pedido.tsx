@@ -9,8 +9,11 @@ import { BotaoEnviar } from './botao-enviar';
  * a lista da equipe e os campos de prioridade/responsável/prazo). Sem JavaScript no navegador além do anexo de fotos.
  */
 export function FormPedido({
-  propriedades, talhoes, categoriaInicial = 'duvida', produtorId, equipe,
+  propriedades, talhoes, categoriaInicial = 'duvida', produtorId, equipe, assuntoInicial, talhaoInicial,
 }: {
+  /** vindos do link "Pedir ajuda" de outras telas */
+  assuntoInicial?: string;
+  talhaoInicial?: string;
   propriedades: OpcaoPropriedade[];
   talhoes: OpcaoTalhao[];
   categoriaInicial?: CategoriaPedido;
@@ -18,6 +21,8 @@ export function FormPedido({
   equipe?: MembroDaEquipe[];
 }) {
   const nomeProp = new Map(propriedades.map((p) => [p.id, p.nome]));
+  // só vale se o talhão é um dos que a pessoa pode escolher (o link pode vir de qualquer lugar)
+  const talhao = talhoes.find((t) => t.id === talhaoInicial);
   return (
     <form action={criarPedido} className="cn-forma">
       {produtorId ? <input type="hidden" name="produtor_id" value={produtorId} /> : null}
@@ -34,7 +39,7 @@ export function FormPedido({
 
       <label className="cn-rotulo">
         Assunto
-        <input name="assunto" required minLength={3} maxLength={160} placeholder="Ex.: folhas amareladas no talhão da frente" autoComplete="off" />
+        <input name="assunto" required minLength={3} maxLength={160} defaultValue={assuntoInicial} placeholder="Ex.: folhas amareladas no talhão da frente" autoComplete="off" />
       </label>
 
       <label className="cn-rotulo">
@@ -46,14 +51,14 @@ export function FormPedido({
         <div className="cn-duas">
           <label className="cn-rotulo">
             Propriedade <span className="cn-opcional">(opcional)</span>
-            <select name="propriedade_id" defaultValue="">
+            <select name="propriedade_id" defaultValue={talhao?.propriedade_id ?? ''}>
               <option value="">Não sei / não se aplica</option>
               {propriedades.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
             </select>
           </label>
           <label className="cn-rotulo">
             Talhão <span className="cn-opcional">(opcional)</span>
-            <select name="talhao_id" defaultValue="">
+            <select name="talhao_id" defaultValue={talhao?.id ?? ''}>
               <option value="">Não sei / não se aplica</option>
               {talhoes.map((t) => <option key={t.id} value={t.id}>{nomeProp.get(t.propriedade_id) ?? '—'} · {t.nome} ({t.cultura})</option>)}
             </select>

@@ -168,6 +168,20 @@ export function textoParaWhatsApp(nomeProdutor: string | null, assunto: string):
   return `${primeiro ? `Olá, ${primeiro}!` : 'Olá!'} Sobre o seu pedido “${assunto}” no AgroTech Connect: `;
 }
 
+/**
+ * Link para o produtor pedir ajuda a partir de outra tela (laudo, recomendação, talhão), com o assunto e o talhão já
+ * preenchidos. Só repassa o que é seguro: tipo conhecido, assunto curto, id no formato de UUID.
+ */
+export function linkPedirAjuda(o: { assunto?: string; categoria?: CategoriaPedido; talhaoId?: string }): string {
+  const q = new URLSearchParams();
+  if (o.categoria && CATEGORIAS.includes(o.categoria)) q.set('categoria', o.categoria);
+  const assunto = (o.assunto ?? '').trim().slice(0, 160);
+  if (assunto) q.set('assunto', assunto);
+  if (o.talhaoId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(o.talhaoId)) q.set('talhao', o.talhaoId);
+  const s = q.toString();
+  return s ? `/connect/pedidos/novo?${s}` : '/connect/pedidos/novo';
+}
+
 /** Nome do arquivo no Storage: sem acento, barra ou espaço; preserva a extensão. */
 export function nomeSeguroDeAnexo(nome: string): string {
   const base = nome.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[-.]+|[-.]+$/g, '');

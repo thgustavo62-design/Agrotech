@@ -18,7 +18,8 @@ Segundo site do plano de expansão (pedido "continue"). O produtor pede ajuda ao
 - [x] **Site da equipe:** fila em colunas com resumo e filtros, atendimento com nota interna, situação, responsável/prioridade/prazo, assumir, retorno na agenda, link do WhatsApp (clique da pessoa), novo atendimento em nome do produtor. Perfis sem a permissão só consultam.
 - [x] **LGPD:** excluir o produtor apaga também os arquivos do bucket `atendimentos` (`lib/lgpd-arquivos.ts`, com teste).
 - [x] **Testes:** `lib/connect.test.ts` (regras puras) e 2 cenários de navegador (`connect_produtor`, `connect_equipe`); o simulador do Supabase ganhou as tabelas do Connect, Storage e filtro `like`.
-- [ ] **Depois:** suspeita fitossanitária com fotos (origem `atlas`), botão "Pedir ajuda" nas telas de laudo/visita, painel de qualidade (tempo de resposta, avaliações), notificação por e-mail/WhatsApp (pede aprovação — serviço pago e mensagem externa).
+- [x] **"Pedir ajuda" nas telas do produtor** (laudo, recomendações, talhões) abre o pedido do Connect com assunto e talhão preenchidos (`linkPedirAjuda`).
+- [ ] **Depois:** suspeita fitossanitária com fotos (origem `atlas`), botão "Pedir ajuda" nas telas de visita do escritório, painel de qualidade (tempo de resposta, avaliações), notificação por e-mail/WhatsApp (pede aprovação — serviço pago e mensagem externa).
 
 ---
 

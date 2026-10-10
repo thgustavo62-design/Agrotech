@@ -552,6 +552,14 @@ const cenarios = {
     conferir('novo pedido: 5 tipos, propriedade/talhão e campo de foto', (await pr.p.locator('.cn-categoria').count()) === 5 && (await pr.p.locator('select[name=talhao_id] option').count()) > 1 && (await pr.p.locator('.cn-anexos-campo input[type=file]').count()) >= 1);
     await pr.p.goto(SITE + '/connect/pedidos/novo?categoria=problema_lavoura', { waitUntil: 'networkidle' });
     conferir('o tipo pode vir marcado pelo link (?categoria=)', await pr.p.locator('.cn-categoria input[value=problema_lavoura]').isChecked());
+    // vindo de "pedir ajuda" em outra tela: assunto e talhão já preenchidos (talhão fora da lista é ignorado)
+    await pr.p.goto(SITE + '/connect/pedidos/novo?assunto=Ajuda+no+Talh%C3%A3o+Sede&talhao=t0000001-0000-0000-0000-000000000000', { waitUntil: 'networkidle' });
+    conferir('"Pedir ajuda" chega com o assunto e o talhão preenchidos', (await pr.p.inputValue('input[name=assunto]')) === 'Ajuda no Talhão Sede' && (await pr.p.inputValue('select[name=talhao_id]')) === 't0000001-0000-0000-0000-000000000000');
+    await pr.p.goto(SITE + '/connect/pedidos/novo?talhao=de-outro-produtor', { waitUntil: 'networkidle' });
+    conferir('talhão desconhecido no link é ignorado', (await pr.p.inputValue('select[name=talhao_id]')) === '');
+    await pr.p.goto(SITE + '/produtor/talhoes', { waitUntil: 'networkidle' });
+    conferir('o portal do produtor oferece "pedir ajuda" em cada talhão', (await pr.p.locator('a:has-text("pedir ajuda")').count()) >= 1 && /\/connect\/pedidos\/novo\?/.test((await pr.p.locator('a:has-text("pedir ajuda")').first().getAttribute('href')) ?? ''));
+    await pr.p.goto(SITE + '/connect/pedidos/novo?categoria=problema_lavoura', { waitUntil: 'networkidle' });
     await pr.p.fill('input[name=assunto]', 'Mancha nas folhas do café');
     await pr.p.fill('textarea[name=descricao]', 'Apareceu depois da chuva.');
     await pr.p.setInputFiles('.cn-anexos-campo input[type=file]:not([hidden])', { name: 'folha.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') });
