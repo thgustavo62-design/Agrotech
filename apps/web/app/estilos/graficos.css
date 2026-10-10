@@ -1,0 +1,41 @@
+/* Gráficos do painel (SVG puro) e blocos do panorama. As cores seguem o tema (--folha) e as escalas de estado do sistema. */
+.gr-figura { margin: 0; }
+.gr { width: 100%; height: auto; display: block; overflow: visible; }
+.gr-grade { stroke: var(--linha); stroke-width: 1; stroke-dasharray: 3 4; }
+.gr-eixo { fill: var(--grafite-2); font: 600 11px var(--fonte); }
+.gr-s1 { fill: var(--folha); stroke: var(--folha); background: var(--folha); }
+.gr-s2 { fill: #e08a2e; stroke: #e08a2e; background: #e08a2e; }
+.gr-s3 { fill: #3d7fc4; stroke: #3d7fc4; background: #3d7fc4; }
+.gr-s4 { fill: #b4342a; stroke: #b4342a; background: #b4342a; }
+.gr-barra { stroke: none; transition: opacity .15s ease; }
+.gr-barra:hover { opacity: .8; }
+.gr-legenda { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 12px 0 0; padding: 0; font-size: 13px; color: var(--grafite); }
+.gr-legenda li { display: flex; align-items: center; gap: 7px; }
+.gr-legenda i { width: 11px; height: 11px; border-radius: 4px; flex: none; }
+.gr-legenda b { color: var(--tinta); font-variant-numeric: tabular-nums; }
+.gr-legenda small { color: var(--grafite-2); font-weight: 600; }
+.gr-legenda-coluna { flex-direction: column; gap: 9px; margin-top: 0; }
+.gr-legenda-coluna li span { flex: 1; }
+
+.gr-rosca { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.gr-rosca-svg { width: 168px; flex: none; }
+.gr-rosca-fundo { fill: none; stroke: var(--linha); stroke-width: 22; }
+.gr-fatia { fill: none; stroke-width: 22; stroke-linecap: butt; }
+.gr-centro-num { font: 800 34px var(--fonte); letter-spacing: -.04em; fill: var(--tinta); }
+.gr-centro-rot { font: 600 11px var(--fonte); fill: var(--grafite-2); text-transform: uppercase; letter-spacing: .1em; }
+.gr-rosca .gr-legenda { flex: 1 1 170px; }
+
+/* só para leitor de tela */
+.gr-tabela-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- panorama (início do escritório) ---------- */
+.panorama { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 14px; margin-top: 14px; align-items: stretch; }
+.panorama-largo { grid-column: 1 / -1; }
+.panorama .cartao { margin-top: 0; }
+.panorama-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.panorama-topo h2 { margin: 2px 0 0; }
+.panorama-topo a { font-size: 13px; font-weight: 600; }
+.panorama-vazio { padding: 34px 10px; text-align: center; color: var(--grafite); font-size: 13.5px; }
+.panorama-mapa { margin-top: 12px; }
+@media (max-width: 900px) { .panorama { grid-template-columns: minmax(0, 1fr); } }
+.panorama .gr-rosca { min-height: 240px; justify-content: center; }

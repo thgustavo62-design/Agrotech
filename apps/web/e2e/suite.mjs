@@ -114,6 +114,21 @@ const cenarios = {
     await dono.p.waitForSelector('.leaflet-marker-icon', { timeout: 8000 }).catch(() => {});
     conferir('mapa mostra marcadores', (await dono.p.locator('.leaflet-marker-icon').count()) > 0);
 
+    // painel inicial: gráficos reais (atividade, situação dos talhões) e mapa
+    await dono.p.goto(SITE + '/app', { waitUntil: 'networkidle' });
+    await dono.p.waitForSelector('.panorama .gr', { timeout: 8000 }).catch(() => {});
+    const painelInicial = await dono.p.evaluate(() => ({
+      graficos: document.querySelectorAll('.panorama svg.gr').length,
+      barras: document.querySelectorAll('.panorama .gr-barra').length,
+      centro: document.querySelector('.gr-centro-num')?.textContent ?? '',
+      fatias: document.querySelectorAll('.panorama .gr-fatia').length,
+      mapa: document.querySelectorAll('.panorama .leaflet-container').length,
+      larguraDoc: document.documentElement.scrollWidth <= window.innerWidth + 1,
+    }));
+    conferir('início: gráfico de atividade (3 séries × 6 meses), rosca com os 8 talhões em 3 situações e mapa', painelInicial.graficos === 2 && painelInicial.barras === 18 && painelInicial.centro === '8' && painelInicial.fatias === 3 && painelInicial.mapa === 1 && painelInicial.larguraDoc, JSON.stringify(painelInicial));
+    const legenda = (await dono.p.locator('.gr-legenda').first().innerText()).replace(/\s+/g, ' ');
+    conferir('início: a legenda soma o que existe (6 análises, 4 visitas, 3 recomendações)', /Análises 6/.test(legenda) && /Visitas 4/.test(legenda) && /Recomendações 3/.test(legenda), legenda);
+
     // cadastro direto de empregado (senha fraca barrada, senha gerada, mensagem de WhatsApp com o acesso)
     await dono.p.goto(SITE + '/app/config/equipe', { waitUntil: 'networkidle' });
     await dono.p.fill('#ce_nome', 'João da Silva');

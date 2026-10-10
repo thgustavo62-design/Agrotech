@@ -34,8 +34,10 @@ export interface TalhaoContorno {
  * — hoje nenhum registro tem; a biblioteca já suporta, falta o dado.
  */
 export function MapaPropriedades({
-  propriedades, talhoesComContorno = [],
+  propriedades, talhoesComContorno = [], altura = 420,
 }: {
+  /** altura do mapa em px */
+  altura?: number;
   propriedades: PropriedadeMapa[];
   talhoesComContorno?: TalhaoContorno[];
 }) {
@@ -57,7 +59,7 @@ export function MapaPropriedades({
   ];
 
   return (
-    <div style={{ height: 420, borderRadius: 'var(--r)', overflow: 'hidden', border: '1px solid var(--linha)' }}>
+    <div style={{ height: altura, borderRadius: 'var(--r)', overflow: 'hidden', border: '1px solid var(--linha)' }}>
       <MapContainer center={centro} zoom={11} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

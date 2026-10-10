@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { f } from '@/lib/formato';
 import { Grade, Metrica } from '@/components/ui';
@@ -6,6 +7,7 @@ import { IconeProdutores, IconeTalhoes, IconeAnalises, IconeRecomendacoes } from
 import { carregarPainel } from './dados';
 import { PrecisaDaSuaAtencao } from './secoes/PrecisaDaSuaAtencao';
 import { AreaEAtividade } from './secoes/AreaEAtividade';
+import { Panorama } from './secoes/Panorama';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +42,10 @@ export default async function PaginaPainel() {
         <Metrica rotulo="Análises" valor={p.analises} icone={IconeAnalises} tendencia={tendencia(p.analises, snapAnterior?.analises)} />
         <Metrica rotulo="Recomendações no mês" valor={p.recomendacoes_emitidas_mes} icone={IconeRecomendacoes} tendencia={tendencia(p.recomendacoes_emitidas_mes, snapAnterior?.recomendacoes_emitidas_mes)} />
       </Grade>
+
+      <Suspense fallback={<div className="cartao panorama-vazio" style={{ marginTop: 14 }}>Montando o panorama…</div>}>
+        <Panorama />
+      </Suspense>
 
       <PrecisaDaSuaAtencao ctx={ctx} />
 

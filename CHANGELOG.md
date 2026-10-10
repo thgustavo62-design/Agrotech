@@ -5,6 +5,7 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 
 ## 2026-10-09
 
+- **Painel inicial com gráficos reais:** atividade dos últimos 6 meses (análises, visitas e recomendações), situação dos talhões em rosca e mapa das propriedades — tudo calculado dos registros do escritório, sem estimativa.
 - **Acabamento visual mais profissional** em todo o sistema: cartões e botões com profundidade e microinterações, números grandes nos indicadores, barra lateral com destaque do item atual, banner de página mais enxuto (etiquetas viraram "pílulas de vidro"), listas com avatar, etiquetas com marcador, campos com foco suave. Camada única em `apps/web/app/estilos/refino.css`.
 - **Atlas de doenças e pragas** (na Academy): 19 fichas do café conilon (12 doenças e 7 pragas) com 44 fotos, busca por nome, parte da planta ou sintoma e atalhos para pesquisar na Embrapa e no Incaper. Conteúdo da Embrapa Rondônia com fonte e autoria das fotos, **sem produtos nem doses** (isso é do agrônomo). O produtor pede ajuda a partir da ficha e a equipe aponta uma ficha na resposta do Connect. Ver [docs/ATLAS.md](docs/ATLAS.md).
 - **Nova tela de entrada** nos três sites: foto da lavoura em tela cheia, texto da marca, cartões de vidro com o que o site oferece e o cartão de login com ícones na escolha do site. Cada site com foto, cores e texto próprios (Academy: "Bem-vindo de volta", "Entrar na Academy").
