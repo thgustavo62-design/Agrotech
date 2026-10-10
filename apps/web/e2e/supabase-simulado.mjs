@@ -28,7 +28,7 @@ const O = 'o0000000-0000-0000-0000-000000000001';
 const nomes = ['José da Silva Pereira', 'Maria Aparecida Souza', 'Antônio Carlos Ferreira', 'Sebastião Lima Rodrigues', 'Ana Paula dos Santos', 'Joaquim Alves de Oliveira'];
 const mun = ['Colatina', 'Baixo Guandu', 'Marilândia', 'São Domingos do Norte', 'Pancas', 'Itaguaçu'];
 const produtores = nomes.map((nome, i) => ({
-  id: `p000000${i + 1}-0000-0000-0000-000000000000`, org_id: O, nome, email: `contato${i + 1}@exemplo.com`,
+  id: `f000000${i + 1}-0000-0000-0000-000000000000`, org_id: O, nome, email: `contato${i + 1}@exemplo.com`,
   telefone: `(27) 99${i}12-34${i}5`, fone: `(27) 99${i}12-34${i}5`, municipio: mun[i], user_id: i === 0 ? U : (i === 1 ? 'pu000001' : null), cpf_cnpj: `123.456.78${i}-00`, criado_em: dia(-90 + i * 10),
 }));
 const propriedades = produtores.map((p, i) => ({ id: `r000000${i + 1}-0000-0000-0000-000000000000`, produtor_id: p.id, nome: ['Sítio Boa Vista', 'Fazenda Santa Rita', 'Chácara Esperança', 'Sítio Córrego Fundo', 'Fazenda Três Irmãos', 'Sítio Alto Verde'][i], municipio: mun[i], area_ha: 12 + i * 7, lat: -19.5 - i / 10, lng: -40.6 - i / 10 }));

@@ -11,6 +11,8 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ## Atlas — fatia 3: indicar uma ficha a um produtor (2026-10-10)
 
+(Atalho "Indicar ficha" na análise e nas visitas do talhão, com contexto: ver [ATLAS.md](ATLAS.md).)
+
 Quem pode indicar (Agronômico, Campo, Proprietário) escolhe o produtor na página da ficha e acompanha se ele abriu; o produtor vê "Indicadas para você" no topo do Atlas (selo Nova até abrir) e recebe aviso. Migração **0051**, 12 testes no banco (db-test 250), regras do app testadas e cenário de navegador `atlas_indicacao`. Detalhes: [ATLAS.md](ATLAS.md).
 
 ---

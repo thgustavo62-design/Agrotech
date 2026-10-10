@@ -10,6 +10,7 @@ import { GRUPOS_DE_PARTE, fichasParecidas, linksDePesquisa, noGrupo } from '@/li
 import { pode } from '@/lib/permissoes';
 import { linkPedirAjuda } from '@/lib/connect';
 import { dominioDoLink } from '@/lib/academy';
+import { lerContextoDeIndicacao } from '@/lib/atlas-indicacoes';
 import { GaleriaAtlas } from '@/components/atlas/galeria';
 import { CartaoFicha } from '@/components/atlas/cartao-ficha';
 import { IndicarFicha, type IndicacaoLinha, type ProdutorOpcao } from '@/components/atlas/indicar-ficha';
@@ -27,9 +28,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 const nivel = (n: string): 'alta' | 'media' | 'baixa' => (/extrema|elevada|alta/i.test(n) ? 'alta' : /m[eé]dia|moderada/i.test(n) ? 'media' : 'baixa');
 
-export default async function FichaDoAtlas({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ indicado?: string }> }) {
+export default async function FichaDoAtlas({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ indicado?: string; indicar?: string; visita?: string; analise?: string }> }) {
   const { slug } = await params;
-  const { indicado } = await searchParams;
+  const sp = await searchParams;
+  const { indicado } = sp;
+  const contexto = lerContextoDeIndicacao(sp);
   const { sb, perfil, ehAluno, ehEquipe } = await exigirConta('academy');
 
   let f: FichaAtlas | undefined = fichaPorSlug(slug);
@@ -166,7 +169,7 @@ export default async function FichaDoAtlas({ params, searchParams }: { params: P
           )}
         </aside>
 
-        {podeIndicar ? <IndicarFicha referencia={f.slug} produtores={produtores} indicacoes={indicacoes} jaIndicou={indicado === '1'} /> : null}
+        {podeIndicar ? <IndicarFicha referencia={f.slug} produtores={produtores} indicacoes={indicacoes} jaIndicou={indicado === '1'} produtorInicial={contexto?.produtorId} visitaId={contexto?.visitaId} analiseId={contexto?.analiseId} /> : null}
 
         {parecidas.length > 0 ? (
           <section className="ac-atlas-trilha" aria-labelledby="t-parecidas">

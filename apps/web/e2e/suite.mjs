@@ -847,8 +847,32 @@ const cenarios = {
     conferir('rascunho não pode ser indicado: o formulário nem aparece', (await ag.p.locator('#t-indicar').count()) === 0);
     await ag.contexto.close();
 
+    // atalho "Indicar ficha" nas telas do escritório: a análise leva ao Atlas com o produtor já escolhido
+    const ag2 = await pagina({ perfis: 'agronomico' });
+    const ID_ANALISE1 = 'a0000001-0000-0000-0000-000000000000';
+    const ID_PRODUTOR1 = 'f0000001-0000-0000-0000-000000000000';
+    await ag2.p.goto(SITE + '/app/analises/' + ID_ANALISE1, { waitUntil: 'networkidle' });
+    const atalho = ag2.p.locator('a:has-text("Indicar ficha do Atlas")');
+    conferir('análise: botão "Indicar ficha do Atlas" leva ao Atlas com o produtor e a análise', (await atalho.count()) === 1 && (await atalho.getAttribute('href')) === `/academy/atlas?indicar=${ID_PRODUTOR1}&analise=${ID_ANALISE1}`, (await atalho.getAttribute('href').catch(() => '')) ?? '');
+    await atalho.click();
+    await ag2.p.waitForURL(/\/academy\/atlas\?indicar=/, { timeout: 8000 }).catch(() => {});
+    conferir('Atlas com contexto: avisa para quem é a indicação e oferece cancelar', /Escolha uma ficha para indicar a José da Silva Pereira/.test(await corpo(ag2.p)) && /a partir de uma análise/.test(await corpo(ag2.p)) && (await ag2.p.locator('a:has-text("Cancelar")').count()) === 1);
+    const hrefCartao = (await ag2.p.locator('a.ac-atlas-cartao').first().getAttribute('href')) ?? '';
+    conferir('os cartões levam o contexto para a ficha', hrefCartao.includes(`indicar=${ID_PRODUTOR1}`) && hrefCartao.includes(`analise=${ID_ANALISE1}`), hrefCartao);
+    await ag2.p.goto(SITE + `/academy/atlas/broca-do-cafe?indicar=${ID_PRODUTOR1}&analise=${ID_ANALISE1}`, { waitUntil: 'networkidle' });
+    conferir('na ficha, o produtor já vem escolhido e a análise vai junto (campo escondido)', (await ag2.p.inputValue('select[name=produtor_id]')) === ID_PRODUTOR1 && (await ag2.p.locator(`input[type=hidden][name=analise_id][value="${ID_ANALISE1}"]`).count()) === 1);
+    antes = chamadas('POST', 'atlas_indicacoes');
+    await ag2.p.click('button:has-text("Indicar ficha")');
+    await esperarEscrita('POST', 'atlas_indicacoes', antes);
+    conferir('a indicação sai ligada à análise', chamadas('POST', 'atlas_indicacoes') > antes);
+    await ag2.p.goto(SITE + '/academy/atlas?indicar=nao-e-id', { waitUntil: 'networkidle' });
+    conferir('contexto inválido na URL é ignorado (sem aviso de indicação)', !/Escolha uma ficha para indicar/.test(await corpo(ag2.p)));
+
+    await ag2.contexto.close();
     // perfil de consulta não indica
     const le = await pagina({ perfis: 'leitura' });
+    await le.p.goto(SITE + '/app/analises/' + ID_ANALISE1, { waitUntil: 'networkidle' });
+    conferir('perfil Consulta não vê o botão "Indicar ficha" na análise', (await le.p.locator('a:has-text("Indicar ficha do Atlas")').count()) === 0);
     await le.p.goto(SITE + '/academy/atlas/broca-do-cafe', { waitUntil: 'networkidle' });
     conferir('perfil Consulta vê a ficha, mas não o formulário de indicar', (await le.p.locator('h1:has-text("Broca-do-café")').count()) === 1 && (await le.p.locator('#t-indicar').count()) === 0);
     await le.contexto.close();

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { exigirConta } from '@/lib/guarda-de-site';
 import { carregarFichasPublicadas } from '@/lib/atlas-dados';
-import { chaveDaIndicacao, type IndicacaoDeFicha } from '@/lib/atlas-indicacoes';
+import { chaveDaIndicacao, consultaDoContexto, lerContextoDeIndicacao, type IndicacaoDeFicha } from '@/lib/atlas-indicacoes';
+import { pode } from '@/lib/permissoes';
 import { FICHAS } from '@/lib/atlas-base';
 import { GRUPOS_DE_PARTE, buscarFichas, linksDePesquisa, maisImportantes, noGrupo } from '@/lib/atlas';
 import { CartaoFicha } from '@/components/atlas/cartao-ficha';
@@ -10,7 +11,7 @@ import { CartaoFicha } from '@/components/atlas/cartao-ficha';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Atlas de doenças e pragas · AgroTech Academy' };
 
-type Busca = { q?: string; tipo?: string; parte?: string };
+type Busca = { q?: string; tipo?: string; parte?: string; indicar?: string; visita?: string; analise?: string };
 
 
 /**
@@ -18,7 +19,7 @@ type Busca = { q?: string; tipo?: string; parte?: string };
  * organizam as fichas pelo lugar onde o problema aparece na planta. Com busca ou filtro, vira uma grade de resultados.
  */
 export default async function AtlasDeDoencasEPragas({ searchParams }: { searchParams: Promise<Busca> }) {
-  const { sb, ehAluno } = await exigirConta('academy');
+  const { sb, perfil, ehAluno, ehEquipe } = await exigirConta('academy');
   const f = await searchParams;
   // fichas-base (Embrapa, no código) + as publicadas pelo escritório (banco)
   const todas = [...FICHAS, ...(await carregarFichasPublicadas(sb))];
@@ -26,6 +27,15 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
   const PRAGAS = todas.filter((x) => x.tipo === 'praga').length;
   const FOTOS = todas.reduce((s, x) => s + x.fotos, 0);
   const doEscritorio = todas.filter((x) => x.origem === 'escritorio').length;
+
+  // "Indicar ficha" vindo de uma visita, análise ou produtor: o produtor já está escolhido e os cartões levam o contexto
+  const contexto = ehEquipe && pode(perfil.perfis, 'academy.indicar') ? lerContextoDeIndicacao(f) : null;
+  let nomeDoProdutor: string | null = null;
+  if (contexto) {
+    const { data: prod } = await sb.schema('agro').from('produtores').select('nome').eq('id', contexto.produtorId).maybeSingle();
+    nomeDoProdutor = (prod as { nome: string } | null)?.nome ?? null;
+  }
+  const consulta = nomeDoProdutor ? consultaDoContexto(contexto) : '';
 
   // fichas que o agrônomo indicou a este produtor (a RLS só entrega as dele)
   type Ficha = (typeof todas)[number];
@@ -46,7 +56,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
 
   const href = (m: Partial<Busca>) => {
     const novo = { q: q || undefined, tipo: tipo || undefined, parte: parte || undefined, ...m };
-    const sp = new URLSearchParams();
+    const sp = new URLSearchParams(consulta);
     for (const [k, v] of Object.entries(novo)) if (v) sp.set(k, v);
     const s = sp.toString();
     return s ? `/academy/atlas?${s}` : '/academy/atlas';
@@ -61,6 +71,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
           <h1>Reconheça doenças e pragas da sua lavoura</h1>
           <p>Fichas com fotos de referência para saber o que é, o que favorece, como manejar e como monitorar. Quando precisar, peça ajuda ao seu técnico direto da ficha.</p>
           <form className="ac-busca-grande" method="get" role="search">
+            {consulta ? [...new URLSearchParams(consulta)].map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />) : null}
             <input name="q" defaultValue={q} placeholder="Busque por nome, sintoma ou parte da planta (ex.: folha amarela, raiz)" aria-label="Buscar no Atlas" autoComplete="off" />
             {tipo ? <input type="hidden" name="tipo" value={tipo} /> : null}
             {parte ? <input type="hidden" name="parte" value={parte} /> : null}
@@ -77,6 +88,12 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
       </section>
 
       <main className="ac-principal ac-atlas-pagina">
+        {nomeDoProdutor ? (
+          <div className="ac-atlas-indicando" role="status">
+            <span>Escolha uma ficha para indicar a <b>{nomeDoProdutor}</b>{contexto?.visitaId ? ' (a partir de uma visita)' : contexto?.analiseId ? ' (a partir de uma análise)' : ''}.</span>
+            <Link className="btn sec mini" href="/academy/atlas">Cancelar</Link>
+          </div>
+        ) : null}
         <nav className="ac-atlas-chips" aria-label="Filtrar o Atlas">
           <div className="ac-atlas-chips-linha" role="group" aria-label="Tipo">
             <Link prefetch={false} href={href({ tipo: undefined })} data-ativo={!tipo}>Tudo</Link>
@@ -108,7 +125,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
                 <p className="nota" style={{ margin: 0 }}>{lista.length} ficha(s) encontrada(s).</p>
                 <Link href="/academy/atlas">Limpar filtros</Link>
               </div>
-              <div className="ac-atlas-grade">{lista.map((x) => <CartaoFicha key={x.slug} ficha={x} />)}</div>
+              <div className="ac-atlas-grade">{lista.map((x) => <CartaoFicha key={x.slug} ficha={x} consulta={consulta} />)}</div>
               {q.trim() ? (
                 <p className="nota" style={{ marginTop: 18 }}>
                   Não é o que procura? {atalhos.map((a) => <a key={a.url} href={a.url} target="_blank" rel="noopener noreferrer" style={{ marginRight: 12 }}>{a.rotulo}</a>)}
@@ -133,7 +150,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
                 <h2 id="t-importantes">As mais importantes no campo</h2>
                 <p>Quem mais derruba produção ou qualidade: comece por aqui.</p>
               </div>
-              <div className="ac-atlas-fila">{maisImportantes(todas).map((x) => <CartaoFicha key={x.slug} ficha={x} />)}</div>
+              <div className="ac-atlas-fila">{maisImportantes(todas).map((x) => <CartaoFicha key={x.slug} ficha={x} consulta={consulta} />)}</div>
             </section>
 
             {GRUPOS_DE_PARTE.map((g) => {
@@ -145,7 +162,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
                     <h2 id={`t-${g.id}`}>{g.rotulo}</h2>
                     <Link prefetch={false} href={href({ parte: g.id })}>Ver as {itens.length}</Link>
                   </div>
-                  <div className="ac-atlas-fila">{itens.map((x) => <CartaoFicha key={x.slug} ficha={x} />)}</div>
+                  <div className="ac-atlas-fila">{itens.map((x) => <CartaoFicha key={x.slug} ficha={x} consulta={consulta} />)}</div>
                 </section>
               );
             })}

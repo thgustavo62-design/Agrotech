@@ -56,3 +56,31 @@ export interface IndicacaoDeFicha {
 
 /** Chave que liga a indicação à ficha na tela: o slug (base) ou o id (escritório). */
 export const chaveDaIndicacao = (i: Pick<IndicacaoDeFicha, 'ficha_id' | 'ficha_slug'>): string => i.ficha_slug ?? i.ficha_id ?? '';
+
+export interface ContextoDeIndicacao { produtorId: string; visitaId: string | null; analiseId: string | null }
+
+/**
+ * Contexto que vem de outra tela (visita, análise ou o cadastro do produtor) quando o agrônomo clica em "Indicar ficha": o Atlas
+ * abre com o produtor já escolhido e a indicação sai ligada à visita/análise. Só vale com ids no formato de UUID.
+ */
+export function lerContextoDeIndicacao(sp: { indicar?: string; visita?: string; analise?: string }): ContextoDeIndicacao | null {
+  const uuid = (v: string | undefined) => (v && UUID.test(v.trim()) ? v.trim().toLowerCase() : null);
+  const produtorId = uuid(sp.indicar);
+  if (!produtorId) return null;
+  return { produtorId, visitaId: uuid(sp.visita), analiseId: uuid(sp.analise) };
+}
+
+/** A parte "?indicar=…&visita=…" que acompanha os links do Atlas enquanto a pessoa escolhe a ficha ("" sem contexto). */
+export function consultaDoContexto(c: ContextoDeIndicacao | null): string {
+  if (!c) return '';
+  const q = new URLSearchParams({ indicar: c.produtorId });
+  if (c.visitaId) q.set('visita', c.visitaId);
+  if (c.analiseId) q.set('analise', c.analiseId);
+  return q.toString();
+}
+
+/** Link do botão "Indicar ficha" nas telas de visita, análise e produtor. null se o produtor não for um id válido. */
+export function linkIndicarFicha(o: { produtorId?: string | null; visitaId?: string | null; analiseId?: string | null }): string | null {
+  const c = lerContextoDeIndicacao({ indicar: o.produtorId ?? undefined, visita: o.visitaId ?? undefined, analise: o.analiseId ?? undefined });
+  return c ? `/academy/atlas?${consultaDoContexto(c)}` : null;
+}

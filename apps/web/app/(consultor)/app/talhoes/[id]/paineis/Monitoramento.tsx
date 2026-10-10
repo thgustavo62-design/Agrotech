@@ -1,12 +1,18 @@
+import Link from 'next/link';
 import { dataBR } from '@/lib/formato';
+import { perfilAtual } from '@/lib/supabase/server';
+import { pode } from '@/lib/permissoes';
+import { linkIndicarFicha } from '@/lib/atlas-indicacoes';
 import { Cartao, Tag, Vazio } from '@/components/ui';
 import { registrarVisita } from '../acoes';
 import { CampoFotosVisita } from '@/components/campo-fotos-visita';
 import { FormFilaOffline } from '@/components/form-fila-offline';
 import type { ContextoTalhao } from '../dados';
 
-export function PainelMonitoramento({ ctx }: { ctx: ContextoTalhao }) {
-  const { id, visitas } = ctx;
+export async function PainelMonitoramento({ ctx }: { ctx: ContextoTalhao }) {
+  const { id, visitas, produtor } = ctx;
+  const perfil = await perfilAtual();
+  const podeIndicar = pode(perfil?.perfis, 'academy.indicar');
 
   return (
     (
@@ -24,6 +30,9 @@ export function PainelMonitoramento({ ctx }: { ctx: ContextoTalhao }) {
                     <small>condição {v.condicao ?? '—'}{v.observacoes ? ` · ${v.observacoes}` : ''}</small>
                   </div>
                   {acima > 0 ? <Tag tom="ruim">{acima} acima do nível</Tag> : <Tag>sob controle</Tag>}
+                  {podeIndicar && linkIndicarFicha({ produtorId: produtor?.id, visitaId: v.id }) ? (
+                    <Link className="btn sec mini" href={linkIndicarFicha({ produtorId: produtor?.id, visitaId: v.id })!}>Indicar ficha</Link>
+                  ) : null}
                 </div>
               );
             })}

@@ -36,9 +36,12 @@ Na página de qualquer ficha publicada (da Embrapa ou do escritório), quem tem 
 - O produtor é avisado (aviso do portal, quando já tem login) e a ficha aparece no topo do Atlas em **"Indicadas para você"**, com o selo **Nova** até ele abrir; ao abrir, a página mostra "indicada para você" com o recado, e a abertura fica registrada (a hora é do servidor).
 - Regras do banco (migração `0051_atlas_indicacoes.sql`): uma ficha por produtor (sem repetir), só ficha **publicada** do mesmo escritório, produtor do mesmo escritório, visita/análise de contexto do mesmo produtor, quem indicou gravado pelo banco; o produtor só lê as próprias e só marca a abertura. Apagar a ficha do escritório leva as indicações. 12 testes no banco (db-test: 250 no total) e regras do app em `lib/atlas-indicacoes.ts`; cenário de navegador `atlas_indicacao`.
 
+### Atalho nas telas do escritório
+
+Na **análise** (botão "Indicar ficha do Atlas") e em cada **visita** do talhão (aba Monitoramento, botão "Indicar ficha"), quem tem a permissão de indicar abre o Atlas **já com o produtor escolhido**: um aviso diz para quem é a indicação (e "a partir de uma visita/análise"), os cartões levam o contexto, e na ficha o produtor vem marcado. A indicação sai **ligada à visita ou à análise** (o banco confere que são do mesmo produtor). Endereço: `/academy/atlas?indicar=<produtor>&visita=<id>|analise=<id>`; id inválido na URL é ignorado.
+
 ## Próximas fatias
 
-- Atalho **"Indicar uma ficha"** nas telas de visita e de laudo do escritório (o banco já aceita visita/análise como contexto).
 - Importar o manual do agrônomo (PDF) em rascunhos de ficha, para revisão — leitura do arquivo sem serviço pago.
 - Mais culturas e o material do Incaper (conilon do ES), se houver autorização.
 - Foto do produtor + "qual ficha parece?" (IA com visão): serviço pago e envio de imagem a terceiro — só com aprovação.

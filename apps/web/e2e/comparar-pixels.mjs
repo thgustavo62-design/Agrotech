@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 
 const [pasta, largura] = process.argv.slice(2);
 mkdirSync(pasta, { recursive: true });
-const U = 'p0000001-0000-0000-0000-000000000000', T = 't0000001-0000-0000-0000-000000000000';
+const U = 'f0000001-0000-0000-0000-000000000000', T = 't0000001-0000-0000-0000-000000000000';
 const CONSULTOR = ['/app', '/app/talhoes', '/app/analises/nova', '/app/laudos/d0', '/app/inteligencia', `/app/produtores/${U}`, `/app/talhoes/${T}`, '/app/agenda', '/app/financeiro-escritorio', '/app/config'];
 const PRODUTOR = ['/produtor', '/produtor/financeiro', '/produtor/talhoes'];
 const PUBLICAS = ['/login', '/cadastro', '/produtor/login', '/demo', '/offline'];

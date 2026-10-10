@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { criarClienteServidor } from '@/lib/supabase/server';
+import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
+import { pode } from '@/lib/permissoes';
+import { linkIndicarFicha } from '@/lib/atlas-indicacoes';
 import { tabelasDaOrg } from '@/lib/tabelas-org';
 import { paraAnalise } from '@/lib/culturas';
 import { dataBR } from '@/lib/formato';
@@ -16,7 +18,7 @@ export default async function PaginaAnalise({ params }: { params: Promise<{ id: 
 
   const [{ data, error }, tabelas] = await Promise.all([
     sb.schema('agro').from('analises').select(
-      `id, data_coleta, profundidade, prnt, incorporacao, prod_esperada,
+      `id, produtor_id, data_coleta, profundidade, prnt, incorporacao, prod_esperada,
        argila, ph, mo, p, k, na, ca, mg, al, h_al, s, b, zn, cu, mn, fe,
        talhao:talhao_id (
          nome, cultura, area_ha, prod_esperada,
@@ -36,6 +38,9 @@ export default async function PaginaAnalise({ params }: { params: Promise<{ id: 
   const validacao = validarAnalise(valores);
   const camada = validarCamadaParaRecomendar(data.profundidade);
   const podeEmitir = validacao.ok && camada.ok;
+  // atalho para indicar uma ficha do Atlas ao produtor desta análise
+  const perfil = await perfilAtual();
+  const linkIndicar = pode(perfil?.perfis, 'academy.indicar') ? linkIndicarFicha({ produtorId: (data as { produtor_id?: string | null }).produtor_id, analiseId: id }) : null;
 
   return (
     <>
@@ -46,6 +51,7 @@ export default async function PaginaAnalise({ params }: { params: Promise<{ id: 
           <button className="btn verde mini" type="submit" disabled={!podeEmitir} title={podeEmitir ? undefined : camada.ok ? 'Complete a análise para emitir' : 'Esta camada não gera recomendação'}>Emitir laudo</button>
         </form>
         <Link className="btn sec mini" href={`/app/analises/${id}/laudo`}>Ver laudo</Link>
+        {linkIndicar ? <Link className="btn sec mini" href={linkIndicar}>Indicar ficha do Atlas</Link> : null}
       </div>
       {!camada.ok ? (
         <div className="aviso" role="alert" style={{ marginBottom: 14 }}>

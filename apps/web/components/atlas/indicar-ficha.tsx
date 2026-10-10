@@ -7,7 +7,11 @@ export interface IndicacaoLinha { id: string; produtor_id: string; produtor: str
 export interface ProdutorOpcao { id: string; nome: string }
 
 /** "Indicar a um produtor" (equipe): escolhe o produtor, escreve um recado e acompanha quem já abriu a ficha. */
-export function IndicarFicha({ referencia, produtores, indicacoes, jaIndicou }: {
+export function IndicarFicha({ referencia, produtores, indicacoes, jaIndicou, produtorInicial, visitaId, analiseId }: {
+  /** vindos do botão "Indicar ficha" de outra tela */
+  produtorInicial?: string;
+  visitaId?: string | null;
+  analiseId?: string | null;
   /** slug (ficha-base) ou id (ficha do escritório) */
   referencia: string;
   produtores: ProdutorOpcao[];
@@ -16,19 +20,24 @@ export function IndicarFicha({ referencia, produtores, indicacoes, jaIndicou }: 
 }) {
   const indicados = new Set(indicacoes.map((i) => i.produtor_id));
   const disponiveis = produtores.filter((p) => !indicados.has(p.id));
+  const escolhido = produtorInicial ? produtores.find((p) => p.id === produtorInicial) : undefined;
+  const escolhidoJaRecebeu = Boolean(escolhido && indicados.has(escolhido.id));
 
   return (
     <section className="ac-atlas-indicar" aria-labelledby="t-indicar">
       <h2 id="t-indicar">Indicar a um produtor</h2>
       {jaIndicou ? <p className="ac-atlas-ok" role="status">Indicação enviada. O produtor é avisado e a ficha aparece em &ldquo;Indicadas para você&rdquo;.</p> : null}
+      {escolhidoJaRecebeu && escolhido ? <p className="nota">{escolhido.nome} já recebeu esta ficha (veja abaixo).</p> : null}
       {disponiveis.length === 0 ? (
         <p className="nota">{produtores.length === 0 ? 'Nenhum produtor cadastrado ainda.' : 'Todos os seus produtores já receberam esta ficha.'}</p>
       ) : (
         <form action={indicarFicha} className="ac-atlas-indicar-form">
           <input type="hidden" name="ficha" value={referencia} />
+          {visitaId ? <input type="hidden" name="visita_id" value={visitaId} /> : null}
+          {analiseId ? <input type="hidden" name="analise_id" value={analiseId} /> : null}
           <div className="campo">
             <label htmlFor="produtor_id">Produtor</label>
-            <select id="produtor_id" name="produtor_id" required defaultValue="">
+            <select id="produtor_id" name="produtor_id" required defaultValue={escolhido && !escolhidoJaRecebeu ? escolhido.id : ''}>
               <option value="" disabled>Escolha…</option>
               {disponiveis.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
             </select>

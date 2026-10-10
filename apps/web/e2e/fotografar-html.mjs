@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 
 const [pasta, papel = 'consultor'] = process.argv.slice(2);
 mkdirSync(pasta, { recursive: true });
-const U = 'p0000001-0000-0000-0000-000000000000', T = 't0000001-0000-0000-0000-000000000000', A = 'a0000001-0000-0000-0000-000000000000';
+const U = 'f0000001-0000-0000-0000-000000000000', T = 't0000001-0000-0000-0000-000000000000', A = 'a0000001-0000-0000-0000-000000000000';
 const PAGINAS = papel === 'produtor'
   ? ['/produtor', '/produtor/fazenda', '/produtor/talhoes', '/produtor/recomendacoes', '/produtor/atividades', '/produtor/financeiro', '/produtor/producao', '/produtor/documentos', '/produtor/notificacoes']
   : [

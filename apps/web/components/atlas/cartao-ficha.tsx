@@ -4,10 +4,10 @@ import { fotosDaFicha, type FichaAtlas } from '@/lib/atlas-base';
 const nivel = (n: string): 'alta' | 'media' | 'baixa' => (/extrema|elevada|alta/i.test(n) ? 'alta' : /m[eé]dia|moderada/i.test(n) ? 'media' : 'baixa');
 
 /** Cartão de ficha (foto, tipo, nome, nome científico e importância): usado nas fileiras e na grade do Atlas. */
-export function CartaoFicha({ ficha, indicada = false, novaIndicacao = false }: { ficha: FichaAtlas; indicada?: boolean; novaIndicacao?: boolean }) {
+export function CartaoFicha({ ficha, indicada = false, novaIndicacao = false, consulta = '' }: { ficha: FichaAtlas; indicada?: boolean; novaIndicacao?: boolean; consulta?: string }) {
   const foto = fotosDaFicha(ficha)[0];
   return (
-    <Link className="ac-atlas-cartao" href={`/academy/atlas/${ficha.slug}`}>
+    <Link className="ac-atlas-cartao" href={`/academy/atlas/${ficha.slug}${consulta ? `?${consulta}` : ''}`}>
       <span className="ac-atlas-foto">
         {foto ? (
           // eslint-disable-next-line @next/next/no-img-element -- foto estática ou assinada, já reduzida
