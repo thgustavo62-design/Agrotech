@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { AtivarAvisos } from '@/components/ativar-avisos';
+import { chavePublicaDeAvisos } from '@/lib/push';
 import { redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { carregarPedidos } from '@/lib/connect-dados';
@@ -28,6 +30,8 @@ export default async function InicioConnect() {
         </div>
         <Link className="btn verde cn-hero-botao" href="/connect/pedidos/novo">Fazer um pedido</Link>
       </section>
+
+      <AtivarAvisos chavePublica={chavePublicaDeAvisos()} texto="Receba um aviso no celular quando o técnico responder o seu pedido, mesmo com o site fechado." />
 
       {precisamDeVoce.length > 0 ? (
         <section className="cn-destaque" aria-label="Precisamos de você">

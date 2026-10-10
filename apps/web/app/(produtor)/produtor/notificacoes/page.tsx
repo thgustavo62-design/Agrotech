@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { AtivarAvisos } from '@/components/ativar-avisos';
+import { chavePublicaDeAvisos } from '@/lib/push';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_TIPO_NOTIFICACAO } from '@/lib/notificacoes';
@@ -35,6 +37,8 @@ export default async function NotificacoesProdutor() {
           </form>
         ) : undefined}
       />
+
+      <AtivarAvisos chavePublica={chavePublicaDeAvisos()} />
 
       <Cartao olho={`${notificacoes.length} no total`} titulo="Recentes">
         {notificacoes.length === 0 ? (

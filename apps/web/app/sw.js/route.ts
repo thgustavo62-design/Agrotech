@@ -5,7 +5,7 @@ const OFFLINE_URL = '/offline';
 
 // Telas/rotas de sessão nunca entram no cache nem são servidas dele: uma tela de login
 // guardada reapareceria para quem já está logado quando a rede falhasse ao reabrir a aba.
-const SESSAO = ['/login', '/cadastro', '/sair', '/produtor/login', '/produtor/sair', '/produtor/aceitar', '/equipe/aceitar', '/redefinir-senha', '/verificar-codigo'];
+const SESSAO = ['/login', '/cadastro', '/sair', '/produtor/login', '/produtor/sair', '/academy/sair', '/connect/sair', '/sites', '/produtor/aceitar', '/equipe/aceitar', '/redefinir-senha', '/verificar-codigo'];
 const ehSessao = (caminho) => SESSAO.some((p) => caminho === p || caminho.startsWith(p + '/'));
 
 self.addEventListener('install', (event) => {
@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
 
   // logout: apaga o que foi guardado, para o próximo usuário do aparelho não ver (nem abrir
   // offline) as telas do anterior
-  if (req.method === 'POST' && (url.pathname === '/sair' || url.pathname === '/produtor/sair')) {
+  if (req.method === 'POST' && ['/sair', '/produtor/sair', '/academy/sair', '/connect/sair'].includes(url.pathname)) {
     event.waitUntil(caches.delete(CACHE));
     return;
   }
@@ -56,6 +56,42 @@ self.addEventListener('fetch', (event) => {
       }
       throw new Error('offline e sem cache pra ' + req.url);
     }
+  })());
+});
+
+// Avisos no celular (Web Push): o servidor manda { titulo, corpo, url, tag }; mostramos o aviso e, ao tocar, abrimos a tela certa.
+self.addEventListener('push', (event) => {
+  let dados = {};
+  try { dados = event.data ? event.data.json() : {}; } catch (e) { dados = {}; }
+  const titulo = typeof dados.titulo === 'string' && dados.titulo ? dados.titulo : 'AgroTech';
+  const opcoes = {
+    body: typeof dados.corpo === 'string' ? dados.corpo : '',
+    icon: '/icones-pwa/192',
+    badge: '/icones-pwa/192',
+    tag: typeof dados.tag === 'string' ? dados.tag : undefined,
+    data: { url: typeof dados.url === 'string' ? dados.url : '/' },
+  };
+  event.waitUntil(self.registration.showNotification(titulo, opcoes));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  // só abre endereço do próprio site (o servidor já manda caminho relativo; aqui confere de novo)
+  let destino = new URL('/', self.location.origin);
+  try {
+    const pedido = new URL(event.notification.data && event.notification.data.url ? event.notification.data.url : '/', self.location.origin);
+    if (pedido.origin === self.location.origin) destino = pedido;
+  } catch (e) { /* fica na página inicial */ }
+  event.waitUntil((async () => {
+    const janelas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const j of janelas) {
+      if (j.url === destino.href && 'focus' in j) return j.focus();
+    }
+    if (janelas[0] && 'navigate' in janelas[0]) {
+      await janelas[0].focus();
+      return janelas[0].navigate(destino.href);
+    }
+    return self.clients.openWindow(destino.href);
   })());
 });
 `;

@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { AtivarAvisos } from '@/components/ativar-avisos';
+import { chavePublicaDeAvisos } from '@/lib/push';
 import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_TIPO_NOTIFICACAO } from '@/lib/notificacoes';
@@ -23,6 +25,7 @@ export default async function AvisosConnect() {
         <h1>Avisos</h1>
         {naoLidos > 0 ? <form action={marcarTodosAvisos}><button className="btn sec" type="submit">Marcar todos como lidos</button></form> : null}
       </div>
+      <AtivarAvisos chavePublica={chavePublicaDeAvisos()} />
       <p className="nota">{naoLidos > 0 ? `${naoLidos} não lido(s).` : 'Tudo em dia.'}</p>
 
       {avisos.length === 0 ? (

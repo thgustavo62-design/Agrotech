@@ -5,6 +5,7 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 
 ## 2026-10-09
 
+- **Avisos no celular:** quem liga o aviso (botão "Ligar avisos" em Avisos/Notificações) recebe no celular, mesmo com o site fechado, o que o AgroTech tiver para a pessoa — "o técnico respondeu seu pedido", novo pedido para a equipe, ficha indicada, recomendação nova. Sem custo (push do navegador). Migração `0052`. Ver [docs/AVISOS-NO-CELULAR.md](docs/AVISOS-NO-CELULAR.md).
 - **Atalho "Indicar ficha"** na análise e nas visitas do talhão: abre o Atlas com o produtor já escolhido e a indicação sai ligada à visita ou análise.
 - **Atlas — indicar uma ficha ao produtor:** o agrônomo escolhe o produtor na ficha, escreve um recado e vê se ele abriu; o produtor recebe aviso e a ficha aparece em "Indicadas para você", no topo do Atlas. Migração `0051`. Ver [docs/ATLAS.md](docs/ATLAS.md).
 - **Atlas — fichas do seu escritório:** o agrônomo escreve as próprias fichas de doenças e pragas (com até 8 fotos) no Estúdio e publica; os produtores veem na busca do Atlas, junto das fichas da Embrapa, e a equipe pode apontar uma ficha na resposta do Connect. Migração `0050`. Ver [docs/ATLAS.md](docs/ATLAS.md).

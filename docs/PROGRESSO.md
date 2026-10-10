@@ -9,6 +9,12 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Avisos no celular — Web Push (2026-10-10)
+
+Próximo passo recomendado e aprovado pelo dono: o produtor precisa saber que o técnico respondeu sem abrir o site. Migração **0052** (`push_assinaturas`, marca de envio nas notificações), despacho depois das ações do servidor, service worker com aviso e abertura da tela certa, bloco "Avisos no celular" nas telas de avisos (produtor e equipe). 6 testes no banco (db-test 256), testes de conteúdo/despacho e cenários de navegador. **Para ligar em produção:** colocar `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` na Vercel e reimplantar — ver [AVISOS-NO-CELULAR.md](AVISOS-NO-CELULAR.md).
+
+---
+
 ## Atlas — fatia 3: indicar uma ficha a um produtor (2026-10-10)
 
 (Atalho "Indicar ficha" na análise e nas visitas do talhão, com contexto: ver [ATLAS.md](ATLAS.md).)

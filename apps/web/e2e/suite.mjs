@@ -22,6 +22,10 @@ const AMBIENTE = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: 'x',
   NEXT_PUBLIC_APP_URL: SITE,
   SUPABASE_SERVICE_ROLE_KEY: 'chave-de-teste',
+  // par de chaves de aviso SÓ para os testes (não é segredo de ninguém): liga o bloco "Avisos no celular" e o despacho depois das ações
+  VAPID_PUBLIC_KEY: 'BEQq0zOi4kgJ2H9rXOKHeCnvJbKoKv8baNu3eDFnVTTM4upflcmvs15NN-uLDh4H7cFdfJ0ERk8LxKjc79FjQn4',
+  VAPID_PRIVATE_KEY: 'AeLxTII2UeE0LGOZRQS5DRvPgHzX7WHI1_m1hDLUDzQ',
+  VAPID_SUBJECT: 'mailto:teste@exemplo.com',
 };
 
 const falhas = [];
@@ -66,8 +70,9 @@ const chamadas = (metodo, rota) => (logSim.match(new RegExp(`\\t${metodo}\\t${ro
 
 // ---- navegador ----
 let navegador;
-async function pagina({ papel = 'consultor', perfis = 'proprietario', anonimo = false, largura = 1280, altura = 900, celular = false } = {}) {
+async function pagina({ papel = 'consultor', perfis = 'proprietario', anonimo = false, largura = 1280, altura = 900, celular = false, permissoes = [] } = {}) {
   const contexto = await navegador.newContext({ viewport: { width: largura, height: altura }, isMobile: celular, hasTouch: celular });
+  if (permissoes.length > 0) await contexto.grantPermissions(permissoes, { origin: SITE });
   if (!anonimo) {
     const { cookie } = await (await fetch(`${SIM}/__sessao?papel=${papel}&perfis=${perfis}`)).json();
     await contexto.addCookies([{ name: 'sb-127-auth-token', value: cookie, domain: '127.0.0.1', path: '/' }]);
@@ -591,6 +596,46 @@ const cenarios = {
     await pr.p.goto(SITE + '/connect/avisos', { waitUntil: 'networkidle' });
     conferir('avisos: só os do atendimento, com "marcar todos como lidos"', (await pr.p.locator('.cn-aviso').count()) === 2 && (await pr.p.locator('button:has-text("Marcar todos como lidos")').count()) === 1);
 
+    // avisos no celular: o bloco aparece (aparelho ainda sem permissão) em Avisos e no início
+    await pr.p.waitForSelector('.avisos-celular', { timeout: 8000 }).catch(() => {});
+    const estadoAvisos = await pr.p.locator('.avisos-celular').first().getAttribute('data-situacao').catch(() => null);
+    conferir('avisos no celular: com as notificações bloqueadas no navegador, o bloco explica como liberar (sem botão de ligar)', estadoAvisos === 'bloqueado' && /bloqueados neste navegador/.test(await pr.p.locator('.avisos-celular').innerText()) && (await pr.p.locator('.avisos-celular button:has-text("Ligar avisos")').count()) === 0, String(estadoAvisos));
+    // o Chromium sem janela sempre nega notificações: o teste simula só as APIs do navegador (permissão e assinatura) e exercita
+    // de verdade a tela e as ações do servidor
+    const liberado = await pagina({ papel: 'produtor' });
+    await liberado.contexto.addInitScript(() => {
+      let permissao = 'default';
+      let assinatura = null;
+      Object.defineProperty(window.Notification, 'permission', { configurable: true, get: () => permissao });
+      window.Notification.requestPermission = async () => { permissao = 'granted'; return 'granted'; };
+      const chave = (n) => new Uint8Array(n).map((_, i) => (i * 7 + 3) % 256).buffer;
+      const nova = () => ({ endpoint: 'https://push.exemplo.com/send/teste-e2e', getKey: (nome) => chave(nome === 'p256dh' ? 65 : 16), unsubscribe: async () => { assinatura = null; return true; } });
+      window.PushManager.prototype.subscribe = async () => { assinatura = nova(); return assinatura; };
+      window.PushManager.prototype.getSubscription = async () => assinatura;
+    });
+    await liberado.p.goto(SITE + '/connect/avisos', { waitUntil: 'networkidle' });
+    await liberado.p.waitForSelector('.avisos-celular[data-situacao=desligado]', { timeout: 8000 }).catch(() => {});
+    conferir('avisos no celular: com a permissão liberada, o bloco oferece "Ligar avisos"', (await liberado.p.locator('.avisos-celular[data-situacao=desligado] button:has-text("Ligar avisos")').count()) === 1);
+    let antesAssin = chamadas('POST', 'push_assinaturas');
+    await liberado.p.click('.avisos-celular button:has-text("Ligar avisos")');
+    await liberado.p.waitForSelector('.avisos-celular[data-situacao=ligado]', { timeout: 10000 }).catch(() => {});
+    conferir('avisos no celular: ligar guarda a assinatura deste aparelho e a tela passa a "ligado"', chamadas('POST', 'push_assinaturas') > antesAssin && (await liberado.p.locator('.avisos-celular[data-situacao=ligado]').count()) === 1 && /Pronto! Você vai receber os avisos/.test(await liberado.p.locator('.avisos-celular').innerText()), 'POST=' + (chamadas('POST', 'push_assinaturas') - antesAssin));
+    conferir('avisos no celular: ligado oferece teste e desligar', (await liberado.p.locator('.avisos-celular button:has-text("Enviar aviso de teste")').count()) === 1 && (await liberado.p.locator('.avisos-celular button:has-text("Desligar")').count()) === 1);
+    await liberado.p.click('.avisos-celular button:has-text("Enviar aviso de teste")');
+    await liberado.p.waitForSelector('.avisos-celular-erro, .avisos-celular-ok', { timeout: 10000 }).catch(() => {});
+    conferir('avisos no celular: o teste responde na tela (aqui o simulador não guarda assinaturas, então explica)', (await liberado.p.locator('.avisos-celular-erro, .avisos-celular-ok').count()) === 1);
+    antesAssin = chamadas('DELETE', 'push_assinaturas');
+    await liberado.p.click('.avisos-celular button:has-text("Desligar")');
+    await liberado.p.waitForSelector('.avisos-celular[data-situacao=desligado]', { timeout: 10000 }).catch(() => {});
+    conferir('avisos no celular: desligar apaga a assinatura e volta a oferecer "Ligar avisos"', chamadas('DELETE', 'push_assinaturas') > antesAssin && (await liberado.p.locator('.avisos-celular button:has-text("Ligar avisos")').count()) === 1);
+    await liberado.p.goto(SITE + '/connect', { waitUntil: 'networkidle' });
+    await liberado.p.waitForSelector('.avisos-celular', { timeout: 8000 }).catch(() => {});
+    conferir('avisos no celular: o início do produtor convida a ligar os avisos do técnico', /quando o técnico responder o seu pedido/.test(await liberado.p.locator('.avisos-celular').innerText().catch(() => '')));
+    conferir('avisos no celular: sem violação de CSP nem erro de JS', liberado.problemas.length === 0, liberado.problemas.join(' | '));
+    await liberado.contexto.close();
+    await pr.p.goto(SITE + '/connect', { waitUntil: 'networkidle' });
+    await pr.p.waitForSelector('.avisos-celular', { timeout: 8000 }).catch(() => {});
+
     // o produtor não entra nas telas da equipe
     await pr.p.goto(SITE + '/connect/fila', { waitUntil: 'networkidle' });
     conferir('a fila é da equipe: o produtor volta ao início', /\/connect$/.test(pr.p.url()), pr.p.url());
@@ -951,6 +996,11 @@ const cenarios = {
     await esperarEscrita('POST', 'agenda_eventos', antes);
     await esperarTexto(eq.p, /Retorno marcado na agenda/);
     conferir('retorno vai para a agenda do escritório com aviso na tela', chamadas('POST', 'agenda_eventos') > antes && /Retorno marcado na agenda/.test(await corpo(eq.p)));
+
+    // avisos no celular também para a equipe (Notificações do escritório e Avisos do Connect)
+    await eq.p.goto(SITE + '/app/notificacoes', { waitUntil: 'networkidle' });
+    await eq.p.waitForSelector('.avisos-celular', { timeout: 8000 }).catch(() => {});
+    conferir('avisos no celular: a equipe também vê o bloco nas Notificações do escritório', (await eq.p.locator('.avisos-celular').count()) === 1);
 
     // novo atendimento: passo 1 (escolher o produtor)
     await eq.p.goto(SITE + '/connect/atendimentos/novo', { waitUntil: 'networkidle' });

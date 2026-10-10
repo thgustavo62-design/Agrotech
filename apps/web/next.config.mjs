@@ -4,7 +4,7 @@ const nextConfig = {
   // o motor é TS puro no monorepo — deixa o Next transpilar direto do source
   transpilePackages: ['@agrotech/agro-core'],
   // OCR de laudo escaneado: binário nativo e WASM não podem ser empacotados pelo Next
-  serverExternalPackages: ['@napi-rs/canvas', 'tesseract.js', 'unpdf'],
+  serverExternalPackages: ['@napi-rs/canvas', 'tesseract.js', 'unpdf', 'web-push'],
   // O tesseract roda o OCR num worker_thread que carrega o motor WASM e as dependências por caminho dinâmico: o rastreamento
   // do Next não os vê e o OCR morria no deploy (processo derrubado, documento preso em 'lendo…'). Entram explicitamente,
   // com o modelo de idioma (ocr/). A lista é conferida por e2e/verificar-pacote-ocr.mjs (copia só o que foi rastreado

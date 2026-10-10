@@ -1,4 +1,5 @@
 import { cookies, headers } from 'next/headers';
+import { after } from 'next/server';
 import { redirect } from 'next/navigation';
 import { COOKIE_AVISO, PARAM_AVISO } from './acao-constantes';
 import { registrarErro } from './log';
@@ -60,15 +61,37 @@ export function destinoDeRetorno(referer: string | null, host: string | null, ma
 }
 
 /**
+ * Depois de uma ação bem-sucedida, manda os avisos no celular das notificações que ela fez nascer (lib/push.ts). Só roda com as
+ * chaves de aviso configuradas; roda DEPOIS de responder à pessoa e nunca derruba a ação.
+ */
+function agendarAvisosNoCelular() {
+  if (!process.env.VAPID_PRIVATE_KEY) return;
+  try {
+    after(async () => {
+      const { despacharPush } = await import('./push');
+      await despacharPush();
+    });
+  } catch {
+    // fora de uma requisição (testes): sem aviso, sem problema
+  }
+}
+
+/**
  * Envolve uma server action: falha esperada (ErroDeUsuario) ou inesperada vira aviso e a
  * pessoa volta para a página de onde veio. Use no export: `export const x = comAviso(async (fd) => …)`.
  */
 export function comAviso<A extends unknown[], R>(acao: (...args: A) => Promise<R>): (...args: A) => Promise<R> {
   return async (...args: A): Promise<R> => {
     try {
-      return await acao(...args);
+      const resultado = await acao(...args);
+      agendarAvisosNoCelular();
+      return resultado;
     } catch (e) {
-      if (ehControleDoNext(e)) throw e;
+      if (ehControleDoNext(e)) {
+        // redirect()/notFound(): a ação terminou como previsto
+        agendarAvisosNoCelular();
+        throw e;
+      }
       let mensagem = MENSAGEM_GENERICA;
       if (e instanceof ErroDeUsuario) mensagem = e.message;
       else registrarErro('acao.inesperado', e, undefined, (await headers()).get('x-vercel-id'));

@@ -3,6 +3,8 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { dataBR } from '@/lib/formato';
 import { ROTULO_TIPO_NOTIFICACAO } from '@/lib/notificacoes';
 import { Cartao, Tag, Vazio } from '@/components/ui';
+import { AtivarAvisos } from '@/components/ativar-avisos';
+import { chavePublicaDeAvisos } from '@/lib/push';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { marcarNotificacaoLida, marcarTodasLidas } from './acoes';
 
@@ -36,6 +38,8 @@ export default async function Notificacoes() {
           </form>
         ) : undefined}
       />
+
+      <AtivarAvisos chavePublica={chavePublicaDeAvisos()} />
 
       <Cartao olho={`${notificacoes.length} no total`} titulo="Recentes">
         {notificacoes.length === 0 ? (

@@ -23,3 +23,14 @@
   position: sticky; top: 45px; z-index: 40; padding: 8px 16px; font-size: 13px; line-height: 1.4;
   background: #fbeedf; color: #6b430c; border-bottom: 1px solid #ecd2ab;
 }
+
+/* ---------- avisos no celular (Web Push) ---------- */
+.avisos-celular { display: flex; align-items: center; justify-content: space-between; gap: 14px 20px; flex-wrap: wrap; background: var(--papel-2); border: 1px solid var(--linha); border-left: 4px solid var(--folha); border-radius: var(--r); padding: 14px 18px; margin-bottom: 16px; }
+.avisos-celular[data-situacao="ligado"] { border-left-color: #2f9e5e; }
+.avisos-celular[data-situacao="bloqueado"], .avisos-celular[data-situacao="precisa-instalar"] { border-left-color: #d9a21e; }
+.avisos-celular-texto { flex: 1 1 280px; min-width: 0; }
+.avisos-celular-texto b { display: block; font-size: 15px; letter-spacing: -.01em; }
+.avisos-celular-texto p { margin: 4px 0 0; font-size: 13.5px; color: var(--grafite); line-height: 1.45; }
+.avisos-celular-texto p.avisos-celular-ok { color: #1c6b3f; font-weight: 600; }
+.avisos-celular-texto p.avisos-celular-erro { color: var(--c-mb); font-weight: 600; }
+.avisos-celular-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
