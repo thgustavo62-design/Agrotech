@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { FICHAS, fotosDaFicha } from './atlas-base';
-import { buscarFichas, linksDePesquisa, partirComFichas, textoDaFicha } from './atlas';
+import { buscarFichas, fichasParecidas, GRUPOS_DE_PARTE, linksDePesquisa, maisImportantes, noGrupo, partirComFichas, textoDaFicha } from './atlas';
 
 describe('fichas-base do Atlas', () => {
   it('são 12 doenças e 7 pragas, com slug único', () => {
@@ -59,6 +59,35 @@ describe('busca no Atlas', () => {
     expect(buscarFichas({ q: 'broca' })[0]!.slug).toMatch(/^broca-/);
     expect(buscarFichas({ q: 'zzzzzz' })).toEqual([]);
     expect(buscarFichas({ q: 'ferrugem', tipo: 'praga' })).toEqual([]);
+  });
+});
+
+describe('organização por trilhas', () => {
+  it('cada ficha aparece em pelo menos uma parte da planta', () => {
+    for (const f of FICHAS) expect(GRUPOS_DE_PARTE.some((g) => noGrupo(f, g.id)), f.slug).toBe(true);
+  });
+  it('filtra pela parte da planta, junto com tipo e busca', () => {
+    const folha = buscarFichas({ parte: 'folha' }).map((f) => f.slug);
+    expect(folha).toContain('ferrugem-alaranjada');
+    expect(folha).toContain('bicho-mineiro');
+    expect(folha).not.toContain('nematoide-das-galhas');
+    expect(buscarFichas({ parte: 'raiz' }).map((f) => f.slug)).toEqual(expect.arrayContaining(['nematoide-das-galhas', 'roseliniose']));
+    expect(buscarFichas({ parte: 'folha', tipo: 'praga' }).every((f) => f.tipo === 'praga')).toBe(true);
+    expect(buscarFichas({ parte: 'inventada' })).toHaveLength(19);
+  });
+  it('"mais importantes" são as de importância extrema ou elevada no campo, sem repetir', () => {
+    const mi = maisImportantes();
+    expect(mi.length).toBeGreaterThan(3);
+    expect(mi.map((f) => f.slug)).toContain('ferrugem-alaranjada');
+    expect(mi.map((f) => f.slug)).not.toContain('rizoctoniose');
+    expect(new Set(mi.map((f) => f.slug)).size).toBe(mi.length);
+    expect(maisImportantes(FICHAS, 2)).toHaveLength(2);
+  });
+  it('parecidas: mesmo tipo e parte em comum, nunca a própria ficha', () => {
+    const ferrugem = FICHAS.find((f) => f.slug === 'ferrugem-alaranjada')!;
+    const p = fichasParecidas(ferrugem);
+    expect(p.length).toBeGreaterThan(0);
+    expect(p.every((x) => x.tipo === 'doenca' && x.slug !== ferrugem.slug && noGrupo(x, 'folha'))).toBe(true);
   });
 });
 

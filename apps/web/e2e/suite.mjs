@@ -602,7 +602,10 @@ const cenarios = {
 
     await pr.p.goto(SITE + '/academy/atlas', { waitUntil: 'networkidle' });
     let t = await corpo(pr.p);
-    conferir('Atlas: 19 fichas (12 doenças e 7 pragas) com foto e o item no menu', (await pr.p.locator('.ac-atlas-cartao').count()) === 19 && (await pr.p.locator('.ac-menu a:has-text("Atlas")').count()) === 1 && /12 doenças e\s*7 pragas/.test(t.replace(/\s+/g, ' ')));
+    const slugsUnicos = await pr.p.evaluate(() => new Set([...document.querySelectorAll('a.ac-atlas-cartao')].map((a) => a.getAttribute('href'))).size);
+    conferir('Atlas: banner com busca, 19 fichas organizadas em trilhas e o item no menu', slugsUnicos === 19 && (await pr.p.locator('.ac-atlas-hero').count()) === 1 && (await pr.p.locator('.ac-atlas-trilha').count()) >= 5 && (await pr.p.locator('.ac-menu a:has-text("Atlas")').count()) === 1 && /12 doenças 7 pragas 44 fotos/.test(t.replace(/\s+/g, ' ')));
+    await pr.p.goto(SITE + '/academy/atlas?parte=raiz', { waitUntil: 'networkidle' });
+    conferir('chip "onde aparece" filtra pela raiz (nematoide e roseliniose, não a ferrugem)', (await pr.p.locator('a.ac-atlas-cartao[href$="/nematoide-das-galhas"]').count()) === 1 && (await pr.p.locator('a.ac-atlas-cartao[href$="/ferrugem-alaranjada"]').count()) === 0);
     await pr.p.goto(SITE + '/academy/atlas?tipo=praga', { waitUntil: 'networkidle' });
     conferir('filtro "só pragas" mostra 7', (await pr.p.locator('.ac-atlas-cartao').count()) === 7);
     await pr.p.goto(SITE + '/academy/atlas?q=ferrugem', { waitUntil: 'networkidle' });
@@ -614,10 +617,14 @@ const cenarios = {
 
     await pr.p.goto(SITE + '/academy/atlas/ferrugem-alaranjada', { waitUntil: 'networkidle' });
     t = await corpo(pr.p);
-    await pr.p.locator('.ac-atlas-galeria img').last().scrollIntoViewIfNeeded();
-    await pr.p.waitForTimeout(400);
+    await pr.p.locator('.ac-atlas-miniaturas').scrollIntoViewIfNeeded();
+    await pr.p.waitForTimeout(500);
     const fotosOk = await pr.p.evaluate(() => [...document.querySelectorAll('.ac-atlas-galeria img')].map((i) => i.complete && i.naturalWidth > 0));
-    conferir('ficha: 3 fotos carregam (estáticas, sob a CSP)', fotosOk.length === 3 && fotosOk.every(Boolean), JSON.stringify(fotosOk));
+    conferir('ficha: foto grande e 3 miniaturas carregam (estáticas, sob a CSP)', fotosOk.length === 4 && fotosOk.every(Boolean), JSON.stringify(fotosOk));
+    const antesSrc = await pr.p.locator('.ac-atlas-principal img').getAttribute('src');
+    await pr.p.locator('.ac-atlas-miniaturas a').nth(1).click();
+    conferir('clicar numa miniatura troca a foto grande (sem sair da página)', (await pr.p.locator('.ac-atlas-principal img').getAttribute('src')) !== antesSrc && pr.p.url().endsWith('/academy/atlas/ferrugem-alaranjada'));
+    conferir('ficha: resumo (importância e onde aparece) e fichas parecidas', (await pr.p.locator('.ac-atlas-fatos li').count()) === 3 && (await pr.p.locator('#t-parecidas').count()) === 1);
     conferir('ficha: o que é, o que favorece, como manejar e monitorar', /Hemileia vastatrix/.test(t) && /O que favorece/.test(t) && /Como manejar/.test(t) && /Como monitorar/.test(t));
     conferir('ficha: avisa que produto e dose são do agrônomo e que as condições são da Amazônia', /Produto, dose e época de aplicação são decisão do seu agrônomo/.test(t) && /Amazônia/.test(t));
     const fonte = pr.p.locator('.ac-atlas-fonte a:has-text("Abrir o documento original")');

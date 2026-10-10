@@ -245,27 +245,85 @@ a.ac-linha:hover { background: var(--folha-clara); }
 .ac-trilho > .ac-aula-cartao { flex-basis: 340px; }
 
 /* ---------- Atlas de doenças e pragas ---------- */
-.ac-atlas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
-.ac-atlas-cartao { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--linha); border-radius: 14px; overflow: hidden; color: inherit !important; text-decoration: none; box-shadow: 0 1px 2px rgba(42,24,5,.05); transition: transform .15s, box-shadow .15s; }
-.ac-atlas-cartao:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(42,24,5,.14); }
-.ac-atlas-cartao img { width: 100%; aspect-ratio: 16 / 11; object-fit: cover; display: block; background: var(--papel-3); }
+.ac-atlas-pagina { padding-top: 22px; }
+.ac-atlas-hero { background-size: cover; background-position: center; color: #fff; }
+.ac-atlas-hero-interno { width: 100%; max-width: 1200px; margin: 0 auto; padding: 46px 20px 40px; }
+.ac-atlas-olho { text-transform: uppercase; letter-spacing: .2em; font-size: 12px; font-weight: 700; color: var(--ac-ouro); margin: 0 0 10px; }
+.ac-atlas-hero h1 { font-size: clamp(28px, 4.4vw, 46px); line-height: 1.08; letter-spacing: -.035em; margin: 0 0 12px; max-width: 760px; }
+.ac-atlas-hero-interno > p:not(.ac-atlas-olho) { max-width: 640px; color: #eadfc8; font-size: 16px; line-height: 1.5; margin: 0 0 22px; }
+.ac-atlas-hero .ac-busca-grande { max-width: 680px; }
+.ac-atlas-hero .ac-busca-grande input { padding: 16px 22px; }
+.ac-atlas-numeros { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 24px 0 0; padding: 0; font-size: 14px; color: #eadfc8; }
+.ac-atlas-numeros b { color: var(--ac-ouro); font-size: 22px; letter-spacing: -.02em; margin-right: 4px; }
+
+.ac-atlas-chips { display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; }
+.ac-atlas-chips-linha { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ac-atlas-chips-rotulo { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--grafite); margin-right: 4px; }
+.ac-atlas-chips a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; border-radius: 99px; background: #fff; border: 1px solid var(--linha-forte); color: var(--tinta); font-size: 14px; font-weight: 600; text-decoration: none; transition: background .12s, border-color .12s; }
+.ac-atlas-chips a:hover { border-color: var(--folha); background: var(--folha-clara); }
+.ac-atlas-chips a[data-ativo="true"] { background: var(--ac-escuro); border-color: var(--ac-escuro); color: #fff; }
+.ac-atlas-chips a small { font-size: 12px; opacity: .7; font-weight: 700; }
+
+.ac-atlas-trilha { margin: 0 0 34px; }
+.ac-atlas-trilha-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.ac-atlas-trilha-topo h2 { font-size: 22px; letter-spacing: -.02em; margin: 0; }
+.ac-atlas-trilha-topo p { margin: 0; color: var(--grafite); font-size: 14px; }
+.ac-atlas-fila { display: flex; gap: 16px; overflow-x: auto; padding: 4px 2px 14px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.ac-atlas-fila > * { flex: 0 0 248px; scroll-snap-align: start; }
+.ac-atlas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.ac-atlas-resultados-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+.ac-atlas-cartao { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--linha); border-radius: 16px; overflow: hidden; color: inherit !important; text-decoration: none; box-shadow: 0 1px 2px rgba(42,24,5,.05); transition: transform .15s, box-shadow .15s; }
+.ac-atlas-cartao:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(42,24,5,.16); }
+.ac-atlas-foto { position: relative; display: block; }
+.ac-atlas-foto img { width: 100%; aspect-ratio: 16 / 11; object-fit: cover; display: block; background: var(--papel-3); }
+.ac-atlas-selo { position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; background: rgba(42,24,5,.82); color: #fff; backdrop-filter: blur(4px); }
+.ac-atlas-selo[data-tipo="doenca"] { background: rgba(138,63,6,.9); }
+.ac-atlas-selo[data-tipo="praga"] { background: rgba(31,90,56,.9); }
+.ac-atlas-selo-solto { position: static; display: inline-block; margin-bottom: 8px; }
 .ac-atlas-corpo { display: flex; flex-direction: column; gap: 3px; padding: 12px 14px 14px; }
 .ac-atlas-corpo b { font-size: 16px; letter-spacing: -.01em; }
 .ac-atlas-corpo i { font-size: 12.5px; color: var(--grafite); }
-.ac-atlas-corpo small { font-size: 12px; color: var(--grafite-2); margin-top: 3px; }
-.ac-atlas-cabeca { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }
-.ac-atlas-cientifico { margin: 0 0 8px; font-style: italic; color: var(--grafite); }
-.ac-atlas-importancia { display: flex; gap: 18px; flex-wrap: wrap; margin: 0; font-size: 14px; }
-.ac-atlas-galeria { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 26px; }
-.ac-atlas-galeria a { display: block; flex: 0 1 300px; max-width: 100%; }
-.ac-atlas-galeria img { width: 100%; height: 220px; object-fit: cover; border-radius: 12px; border: 1px solid var(--linha-forte); display: block; background: var(--papel-3); }
-.ac-atlas-galeria .nota { flex-basis: 100%; margin: 2px 0 0; }
-.ac-atlas-texto { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; margin-bottom: 20px; }
-.ac-atlas-texto section { background: #fff; border: 1px solid var(--linha); border-radius: 14px; padding: 16px 18px; }
-.ac-atlas-texto h2 { font-size: 17px; margin: 0 0 8px; }
-.ac-atlas-texto ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
-.ac-atlas-texto p { margin: 0 0 8px; }
-.ac-atlas-aviso { background: #fff6e0; border: 1px solid #f0d9a0; border-radius: 10px; padding: 9px 12px; color: #5a3d06; }
-.ac-atlas-fonte { background: #fff; border: 1px solid var(--linha); border-left: 4px solid var(--folha); border-radius: 12px; padding: 14px 18px; font-size: 14px; }
+.ac-atlas-nivel { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--grafite); }
+.ac-atlas-nivel::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #9aa39a; }
+.ac-atlas-nivel[data-nivel="alta"]::before { background: #c2410c; }
+.ac-atlas-nivel[data-nivel="media"]::before { background: #d99a1e; }
+
+/* ficha */
+.ac-atlas-faixa { background: linear-gradient(135deg, #2a1805, #4a2a08); color: #fff; }
+.ac-atlas-faixa-interno { width: 100%; max-width: 1200px; margin: 0 auto; padding: 22px 20px 26px; }
+.ac-atlas-faixa .ac-migalha { margin: 0 0 14px; }
+.ac-atlas-faixa-topo { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.ac-atlas-faixa h1 { font-size: clamp(28px, 4vw, 42px); letter-spacing: -.035em; line-height: 1.08; margin: 0; }
+.ac-atlas-cientifico { margin: 6px 0 0; font-style: italic; color: #e6d4b0; }
+.site-academy .btn.ac-atlas-cta { background: var(--ac-ouro); border-color: var(--ac-ouro); color: var(--ac-escuro); font-weight: 800; padding: 13px 22px; }
+.site-academy .btn.ac-atlas-cta:hover { background: #ffc94d; border-color: #ffc94d; }
+.ac-atlas-fatos { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 20px 0 0; padding: 0; }
+.ac-atlas-fatos li { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px 14px; }
+.ac-atlas-fatos span { display: block; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: #d9c79f; }
+.ac-atlas-fatos b { font-size: 17px; }
+.ac-atlas-fatos li[data-nivel="alta"] b { color: #ffb48a; }
+.ac-atlas-fatos li[data-nivel="media"] b { color: #f6d27a; }
+
+.ac-atlas-ficha { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 26px; align-items: start; margin-bottom: 22px; }
+.ac-atlas-galeria { margin: 0; position: sticky; top: 84px; }
+.ac-atlas-principal { position: relative; display: block; border-radius: 18px; overflow: hidden; border: 1px solid var(--linha-forte); background: var(--papel-3); box-shadow: 0 8px 26px rgba(42,24,5,.14); }
+.ac-atlas-principal img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.ac-atlas-contador { position: absolute; right: 12px; bottom: 12px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+.ac-atlas-miniaturas { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ac-atlas-miniaturas a { display: block; width: 78px; height: 58px; border-radius: 10px; overflow: hidden; border: 2px solid transparent; opacity: .72; }
+.ac-atlas-miniaturas a[data-ativa="true"] { border-color: var(--folha); opacity: 1; }
+.ac-atlas-miniaturas img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ac-atlas-galeria figcaption { margin-top: 8px; }
+.ac-atlas-texto { display: flex; flex-direction: column; gap: 14px; }
+.ac-atlas-texto section { background: #fff; border: 1px solid var(--linha); border-radius: 16px; padding: 18px 20px; }
+.ac-atlas-texto h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; letter-spacing: -.01em; margin: 0 0 10px; }
+.ac-atlas-texto h2 span { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--folha-clara); color: var(--folha-escura); font-size: 13px; font-weight: 800; }
+.ac-atlas-texto ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; line-height: 1.5; }
+.ac-atlas-texto p { margin: 0 0 8px; line-height: 1.55; }
+.ac-atlas-aviso { background: #fff6e0; border: 1px solid #f0d9a0; border-radius: 10px; padding: 9px 12px; color: #5a3d06; margin-top: 10px !important; font-size: 14px; }
+.ac-atlas-fonte { background: #fff; border: 1px solid var(--linha); border-left: 4px solid var(--folha); border-radius: 12px; padding: 14px 18px; font-size: 14px; margin-bottom: 30px; }
 .ac-atlas-fonte p { margin: 4px 0 0; }
-@media (max-width: 640px) { .ac-atlas-galeria a { flex-basis: 100%; } .ac-atlas-galeria img { height: 200px; } }
+.ac-atlas-rodape-aviso { background: #fff; border: 1px dashed var(--linha-forte); border-radius: 12px; padding: 12px 16px; font-size: 14px; color: var(--grafite); }
+@media (max-width: 900px) { .ac-atlas-ficha { grid-template-columns: minmax(0, 1fr); } .ac-atlas-galeria { position: static; } }
+@media (max-width: 640px) { .ac-atlas-hero-interno { padding: 30px 16px 28px; } .ac-atlas-fila > * { flex-basis: 220px; } .ac-atlas-numeros b { font-size: 18px; } }

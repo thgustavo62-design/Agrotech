@@ -5,6 +5,7 @@ Parte da Academy (`/academy/atlas`): fichas com fotos para reconhecer o problema
 ## O que existe (fatia 1)
 
 - **19 fichas-base de café conilon** (12 doenças e 7 pragas), com 44 fotos, importância no campo e no viveiro, o que favorece, como manejar, como monitorar (nível de controle quando existe) e "pode ser confundida com". Dados em `apps/web/lib/atlas-base.ts`, fotos em `apps/web/public/atlas/`.
+- **Organização (referência: SENAR Play):** banner com busca e números (12 doenças, 7 pragas, 44 fotos), chips de navegação (tipo e "onde aparece": folha, fruto e flor, ramo e ponteiros, raiz/colo/caule, muda) e **trilhas** em fileiras — "as mais importantes no campo" e uma por parte da planta. Com busca ou filtro vira grade de resultados. A ficha tem faixa de resumo (importância no campo e no viveiro, onde aparece), galeria com miniaturas, quatro blocos numerados (o que é, o que favorece, como manejar, como monitorar), fonte e fichas parecidas.
 - **Busca** por nome, nome científico, outro nome, parte da planta ("folha", "raiz", "fruto") e texto, sem acento; filtro doença/praga. Sem resultado, a tela oferece **atalhos** "Procurar na Embrapa" e "Procurar no Incaper" (abrem a pesquisa em outra aba; o sistema não consulta nem copia nada por trás).
 - **Suspeito disso na minha lavoura:** o produtor abre um pedido do Connect com assunto, tipo "problema na lavoura" e origem `atlas` (a equipe vê "veio de uma ficha do Atlas").
 - **Resposta com ficha:** na conversa, a equipe escolhe uma ficha; o texto ganha a frase e a conversa mostra um link para ela.
