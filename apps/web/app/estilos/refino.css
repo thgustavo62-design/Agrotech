@@ -1,0 +1,139 @@
+/* =========================================================================
+   Refino visual — camada de acabamento sobre base/navegacao/componentes.
+   Mexe só em aparência (espaço, raio, sombra, cor, microinterações): nenhuma regra de layout nova nem de comportamento.
+   Os sites Academy e Connect redefinem as próprias cores (--folha etc.) e herdam o resto daqui.
+   ========================================================================= */
+
+:root {
+  --papel: #f2f5f1;
+  --papel-3: #f6f8f4;
+  --linha: #e1e7dd;
+  --linha-forte: #c9d2c4;
+  --r: 16px;
+  --r-p: 10px;
+  --r-mini: 8px;
+  --sombra: 0 1px 2px rgba(17, 26, 20, .05), 0 6px 18px -10px rgba(17, 26, 20, .28);
+  --sombra-alta: 0 2px 6px rgba(17, 26, 20, .06), 0 22px 44px -26px rgba(17, 26, 20, .55);
+  --anel: 0 0 0 3px color-mix(in srgb, var(--folha) 18%, transparent);
+}
+
+body {
+  background:
+    radial-gradient(1100px 420px at 78% -120px, color-mix(in srgb, var(--folha) 9%, transparent) 0%, transparent 70%),
+    var(--papel);
+  background-attachment: fixed;
+}
+
+/* ---------- tipografia ---------- */
+h1 { font-size: 30px; letter-spacing: -.035em; }
+h2 { font-size: 20px; letter-spacing: -.03em; }
+.olho { font-size: 10.5px; letter-spacing: .2em; }
+.cabecalho-vista { margin-bottom: 22px; }
+.cabecalho-vista p { font-size: 14px; }
+
+/* ---------- cartões ---------- */
+.cartao { padding: 22px; border-color: var(--linha); box-shadow: var(--sombra); }
+.cartao > h2 { margin: 2px 0 14px; }
+
+/* ---------- botões ---------- */
+.btn {
+  min-height: 38px; padding: 0 16px; border-radius: var(--r-p); justify-content: center;
+  font-size: 13.5px; font-weight: 650; letter-spacing: -.005em;
+  box-shadow: 0 1px 2px rgba(17, 26, 20, .12);
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .08s ease;
+}
+.btn:hover { box-shadow: 0 4px 12px -4px rgba(17, 26, 20, .35); }
+.btn:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(17, 26, 20, .12); }
+.btn.verde { background: linear-gradient(180deg, color-mix(in srgb, var(--folha) 88%, #fff) 0%, var(--folha) 100%); border-color: var(--folha-escura); }
+.btn.verde:hover { background: linear-gradient(180deg, var(--folha) 0%, var(--folha-escura) 100%); }
+.btn.sec { background: #fff; box-shadow: 0 1px 2px rgba(17, 26, 20, .06); }
+.btn.sec:hover { background: var(--papel-3); border-color: var(--grafite-2); }
+.btn.mini { min-height: 30px; padding: 0 11px; font-size: 12.5px; border-radius: var(--r-mini); box-shadow: none; }
+.btn:focus-visible, .aba:focus-visible, a:focus-visible { outline: none; box-shadow: var(--anel); }
+
+/* ---------- listas ---------- */
+.lista { gap: 10px; }
+.item {
+  padding: 15px 18px; border-radius: var(--r); box-shadow: 0 1px 2px rgba(17, 26, 20, .03);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.item:hover { border-color: color-mix(in srgb, var(--folha) 35%, var(--linha)); box-shadow: var(--sombra); transform: translateY(-1px); }
+.item h3 { font-size: 15px; letter-spacing: -.015em; }
+.item small { font-size: 12.5px; }
+.item .avatar { width: 40px; height: 40px; font-size: 14px; background: linear-gradient(135deg, var(--folha) 0%, color-mix(in srgb, var(--folha) 60%, #4fb286) 100%); }
+
+.vazio { border-radius: var(--r); padding: 40px 24px; background: linear-gradient(180deg, var(--papel-3), #fff); }
+
+/* ---------- tags ---------- */
+.tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; font-size: 11.5px; }
+.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .75; flex: none; }
+.tag.cinza { background: #ecefe9; }
+
+/* ---------- métricas ---------- */
+.metrica {
+  padding: 18px 18px 16px; border-radius: var(--r); border-color: var(--linha); box-shadow: var(--sombra);
+  background: linear-gradient(180deg, #fff 0%, var(--papel-3) 100%);
+}
+.metrica::before { width: 100%; height: 3px; right: 0; bottom: auto; opacity: .85; background: linear-gradient(90deg, var(--folha), color-mix(in srgb, var(--folha) 40%, #7fe3af)); }
+.metrica span { font-size: 10.5px; letter-spacing: .12em; }
+.metrica b { margin: 6px 0 2px; font-family: var(--fonte); font-size: 32px; font-weight: 800; letter-spacing: -.045em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.metrica[data-rico="true"] { padding-right: 62px; }
+.metrica-icone { top: 18px; right: 16px; width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--folha-clara), color-mix(in srgb, var(--folha-clara) 60%, #fff)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--folha) 12%, transparent); }
+
+/* ---------- banner de página ---------- */
+.banner-hero { padding: 28px 30px; border-radius: 20px; box-shadow: var(--sombra-alta); margin-bottom: 22px; }
+.banner-hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(520px 220px at 100% 0%, rgba(255, 255, 255, .14), transparent 70%);
+}
+.banner-hero h1 { font-size: 32px; letter-spacing: -.04em; }
+.banner-hero p { font-size: 14.5px; color: #e4f1ea; }
+.banner-hero-tags { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; max-width: 320px; letter-spacing: .04em; text-transform: none; white-space: normal; }
+.banner-hero-tags span { padding: 5px 12px; border-radius: 99px; font-size: 11.5px; background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .22); color: #fff; backdrop-filter: blur(6px); }
+.banner-hero-acoes .btn { box-shadow: none; }
+.banner-hero-acoes .btn.verde { background: #fff; color: var(--folha-escura); border-color: #fff; font-weight: 700; }
+.banner-hero-acoes .btn.verde:hover { background: #eaf5ef; }
+
+/* ---------- topo e barra lateral ---------- */
+.topo { padding: 10px 22px; background: linear-gradient(180deg, #16231b 0%, #101914 100%); box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 6px 18px -14px rgba(0, 0, 0, .6); }
+.busca-gatilho { border-radius: 99px; padding: 7px 12px 7px 14px; border-color: #2c3a30; min-width: 230px; }
+.lateral { width: 248px; padding: 18px 12px 90px; background: #fff; box-shadow: 1px 0 0 var(--linha); }
+.lateral-grupo { margin-bottom: 20px; }
+.lateral-grupo-titulo { padding: 0 12px 8px; font-size: 10.5px; letter-spacing: .14em; }
+.lateral-item { position: relative; padding: 9px 12px; border-radius: 10px; font-weight: 600; }
+.lateral-item svg { opacity: .7; }
+.lateral-item[data-ativa="true"] { background: linear-gradient(90deg, var(--folha-clara), color-mix(in srgb, var(--folha-clara) 50%, #fff)); color: var(--folha-escura); }
+.lateral-item[data-ativa="true"]::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 4px; border-radius: 0 4px 4px 0; background: var(--folha); }
+.lateral-colapsar { border-radius: 10px; }
+main.vista { max-width: 1180px; padding-top: 28px; }
+
+.abas { padding: 10px 16px; background: rgba(242, 245, 241, .88); }
+.aba { padding: 8px 15px; }
+.aba[data-ativa="true"] { box-shadow: 0 4px 12px -5px color-mix(in srgb, var(--folha) 70%, transparent); }
+
+/* ---------- tabelas ---------- */
+th { padding: 10px 12px; background: var(--papel-3); font-size: 10.5px; }
+th:first-child { border-radius: 10px 0 0 10px; }
+th:last-child { border-radius: 0 10px 10px 0; }
+td { padding: 11px 12px; }
+
+/* ---------- formulários ---------- */
+label { font-size: 12px; letter-spacing: 0; color: var(--grafite); }
+input, select, textarea { padding: 10px 12px; border-radius: var(--r-p); border-color: var(--linha-forte); transition: border-color .12s ease, box-shadow .12s ease; }
+input:hover, select:hover, textarea:hover { border-color: var(--grafite-2); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--folha); box-shadow: var(--anel); }
+
+.aviso { border-radius: 0 var(--r-p) var(--r-p) 0; padding: 14px 16px; }
+.migalhas { font-size: 13px; margin-bottom: 16px; }
+
+@media (max-width: 680px) {
+  h1 { font-size: 26px; }
+  .banner-hero { padding: 22px 20px; }
+  .banner-hero h1 { font-size: 26px; }
+  .cartao { padding: 18px; }
+  .metrica b { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn, .item { transition: none; }
+  .item:hover { transform: none; }
+}

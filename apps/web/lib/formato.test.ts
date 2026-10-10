@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dataBR, diasDepoisISO, hojeISO } from './formato';
+import { dataBR, diasDepoisISO, hojeISO, iniciaisDoNome } from './formato';
 
 describe('hojeISO — fuso de Brasília', () => {
   it('às 22h de Brasília (01h UTC do dia seguinte) ainda é o dia de Brasília', () => {
@@ -35,5 +35,19 @@ describe('dataBR', () => {
   it('formata dd/mm/aaaa e aceita vazio', () => {
     expect(dataBR('2026-10-01')).toBe('01/10/2026');
     expect(dataBR(null)).toBe('—');
+  });
+});
+
+describe('iniciaisDoNome', () => {
+  it('primeira letra do primeiro e do último nome', () => {
+    expect(iniciaisDoNome('José da Silva Pereira')).toBe('JP');
+    expect(iniciaisDoNome('maria')).toBe('M');
+    expect(iniciaisDoNome('  Ana   Paula  ')).toBe('AP');
+    expect(iniciaisDoNome('Álvaro Ônix')).toBe('ÁÔ');
+  });
+  it('sem nome devolve ponto de interrogação', () => {
+    expect(iniciaisDoNome('')).toBe('?');
+    expect(iniciaisDoNome(null)).toBe('?');
+    expect(iniciaisDoNome(undefined)).toBe('?');
   });
 });

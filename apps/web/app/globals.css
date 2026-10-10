@@ -21,6 +21,9 @@
 /* Academy: formulário do conteúdo, listas de produtores, leitura do artigo. */
 @import './estilos/academy.css';
 
+/* Refino visual: acabamento (raios, sombras, botões, cartões, métricas, barra lateral, campos) sobre os módulos acima. */
+@import './estilos/refino.css';
+
 /* Site da Academy (tema próprio, sob .site-academy). */
 @import './estilos/academy-site.css';
 @import './estilos/connect-site.css';

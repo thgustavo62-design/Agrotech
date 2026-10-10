@@ -3,6 +3,7 @@ import { criarClienteServidor } from '@/lib/supabase/server';
 import { Grade, Metrica, Vazio } from '@/components/ui';
 import { BannerHero, FOTO_CONSULTOR } from '@/components/banner-hero';
 import { IconeProdutores, IconePropriedades } from '@/components/icones';
+import { iniciaisDoNome } from '@/lib/formato';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,7 @@ export default async function Produtores() {
         <div className="lista">
           {produtores.map((p) => (
             <div className="item" key={p.id as string}>
+              <span className="avatar" aria-hidden="true">{iniciaisDoNome(p.nome as string)}</span>
               <div className="cresce">
                 <h3>{p.nome as string}</h3>
                 <small>

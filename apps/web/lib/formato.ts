@@ -40,3 +40,12 @@ export function diasDepoisISO(dias: number, agora: Date = new Date()): string {
   const base = new Date(Date.UTC(a, m - 1, d + dias, 12));
   return base.toISOString().slice(0, 10);
 }
+
+/** Iniciais para o avatar: primeira letra do primeiro e do último nome ("José da Silva Pereira" → "JP"); sem nome, "?". */
+export function iniciaisDoNome(nome: string | null | undefined): string {
+  const partes = (nome ?? '').normalize('NFC').trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return '?';
+  const primeira = [...partes[0]!][0] ?? '?';
+  const ultima = partes.length > 1 ? ([...partes[partes.length - 1]!][0] ?? '') : '';
+  return (primeira + ultima).toLocaleUpperCase('pt-BR');
+}
