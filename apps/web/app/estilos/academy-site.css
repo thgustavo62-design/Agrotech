@@ -337,3 +337,18 @@ a.ac-linha:hover { background: var(--folha-clara); }
   .ac-menu a { background: rgba(255,255,255,.07); padding: 8px 14px; }
   .ac-menu a[data-ativo="true"] { background: rgba(245,178,50,.2); }
 }
+
+/* Atlas: ficha do escritório, rascunho e foto ausente */
+.ac-atlas-selo-escritorio { background: rgba(245,178,50,.95); color: #2a1805; }
+.ac-atlas-selo-canto { left: auto; right: 10px; }
+.ac-atlas-selo-solto + .ac-atlas-selo-solto { margin-left: 6px; }
+.ac-atlas-sem-foto { display: grid; place-items: center; width: 100%; aspect-ratio: 16 / 11; background: linear-gradient(135deg, var(--folha-clara), #fff); color: var(--folha); font-size: 54px; font-weight: 800; }
+.ac-atlas-acoes { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ac-atlas-rascunho { margin: 14px 0 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: #f0e2c4; font-size: 14px; }
+
+/* Estúdio do Atlas: fotos da ficha */
+.ac-estudio-fotos { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.ac-estudio-fotos li { display: flex; flex-direction: column; gap: 6px; }
+.ac-estudio-fotos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; border: 1px solid var(--linha-forte); display: block; background: var(--papel-3); }
+.ac-estudio-fotos small { color: var(--grafite); font-size: 12px; }
+.ac-estudio-envio { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--linha); padding-top: 14px; }

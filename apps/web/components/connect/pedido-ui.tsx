@@ -47,7 +47,7 @@ export function Anexos({ arquivos }: { arquivos: ArquivoDoPedido[] }) {
 }
 
 /** A conversa: o produtor à esquerda, a equipe à direita; nota interna (só a equipe vê) em amarelo. */
-export function Conversa({ mensagens, visao, nomes }: { mensagens: Mensagem[]; visao: Visao; nomes: ReadonlyMap<string, string> }) {
+export function Conversa({ mensagens, visao, nomes, fichas = new Map() }: { mensagens: Mensagem[]; visao: Visao; nomes: ReadonlyMap<string, string>; fichas?: ReadonlyMap<string, string> }) {
   if (mensagens.length === 0) return <p className="nota">Ainda não há mensagens. {visao === 'produtor' ? 'O técnico responde por aqui.' : 'Escreva abaixo para responder.'}</p>;
   return (
     <ol className="cn-conversa" aria-label="Conversa">
@@ -62,7 +62,7 @@ export function Conversa({ mensagens, visao, nomes }: { mensagens: Mensagem[]; v
               <time dateTime={m.criado_em}>{dataHora(m.criado_em)}</time>
             </div>
             <p className="cn-msg-corpo">
-              {m.corpo === '(foto)' && m.arquivos.length > 0 ? '' : partirComFichas(m.corpo).map((parte, i) => (
+              {m.corpo === '(foto)' && m.arquivos.length > 0 ? '' : partirComFichas(m.corpo, fichas).map((parte, i) => (
                 parte.tipo === 'texto' ? parte.valor : <Link key={i} href={`/academy/atlas/${parte.slug}`}>ficha: {parte.nome}</Link>
               ))}
             </p>
@@ -91,7 +91,7 @@ export function LinhaDoTempo({ eventos, visao, nomes }: { eventos: EventoDoPedid
 }
 
 /** Caixa de resposta. A equipe ganha a opção de nota interna e aceita PDF. */
-export function FormResposta({ pedidoId, visao, rotuloBotao = 'Enviar mensagem' }: { pedidoId: string; visao: Visao; rotuloBotao?: string }) {
+export function FormResposta({ pedidoId, visao, rotuloBotao = 'Enviar mensagem', fichasDoEscritorio = [] }: { pedidoId: string; visao: Visao; rotuloBotao?: string; fichasDoEscritorio?: Array<{ slug: string; nome: string }> }) {
   return (
     <form action={responderPedido} className="cn-resposta">
       <input type="hidden" name="pedido_id" value={pedidoId} />
@@ -107,6 +107,7 @@ export function FormResposta({ pedidoId, visao, rotuloBotao = 'Enviar mensagem' 
             <option value="">Nenhuma</option>
             <optgroup label="Doenças">{FICHAS.filter((f) => f.tipo === 'doenca').map((f) => <option key={f.slug} value={f.slug}>{f.nome}</option>)}</optgroup>
             <optgroup label="Pragas">{FICHAS.filter((f) => f.tipo === 'praga').map((f) => <option key={f.slug} value={f.slug}>{f.nome}</option>)}</optgroup>
+            {fichasDoEscritorio.length > 0 ? <optgroup label="Do seu escritório">{fichasDoEscritorio.map((f) => <option key={f.slug} value={f.slug}>{f.nome}</option>)}</optgroup> : null}
           </select>
         </label>
       ) : null}

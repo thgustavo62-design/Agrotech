@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { carregarPedido } from '@/lib/connect-dados';
+import { nomesDeFichas } from '@/lib/atlas-dados';
 import { ROTULO_CATEGORIA } from '@/lib/connect';
 import { dataBR } from '@/lib/formato';
 import { Anexos, Conversa, FormResposta, LinhaDoTempo, SeloPrioridade, SeloStatus } from '@/components/connect/pedido-ui';
@@ -23,6 +24,7 @@ export default async function PedidoDoProdutor({ params }: { params: Promise<{ i
   const p = await carregarPedido(sb, id);
   if (!p) notFound();
   const semNomes = new Map<string, string>();
+  const nomesFichas = await nomesDeFichas(sb, p.mensagens.map((m) => m.corpo));
 
   return (
     <main className="cn-principal cn-estreito">
@@ -49,7 +51,7 @@ export default async function PedidoDoProdutor({ params }: { params: Promise<{ i
 
       <section className="cn-bloco" aria-labelledby="titulo-conversa">
         <h2 id="titulo-conversa">Conversa</h2>
-        <Conversa mensagens={p.mensagens} visao="produtor" nomes={semNomes} />
+        <Conversa mensagens={p.mensagens} visao="produtor" nomes={semNomes} fichas={nomesFichas} />
         {p.status === 'arquivado' ? (
           <p className="nota">Este pedido foi arquivado. Para tratar de outro assunto, <Link href="/connect/pedidos/novo">abra um novo pedido</Link>.</p>
         ) : (

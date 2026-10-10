@@ -19,8 +19,19 @@ Escolhas editoriais (política de aprovação):
 - **Condições da Amazônia.** Épocas, níveis e variedades (ex.: BRS Ouro Preto) são de Rondônia; cada tela avisa que podem ser diferentes no município. O Incaper tem material próprio do conilon do Espírito Santo, que o escritório pode acrescentar.
 - O conteúdo é de **apoio ao reconhecimento**; o diagnóstico é do agrônomo.
 
+## Fichas do escritório (fatia 2)
+
+O agrônomo escreve as fichas dele no **Estúdio → Atlas** (`/academy/estudio/atlas`), a partir do manual técnico: tipo (doença, praga, outro), nome, nome científico, cultura, onde aparece na planta, importância no campo e no viveiro, e quatro blocos de texto com **um item por linha** (o que é, o que favorece, como manejar, como monitorar), mais "pode ser confundida com", apoio/fonte e link opcionais. Até **8 fotos** por ficha, reduzidas no navegador e guardadas no bucket privado da Academy (`{escritório}/atlas/{ficha}/…`).
+
+- **Fluxo:** rascunho → salvar e adicionar fotos → publicar. Publicar exige texto em "o que é", ao menos uma parte da planta e ao menos uma foto (o banco confere); uma ficha publicada não fica sem foto. O banco grava autor e revisor.
+- **Quem vê:** o produtor só enxerga a ficha **publicada** do próprio escritório; a equipe vê todas (rascunho e arquivada) e só as do escritório dela. Quem escreve: `academy.gerenciar` (Agronômico e Proprietário); os demais perfis só consultam.
+- **No Atlas:** as fichas publicadas entram na mesma busca, nos mesmos filtros e nas mesmas trilhas das fichas-base, com o selo "Do escritório". Na ficha aparece "Ficha escrita pelo seu escritório" e, se houver, o apoio/fonte e o link.
+- **No Connect:** a equipe pode apontar uma ficha do escritório na resposta (o grupo "Do seu escritório" aparece na lista) e a conversa mostra o link com o nome da ficha.
+- Banco: migração `0050_academy_atlas.sql` (`atlas_fichas`, `atlas_fotos`, regras, RLS, política de leitura das fotos no Storage); 23 testes em `packages/db-test/test/atlas.test.ts`. App: `lib/atlas-escritorio.ts` (regras, com testes), `lib/atlas-dados.ts`, `components/atlas/form-ficha.tsx`, `app/(academy)/academy/estudio/atlas/…`; cenário de navegador `atlas_escritorio`.
+
 ## Próximas fatias
 
-- Fichas **do escritório** (manual técnico do agrônomo): cadastro no Estúdio com fotos próprias, entrando na mesma busca e na indicação ao produtor. Exige migração (novo tipo `ficha` + fotos) e fica na frente do que já existe.
+- **Indicar uma ficha a um produtor** (como já se indica um conteúdo) e botão "Indicar" dentro da ficha.
+- Importar o manual do agrônomo (PDF) em rascunhos de ficha, para revisão — leitura do arquivo sem serviço pago.
 - Mais culturas e o material do Incaper (conilon do ES), se houver autorização.
 - Foto do produtor + "qual ficha parece?" (IA com visão): serviço pago e envio de imagem a terceiro — só com aprovação.

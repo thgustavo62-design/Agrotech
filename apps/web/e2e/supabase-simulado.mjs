@@ -148,6 +148,17 @@ notificacoes.push(
   { id: 'n63a', org_id: O, destinatario_user_id: U, tipo: 'atendimento_resposta', titulo: 'O técnico respondeu: Folhas amareladas no talhão da frente', corpo: 'Boa tarde, José. Consegue mandar uma foto da folha?', link: `/connect/pedidos/${AT.folhas}`, lida_em: null, criado_em: new Date(hoje.getTime() - 3600000).toISOString() },
   { id: 'n63b', org_id: O, destinatario_user_id: U, tipo: 'atendimento_status', titulo: 'O técnico precisa de uma informação sua: Dúvida sobre a calagem', corpo: null, link: `/connect/pedidos/${AT.calagem}`, lida_em: dia(-1) + 'T10:00:00Z', criado_em: new Date(hoje.getTime() - 86400000).toISOString() },
 );
+// Atlas do escritório (0050): uma ficha publicada com 2 fotos e uma em rascunho, sem foto
+const FI = { publicada: '64aaaaaa-0000-0000-0000-000000000001', rascunho: '64aaaaaa-0000-0000-0000-000000000002' };
+const fichaBase = { org_id: O, autor_id: U, cientifico: null, outros_nomes: null, cultura: null, partes: [], importancia_campo: null, importancia_viveiro: null, sobre: [], favorecem: [], manejo: [], monitoramento: [], confunde: null, fonte: null, url: null, revisado_por: null, revisado_em: null, criado_em: dia(-4) + 'T10:00:00Z', atualizado_em: dia(-2) + 'T10:00:00Z' };
+const atlas_fichas = [
+  { ...fichaBase, id: FI.publicada, tipo: 'doenca', nome: 'Mancha-de-phoma do escritório', cientifico: 'Phoma tarda', cultura: 'Café conilon', partes: ['folha', 'ramo'], importancia_campo: 'alta', importancia_viveiro: 'baixa', sobre: ['Aparece em folhas novas depois de períodos frios e úmidos.'], favorecem: ['Frio e vento.', 'Plantas expostas ao vento.'], manejo: ['Quebra-vento.', 'Poda dos ramos atacados.'], status: 'publicado', publicado_em: dia(-2) + 'T10:00:00Z' },
+  { ...fichaBase, id: FI.rascunho, tipo: 'praga', nome: 'Ficha em redação', status: 'rascunho', publicado_em: null },
+];
+const atlas_fotos = [
+  { id: '64bbbbbb-0000-0000-0000-000000000001', org_id: O, ficha_id: FI.publicada, storage_path: `${O}/atlas/${FI.publicada}/f1.jpg`, legenda: null, posicao: 0, criado_em: dia(-3) + 'T10:00:00Z' },
+  { id: '64bbbbbb-0000-0000-0000-000000000002', org_id: O, ficha_id: FI.publicada, storage_path: `${O}/atlas/${FI.publicada}/f2.jpg`, legenda: 'Folha atacada', posicao: 1, criado_em: dia(-3) + 'T10:05:00Z' },
+];
 const T = {
   profiles: [{ id: U, org_id: O, role: process.env.PAPEL ?? 'consultor', nome: process.env.PAPEL === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }],
   orgs: [{ id: O, nome: 'Campo Forte Assistência Técnica', municipio: 'Colatina', uf: 'ES', plano: 'pro', cnpj: null, criado_em: dia(-200) }],
@@ -158,9 +169,11 @@ const T = {
   planos, assinaturas: [{ id: 's1', org_id: O, plano: 'pro', planos_id: 'pro', status: 'ativa', trial_expira_em: null, atual_ate: dia(20) }], cobrancas: [], convites_equipe: convitesEquipe, convites: [], compartilhamentos: [], safras: [], producao_registros: [],
   metricas_diarias: [], audit_log: auditoria, academy_conteudos, academy_publicos, academy_indicacoes,
   academy_cursos, academy_curso_modulos, academy_curso_aulas, academy_curso_publicos: [], academy_matriculas, academy_progresso, academy_certificados,
-  atendimentos, atendimento_mensagens, atendimento_arquivos, atendimento_eventos,
+  atendimentos, atendimento_mensagens, atendimento_arquivos, atendimento_eventos, atlas_fichas, atlas_fotos,
 };
 const TABELAS_CONNECT = ['atendimentos', 'atendimento_mensagens', 'atendimento_arquivos', 'atendimento_eventos'];
+// tabelas que guardam de verdade o que o app grava (POST/PATCH)
+const PERSISTE = [...TABELAS_CONNECT, 'atlas_fichas', 'atlas_fotos'];
 
 // LAUDO_PAYLOAD=arquivo.json: extração (com recortes) para o laudo em conferência d0, para olhar a tela de conferência
 if (process.env.LAUDO_PAYLOAD) documentos[0].payload = JSON.parse(readFileSync(process.env.LAUDO_PAYLOAD, 'utf8'));
@@ -308,6 +321,8 @@ function atender(req, res) {
     let linhas = [...(T[tabela] ?? [])];
     // o simulador não tem RLS: para o produtor, as tabelas do Connect mostram só o que o banco mostraria
     if (papel === 'produtor' && TABELAS_CONNECT.includes(tabela)) linhas = linhas.filter((r) => r.produtor_id === produtores[0].id && !r.interna);
+    if (papel === 'produtor' && tabela === 'atlas_fichas') linhas = linhas.filter((r) => r.status === 'publicado');
+    if (papel === 'produtor' && tabela === 'atlas_fotos') linhas = linhas.filter((r) => T.atlas_fichas.find((f) => f.id === r.ficha_id)?.status === 'publicado');
     for (const [k, v] of url.searchParams) {
       if (['select', 'order', 'limit', 'offset', 'on_conflict', 'columns'].includes(k) || k.includes('.')) continue; // filtros em recurso aninhado: depois de montar
       const m = /^eq\.(.*)$/.exec(v); if (m) linhas = linhas.filter((r) => String(r[k]) === m[1]);
@@ -320,7 +335,7 @@ function atender(req, res) {
     const lim = Number(url.searchParams.get('limit')); if (lim) linhas = linhas.slice(0, lim);
     const total = linhas.length;
     const extra = { 'content-range': total ? `0-${total - 1}/${total}` : '*/0' };
-    if (TABELAS_CONNECT.includes(tabela) && (req.method === 'POST' || req.method === 'PATCH')) {
+    if (PERSISTE.includes(tabela) && (req.method === 'POST' || req.method === 'PATCH')) {
       // as tabelas do Connect guardam de verdade (com os efeitos dos gatilhos do 0049, no essencial): a tela seguinte já mostra o resultado
       return corpoJson(req, (b) => {
         const agora = new Date().toISOString();
@@ -333,6 +348,7 @@ function atender(req, res) {
               const at = T.atendimentos.find((x) => x.id === nova.atendimento_id);
               if (at) { at.ultima_interacao_em = agora; if (nova.autor_tipo === 'produtor' && ['aguardando_produtor', 'resolvido'].includes(at.status)) at.status = 'em_acompanhamento'; if (nova.autor_tipo === 'equipe' && !nova.interna && ['novo', 'em_triagem'].includes(at.status)) at.status = 'em_acompanhamento'; }
             }
+            if (tabela === 'atlas_fichas') Object.assign(nova, { ...fichaBase, ...r, id: r.id ?? nova.id, criado_em: agora, atualizado_em: agora, revisado_em: r.status === 'publicado' ? agora : null, publicado_em: r.status === 'publicado' ? agora : null });
             T[tabela].push(nova);
             return nova;
           });
@@ -342,6 +358,7 @@ function atender(req, res) {
         }
         for (const r of linhas) {
           if (tabela === 'atendimentos' && b.status && b.status !== r.status) { r.resolvido_em = b.status === 'resolvido' ? agora : null; }
+          if (tabela === 'atlas_fichas') { r.atualizado_em = agora; if (b.status === 'publicado') r.publicado_em = r.publicado_em ?? agora; }
           Object.assign(r, b);
         }
         json(linhas);

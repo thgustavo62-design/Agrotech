@@ -81,17 +81,33 @@ export function textoDaFicha(f: Pick<FichaAtlas, 'slug' | 'nome'>): string {
   return `Veja a ficha do Atlas sobre ${f.nome}: ${caminhoDaFicha(f.slug)}`;
 }
 
-/** Divide um texto em pedaços, separando os caminhos de ficha do Atlas (para a conversa mostrar como link). */
-export function partirComFichas(texto: string): Array<{ tipo: 'texto'; valor: string } | { tipo: 'ficha'; slug: string; nome: string }> {
+const UUID_EM_TEXTO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CAMINHO_DE_FICHA = /\/academy\/atlas\/([a-z0-9-]{3,60})(?![a-z0-9-])/gi;
+
+/** Ids de fichas do escritório citados num texto (para a tela buscar os nomes). */
+export function idsDeFichasNoTexto(texto: string): string[] {
+  const ids = new Set<string>();
+  for (const m of texto.matchAll(CAMINHO_DE_FICHA)) if (UUID_EM_TEXTO.test(m[1]!)) ids.add(m[1]!.toLowerCase());
+  return [...ids];
+}
+
+/**
+ * Divide um texto em pedaços, separando os caminhos de ficha do Atlas (para a conversa mostrar como link). Fichas-base são
+ * reconhecidas pelo slug; as do escritório, pelo id, e só viram link se o nome estiver em `extras` (a RLS já decidiu se a pessoa vê).
+ */
+export function partirComFichas(
+  texto: string,
+  extras: ReadonlyMap<string, string> = new Map(),
+): Array<{ tipo: 'texto'; valor: string } | { tipo: 'ficha'; slug: string; nome: string }> {
   const saida: Array<{ tipo: 'texto'; valor: string } | { tipo: 'ficha'; slug: string; nome: string }> = [];
-  const re = /\/academy\/atlas\/([a-z0-9-]{3,60})/g;
   let ultimo = 0;
-  for (const m of texto.matchAll(re)) {
+  for (const m of texto.matchAll(CAMINHO_DE_FICHA)) {
     const ficha = FICHAS.find((f) => f.slug === m[1]);
-    if (!ficha) continue;
+    const nomeExtra = ficha ? undefined : extras.get(m[1]!.toLowerCase());
+    if (!ficha && !nomeExtra) continue;
     const ini = m.index ?? 0;
     if (ini > ultimo) saida.push({ tipo: 'texto', valor: texto.slice(ultimo, ini) });
-    saida.push({ tipo: 'ficha', slug: ficha.slug, nome: ficha.nome });
+    saida.push({ tipo: 'ficha', slug: ficha ? ficha.slug : m[1]!.toLowerCase(), nome: ficha ? ficha.nome : nomeExtra! });
     ultimo = ini + m[0].length;
   }
   if (ultimo < texto.length) saida.push({ tipo: 'texto', valor: texto.slice(ultimo) });

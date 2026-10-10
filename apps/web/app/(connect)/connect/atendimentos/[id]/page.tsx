@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { criarClienteServidor, perfilAtual } from '@/lib/supabase/server';
 import { carregarEquipe, carregarPedido } from '@/lib/connect-dados';
+import { carregarFichasPublicadas, nomesDeFichas } from '@/lib/atlas-dados';
 import { pode } from '@/lib/permissoes';
 import { ROTULO_CATEGORIA, ROTULO_STATUS, STATUS, estaAtrasado, linkWhatsApp, textoParaWhatsApp } from '@/lib/connect';
 import { dataBR, hojeISO } from '@/lib/formato';
@@ -22,8 +23,9 @@ export default async function Atendimento({ params }: { params: Promise<{ id: st
   if (perfil.role === 'produtor') redirect(`/connect/pedidos/${id}`);
 
   const sb = await criarClienteServidor();
-  const [p, equipe] = await Promise.all([carregarPedido(sb, id), carregarEquipe(sb)]);
+  const [p, equipe, fichasEscritorio] = await Promise.all([carregarPedido(sb, id), carregarEquipe(sb), carregarFichasPublicadas(sb)]);
   if (!p) notFound();
+  const nomesFichas = await nomesDeFichas(sb, p.mensagens.map((m) => m.corpo));
   const nomes = new Map(equipe.map((m) => [m.id, m.nome]));
   const podeGerir = pode(perfil.perfis, 'atendimento.gerir');
   const atrasado = estaAtrasado(p, hojeISO());
@@ -55,13 +57,13 @@ export default async function Atendimento({ params }: { params: Promise<{ id: st
 
           <section className="cn-bloco" aria-labelledby="titulo-conversa">
             <h2 id="titulo-conversa">Conversa</h2>
-            <Conversa mensagens={p.mensagens} visao="equipe" nomes={nomes} />
+            <Conversa mensagens={p.mensagens} visao="equipe" nomes={nomes} fichas={nomesFichas} />
             {!podeGerir ? (
               <p className="nota">Seu perfil só consulta os atendimentos. Peça ao proprietário do escritório para atender pedidos.</p>
             ) : p.status === 'arquivado' ? (
               <p className="nota">Pedido arquivado: não recebe novas mensagens.</p>
             ) : (
-              <FormResposta pedidoId={p.id} visao="equipe" rotuloBotao="Enviar resposta" />
+              <FormResposta pedidoId={p.id} visao="equipe" rotuloBotao="Enviar resposta" fichasDoEscritorio={fichasEscritorio.map((f) => ({ slug: f.slug, nome: f.nome }))} />
             )}
           </section>
 

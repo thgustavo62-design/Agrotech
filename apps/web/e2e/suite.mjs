@@ -618,7 +618,7 @@ const cenarios = {
     await pr.p.goto(SITE + '/academy/atlas', { waitUntil: 'networkidle' });
     let t = await corpo(pr.p);
     const slugsUnicos = await pr.p.evaluate(() => new Set([...document.querySelectorAll('a.ac-atlas-cartao')].map((a) => a.getAttribute('href'))).size);
-    conferir('Atlas: banner com busca, 19 fichas organizadas em trilhas e o item no menu', slugsUnicos === 19 && (await pr.p.locator('.ac-atlas-hero').count()) === 1 && (await pr.p.locator('.ac-atlas-trilha').count()) >= 5 && (await pr.p.locator('.ac-menu a:has-text("Atlas")').count()) === 1 && /12 doenças 7 pragas 44 fotos/.test(t.replace(/\s+/g, ' ')));
+    conferir('Atlas: banner com busca, 19 fichas-base + 1 do escritório organizadas em trilhas e o item no menu', slugsUnicos === 20 && (await pr.p.locator('.ac-atlas-hero').count()) === 1 && (await pr.p.locator('.ac-atlas-trilha').count()) >= 5 && (await pr.p.locator('.ac-menu a:has-text("Atlas")').count()) === 1 && /13 doenças 7 pragas 46 fotos Embrapa como fonte 1 do seu escritório/.test(t.replace(/\s+/g, ' ')));
     await pr.p.goto(SITE + '/academy/atlas?parte=raiz', { waitUntil: 'networkidle' });
     conferir('chip "onde aparece" filtra pela raiz (nematoide e roseliniose, não a ferrugem)', (await pr.p.locator('a.ac-atlas-cartao[href$="/nematoide-das-galhas"]').count()) === 1 && (await pr.p.locator('a.ac-atlas-cartao[href$="/ferrugem-alaranjada"]').count()) === 0);
     await pr.p.goto(SITE + '/academy/atlas?tipo=praga', { waitUntil: 'networkidle' });
@@ -682,6 +682,113 @@ const cenarios = {
       await cel.p.goto(SITE + rota, { waitUntil: 'networkidle' });
       const larguras = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
       conferir(`celular: ${rota} não rola para o lado`, larguras.doc <= larguras.janela + 1, JSON.stringify(larguras));
+    }
+    await cel.contexto.close();
+  },
+
+  async atlas_escritorio() {
+    await subir();
+    const FI = { publicada: '64aaaaaa-0000-0000-0000-000000000001', rascunho: '64aaaaaa-0000-0000-0000-000000000002' };
+    const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    const ag = await pagina({ perfis: 'agronomico' });
+
+    // lista do Estúdio
+    await ag.p.goto(SITE + '/academy/estudio/atlas', { waitUntil: 'networkidle' });
+    let t = await corpo(ag.p);
+    conferir('Estúdio: aba Atlas com as 2 fichas do escritório (uma publicada, uma rascunho) e o botão de nova ficha', (await ag.p.locator('.ac-estudio-abas a:has-text("Atlas")').count()) === 1 && (await ag.p.locator('.item').count()) === 2 && /publicada/.test(t) && /rascunho/.test(t) && (await ag.p.locator('a:has-text("Nova ficha")').count()) === 1);
+
+    // nova ficha: rascunho → foto → publicar
+    await ag.p.goto(SITE + '/academy/estudio/atlas/novo', { waitUntil: 'networkidle' });
+    await ag.p.fill('input[name=nome]', 'Cercospora do escritório');
+    await ag.p.fill('input[name=cultura]', 'Café conilon');
+    await ag.p.check('input[name=partes][value=folha]');
+    await ag.p.selectOption('select[name=importancia_campo]', 'alta');
+    await ag.p.fill('textarea[name=sobre]', 'Manchas circulares com centro claro nas folhas.\nCostuma aparecer em lavoura mal nutrida.');
+    await ag.p.fill('textarea[name=manejo]', 'Adubação equilibrada.\nEvitar excesso de sol na muda.');
+    conferir('nova ficha: não deixa publicar antes de ter foto', await ag.p.locator('button:has-text("Publicar")').isDisabled());
+    let antes = chamadas('POST', 'atlas_fichas');
+    await ag.p.click('button:has-text("Salvar rascunho")');
+    await esperarEscrita('POST', 'atlas_fichas', antes);
+    await ag.p.waitForURL(/\/academy\/estudio\/atlas\/[0-9a-f-]{36}$/, { timeout: 8000 }).catch(() => {});
+    const idNova = (ag.p.url().match(/atlas\/([0-9a-f-]{36})$/) ?? [])[1] ?? '';
+    conferir('rascunho salvo e a pessoa cai na página da ficha, com 0 fotos', chamadas('POST', 'atlas_fichas') > antes && idNova !== '' && /Fotos da ficha \(0 de 8\)/.test(await corpo(ag.p)), ag.p.url());
+
+    await ag.p.setInputFiles('.ac-estudio-envio input[type=file]:not([hidden])', { name: 'folha.png', mimeType: 'image/png', buffer: PNG });
+    await esperarTexto(ag.p, /1 arquivo\(s\) prontos para enviar/);
+    await ag.p.fill('input[name=legenda]', 'Folha com a mancha');
+    antes = chamadas('POST', 'atlas_fotos');
+    await ag.p.click('button:has-text("Enviar fotos")');
+    await esperarEscrita('POST', 'atlas_fotos', antes);
+    await esperarTexto(ag.p, /Fotos da ficha \(1 de 8\)/);
+    conferir('foto enviada (Storage + registro) e a ficha passa a ter 1 foto', chamadas('POST', 'atlas_fotos') > antes && /Fotos da ficha \(1 de 8\)/.test(await corpo(ag.p)) && (await ag.p.locator('.ac-estudio-fotos li').count()) === 1);
+    antes = chamadas('PATCH', 'atlas_fichas');
+    conferir('com foto, o botão Publicar libera', await ag.p.locator('button:has-text("Publicar")').isEnabled());
+    await ag.p.click('button:has-text("Publicar")');
+    await esperarEscrita('PATCH', 'atlas_fichas', antes);
+    await esperarTexto(ag.p, /Os produtores já veem esta ficha/);
+    conferir('publicar muda a situação para "publicada"', /Os produtores já veem esta ficha/.test(await corpo(ag.p)));
+
+    // quem não tem permissão só consulta
+    const campo = await pagina({ perfis: 'campo' });
+    await campo.p.goto(SITE + '/academy/estudio/atlas', { waitUntil: 'networkidle' });
+    conferir('perfil Campo vê a lista, mas sem botão de nova ficha', (await campo.p.locator('.item').count()) >= 2 && (await campo.p.locator('a:has-text("Nova ficha")').count()) === 0);
+    await campo.p.goto(SITE + '/academy/estudio/atlas/novo', { waitUntil: 'networkidle' });
+    conferir('perfil Campo que abre "nova ficha" volta para a lista', /\/academy\/estudio\/atlas$/.test(campo.p.url()), campo.p.url());
+    await campo.contexto.close();
+
+    // equipe vê a ficha como o aluno e acha o atalho de edição
+    await ag.p.goto(SITE + '/academy/atlas/' + FI.publicada, { waitUntil: 'networkidle' });
+    conferir('equipe: na ficha publicada há "Editar no Estúdio", sem o botão de suspeita (isso é do produtor)', (await ag.p.locator('a:has-text("Editar no Estúdio")').count()) === 1 && (await ag.p.locator('a:has-text("Suspeito disso")').count()) === 0);
+    await ag.p.goto(SITE + '/academy/atlas/' + FI.rascunho, { waitUntil: 'networkidle' });
+    conferir('equipe: o rascunho abre com o aviso de que só a equipe vê', /Só a equipe vê esta ficha/.test(await corpo(ag.p)));
+
+    // produtor: vê as publicadas (inclusive a nova), nunca o rascunho
+    const pr = await pagina({ papel: 'produtor' });
+    await pr.p.goto(SITE + '/academy/atlas', { waitUntil: 'networkidle' });
+    const unicos = await pr.p.evaluate(() => new Set([...document.querySelectorAll('a.ac-atlas-cartao')].map((a) => a.getAttribute('href'))).size);
+    t = await corpo(pr.p);
+    conferir('produtor: 19 fichas-base + 2 do escritório (a nova e a publicada), sem o rascunho', unicos === 21 && /Mancha-de-phoma do escritório/.test(t) && /Cercospora do escritório/.test(t) && !/Ficha em redação/.test(t), String(unicos));
+    await pr.p.locator('a.ac-atlas-cartao[href*="64aaaaaa"] img').first().scrollIntoViewIfNeeded();
+    await pr.p.waitForTimeout(700);
+    conferir('produtor: o cartão mostra o selo "Do escritório" e a foto carrega', (await pr.p.locator('.ac-atlas-selo-escritorio').count()) >= 2 && await pr.p.evaluate(() => { const i = document.querySelector('a.ac-atlas-cartao[href*="64aaaaaa"] img'); return Boolean(i && i.complete && i.naturalWidth > 0); }));
+    await pr.p.goto(SITE + '/academy/atlas?q=phoma', { waitUntil: 'networkidle' });
+    conferir('a busca acha a ficha do escritório pelo nome', (await pr.p.locator('a.ac-atlas-cartao').count()) === 1);
+    await pr.p.goto(SITE + '/academy/atlas?parte=ramo', { waitUntil: 'networkidle' });
+    conferir('o filtro por parte da planta inclui a ficha do escritório (ramo)', (await pr.p.locator('a.ac-atlas-cartao[href*="64aaaaaa"]').count()) === 1);
+
+    await pr.p.goto(SITE + '/academy/atlas/' + FI.publicada, { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
+    await pr.p.locator('.ac-atlas-miniaturas').scrollIntoViewIfNeeded();
+    await pr.p.waitForTimeout(500);
+    const fotosOk = await pr.p.evaluate(() => [...document.querySelectorAll('.ac-atlas-galeria img')].map((i) => i.complete && i.naturalWidth > 0));
+    conferir('ficha do escritório: texto, fonte do escritório e 2 fotos (foto grande + miniaturas) carregando', /Phoma tarda/.test(t) && /Quebra-vento/.test(t) && /Ficha escrita pelo seu escritório/.test(t) && fotosOk.length === 3 && fotosOk.every(Boolean), JSON.stringify(fotosOk));
+    conferir('ficha do escritório: sem a nota da Embrapa/Amazônia e com o botão de suspeita', !/Reprodução com autorização da Embrapa/.test(t) && (await pr.p.locator('a:has-text("Suspeito disso")').count()) === 1);
+    await pr.p.goto(SITE + '/academy/atlas/' + FI.rascunho, { waitUntil: 'networkidle' });
+    conferir('produtor não abre o rascunho do escritório', !/Ficha em redação/.test(await corpo(pr.p)));
+    await pr.p.goto(SITE + '/academy/estudio/atlas', { waitUntil: 'networkidle' });
+    conferir('produtor não entra no Estúdio', /\/academy$/.test(pr.p.url()), pr.p.url());
+    conferir('Atlas do escritório sem violação de CSP nem erro de JS', pr.problemas.length === 0 && ag.problemas.length === 0, pr.problemas.concat(ag.problemas).join(' | '));
+    await pr.contexto.close();
+
+    // Connect: a equipe aponta a ficha do escritório e a conversa mostra o link com o nome
+    await ag.p.goto(SITE + '/connect/atendimentos/63aaaaaa-0000-0000-0000-000000000001', { waitUntil: 'networkidle' });
+    conferir('Connect: a lista de fichas da resposta inclui o grupo "Do seu escritório"', (await ag.p.locator('select[name=ficha] optgroup[label="Do seu escritório"] option').count()) >= 2);
+    antes = chamadas('POST', 'atendimento_mensagens');
+    await ag.p.fill('.cn-resposta textarea', 'Veja se bate com o que você viu.');
+    await ag.p.selectOption('select[name=ficha]', FI.publicada);
+    await ag.p.click('.cn-resposta button[type=submit]');
+    await esperarEscrita('POST', 'atendimento_mensagens', antes);
+    const link = ag.p.locator(`.cn-msg a:has-text("ficha: Mancha-de-phoma do escritório")`);
+    await link.first().waitFor({ timeout: 8000 }).catch(() => {});
+    conferir('a resposta cita a ficha do escritório e a conversa mostra o link com o nome', chamadas('POST', 'atendimento_mensagens') > antes && (await link.first().getAttribute('href').catch(() => '')) === `/academy/atlas/${FI.publicada}`);
+    await ag.contexto.close();
+
+    // celular
+    const cel = await pagina({ papel: 'produtor', largura: 390, altura: 844, celular: true });
+    for (const rota of ['/academy/atlas', '/academy/atlas/' + FI.publicada]) {
+      await cel.p.goto(SITE + rota, { waitUntil: 'networkidle' });
+      const larguras = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+      conferir(`celular: ${rota.replace(/[0-9a-f-]{36}/, ':id')} não rola para o lado`, larguras.doc <= larguras.janela + 1, JSON.stringify(larguras));
     }
     await cel.contexto.close();
   },

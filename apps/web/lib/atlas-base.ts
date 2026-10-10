@@ -47,9 +47,18 @@ export interface FichaAtlas {
   manejo: string[];
   monitoramento?: string[];
   confunde?: string;
-  /** quantas fotos existem em /atlas/{slug}-{n}.jpg */
+  /** quantas fotos existem em /atlas/{slug}-{n}.jpg (fichas-base) */
   fotos: number;
   creditos: string;
+  /** de onde vem: fichas-base (Embrapa, no código) ou fichas do escritório (banco). Ausente = base. */
+  origem?: 'embrapa' | 'escritorio';
+  /** fichas do escritório: endereços (assinados) das fotos, na ordem */
+  fotoUrls?: string[];
+  /** fichas do escritório: cultura a que se refere (texto livre) */
+  cultura?: string | null;
+  /** fichas do escritório: fonte e link opcionais */
+  fonteTexto?: string | null;
+  fonteUrl?: string | null;
 }
 
 const C_DOENCAS = 'José R. Vieira Júnior — Embrapa Rondônia';
@@ -403,5 +412,6 @@ export const FICHAS: FichaAtlas[] = [
 ];
 
 export const fonteDaFicha = (f: FichaAtlas): FonteAtlas => (f.tipo === 'doenca' ? FONTES.doencas : FONTES.pragas);
-export const fotosDaFicha = (f: FichaAtlas): string[] => Array.from({ length: f.fotos }, (_, i) => `/atlas/${f.slug}-${i + 1}.jpg`);
+export const fotosDaFicha = (f: FichaAtlas): string[] => f.fotoUrls ?? Array.from({ length: f.fotos }, (_, i) => `/atlas/${f.slug}-${i + 1}.jpg`);
+export const ehDoEscritorio = (f: Pick<FichaAtlas, 'origem'>): boolean => f.origem === 'escritorio';
 export const fichaPorSlug = (slug: string): FichaAtlas | undefined => FICHAS.find((f) => f.slug === slug);

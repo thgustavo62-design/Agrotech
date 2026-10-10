@@ -129,7 +129,13 @@ async function responderPedidoImpl(fd: FormData) {
   const pedidoId = idObrigatorio(fd, 'pedido_id');
   const arquivos = arquivosDoForm(fd);
   // a equipe pode apontar uma ficha do Atlas: o texto ganha a frase e a conversa mostra como link
-  const ficha = ehEquipe ? fichaPorSlug(texto(fd, 'ficha')) : undefined;
+  const fichaPedida = ehEquipe ? texto(fd, 'ficha') : '';
+  let ficha: { slug: string; nome: string } | undefined = fichaPedida ? fichaPorSlug(fichaPedida) : undefined;
+  if (!ficha && UUID.test(fichaPedida)) {
+    // ficha do escritório: a RLS só entrega as do próprio escritório
+    const { data: f } = await (await criarClienteServidor()).schema('agro').from('atlas_fichas').select('id, nome').eq('id', fichaPedida).maybeSingle();
+    if (f) ficha = { slug: (f as { id: string }).id, nome: (f as { nome: string }).nome };
+  }
   const corpoBruto = [texto(fd, 'corpo').trim(), ficha ? textoDaFicha(ficha) : ''].filter(Boolean).join('\n\n');
   const m = validarMensagem(corpoBruto, arquivos.length > 0);
   if (!m.ok) throw new ErroDeUsuario(m.erro);

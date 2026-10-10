@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { exigirConta } from '@/lib/guarda-de-site';
+import { carregarFichasPublicadas } from '@/lib/atlas-dados';
 import { FICHAS } from '@/lib/atlas-base';
 import { GRUPOS_DE_PARTE, buscarFichas, linksDePesquisa, maisImportantes, noGrupo } from '@/lib/atlas';
 import { CartaoFicha } from '@/components/atlas/cartao-ficha';
@@ -10,22 +11,25 @@ export const metadata: Metadata = { title: 'Atlas de doenças e pragas · AgroTe
 
 type Busca = { q?: string; tipo?: string; parte?: string };
 
-const DOENCAS = FICHAS.filter((x) => x.tipo === 'doenca').length;
-const PRAGAS = FICHAS.filter((x) => x.tipo === 'praga').length;
-const FOTOS = FICHAS.reduce((s, x) => s + x.fotos, 0);
 
 /**
  * Atlas de doenças e pragas — no molde das plataformas de cursos: banner com busca, chips de navegação e "trilhas" que
  * organizam as fichas pelo lugar onde o problema aparece na planta. Com busca ou filtro, vira uma grade de resultados.
  */
 export default async function AtlasDeDoencasEPragas({ searchParams }: { searchParams: Promise<Busca> }) {
-  await exigirConta('academy');
+  const { sb } = await exigirConta('academy');
   const f = await searchParams;
+  // fichas-base (Embrapa, no código) + as publicadas pelo escritório (banco)
+  const todas = [...FICHAS, ...(await carregarFichasPublicadas(sb))];
+  const DOENCAS = todas.filter((x) => x.tipo === 'doenca').length;
+  const PRAGAS = todas.filter((x) => x.tipo === 'praga').length;
+  const FOTOS = todas.reduce((s, x) => s + x.fotos, 0);
+  const doEscritorio = todas.filter((x) => x.origem === 'escritorio').length;
   const tipo = f.tipo === 'doenca' || f.tipo === 'praga' ? f.tipo : '';
   const parte = GRUPOS_DE_PARTE.some((g) => g.id === f.parte) ? (f.parte as string) : '';
   const q = (f.q ?? '').slice(0, 80);
   const filtrando = Boolean(q.trim() || tipo || parte);
-  const lista = buscarFichas({ q, tipo, parte });
+  const lista = buscarFichas({ q, tipo, parte }, todas);
   const atalhos = q.trim() ? linksDePesquisa(q) : [];
 
   const href = (m: Partial<Busca>) => {
@@ -35,7 +39,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
     const s = sp.toString();
     return s ? `/academy/atlas?${s}` : '/academy/atlas';
   };
-  const contar = (g: string) => buscarFichas({ tipo, parte: g }).length;
+  const contar = (g: string) => buscarFichas({ tipo, parte: g }, todas).length;
 
   return (
     <>
@@ -55,6 +59,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
             <li><b>{PRAGAS}</b> pragas</li>
             <li><b>{FOTOS}</b> fotos</li>
             <li><b>Embrapa</b> como fonte</li>
+            {doEscritorio > 0 ? <li><b>{doEscritorio}</b> do seu escritório</li> : null}
           </ul>
         </div>
       </section>
@@ -106,11 +111,11 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
                 <h2 id="t-importantes">As mais importantes no campo</h2>
                 <p>Quem mais derruba produção ou qualidade: comece por aqui.</p>
               </div>
-              <div className="ac-atlas-fila">{maisImportantes().map((x) => <CartaoFicha key={x.slug} ficha={x} />)}</div>
+              <div className="ac-atlas-fila">{maisImportantes(todas).map((x) => <CartaoFicha key={x.slug} ficha={x} />)}</div>
             </section>
 
             {GRUPOS_DE_PARTE.map((g) => {
-              const itens = FICHAS.filter((x) => noGrupo(x, g.id));
+              const itens = todas.filter((x) => noGrupo(x, g.id));
               if (itens.length === 0) return null;
               return (
                 <section className="ac-atlas-trilha" key={g.id} aria-labelledby={`t-${g.id}`}>

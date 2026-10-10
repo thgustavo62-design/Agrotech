@@ -9,6 +9,12 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Atlas — fatia 2: fichas do escritório (2026-10-09)
+
+O agrônomo cadastra as próprias fichas (manual técnico) no Estúdio, com até 8 fotos; entram na mesma busca, filtros e trilhas do Atlas, com o selo "Do escritório", e podem ser apontadas nas respostas do Connect. Migração **0050** (`atlas_fichas`, `atlas_fotos`, RLS, Storage), 23 testes no banco (db-test agora 238), regras testadas no app e cenário de navegador `atlas_escritorio`. Detalhes: [ATLAS.md](ATLAS.md).
+
+---
+
 ## Atlas de doenças e pragas — fatia 1 (2026-10-09)
 
 Pedido do dono: o Atlas pesquisa no manual técnico do agrônomo, na Embrapa e em outras fontes; **dono informou que a Embrapa autoriza a reprodução**. Detalhes e escolhas: [ATLAS.md](ATLAS.md).
