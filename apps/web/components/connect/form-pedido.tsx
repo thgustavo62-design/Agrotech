@@ -9,11 +9,13 @@ import { BotaoEnviar } from './botao-enviar';
  * a lista da equipe e os campos de prioridade/responsável/prazo). Sem JavaScript no navegador além do anexo de fotos.
  */
 export function FormPedido({
-  propriedades, talhoes, categoriaInicial = 'duvida', produtorId, equipe, assuntoInicial, talhaoInicial,
+  propriedades, talhoes, categoriaInicial = 'duvida', produtorId, equipe, assuntoInicial, talhaoInicial, origem,
 }: {
   /** vindos do link "Pedir ajuda" de outras telas */
   assuntoInicial?: string;
   talhaoInicial?: string;
+  /** o pedido nasceu numa ficha do Atlas */
+  origem?: 'atlas';
   propriedades: OpcaoPropriedade[];
   talhoes: OpcaoTalhao[];
   categoriaInicial?: CategoriaPedido;
@@ -26,6 +28,7 @@ export function FormPedido({
   return (
     <form action={criarPedido} className="cn-forma">
       {produtorId ? <input type="hidden" name="produtor_id" value={produtorId} /> : null}
+      {origem ? <input type="hidden" name="origem" value={origem} /> : null}
 
       <fieldset className="cn-categorias">
         <legend className="cn-rotulo">Do que se trata?</legend>

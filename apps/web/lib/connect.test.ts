@@ -139,6 +139,10 @@ describe('link para pedir ajuda', () => {
     expect(linkPedirAjuda({ assunto: 'Dúvida sobre o laudo', categoria: 'duvida', talhaoId: T }))
       .toBe(`/connect/pedidos/novo?categoria=duvida&assunto=D%C3%BAvida+sobre+o+laudo&talhao=${T}`);
   });
+  it('marca o pedido que veio do Atlas', () => {
+    expect(linkPedirAjuda({ assunto: 'Suspeita de ferrugem', origem: 'atlas' })).toBe('/connect/pedidos/novo?origem=atlas&assunto=Suspeita+de+ferrugem');
+    expect(linkPedirAjuda({ origem: 'outra' as never })).toBe('/connect/pedidos/novo');
+  });
   it('descarta o que não é seguro e corta o assunto em 160 letras', () => {
     expect(linkPedirAjuda({})).toBe('/connect/pedidos/novo');
     expect(linkPedirAjuda({ talhaoId: 'x" onmouseover=', categoria: 'astrologia' as never })).toBe('/connect/pedidos/novo');

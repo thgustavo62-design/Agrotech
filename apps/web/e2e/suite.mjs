@@ -596,6 +596,74 @@ const cenarios = {
     await cel.contexto.close();
   },
 
+  async atlas() {
+    await subir();
+    const pr = await pagina({ papel: 'produtor' });
+
+    await pr.p.goto(SITE + '/academy/atlas', { waitUntil: 'networkidle' });
+    let t = await corpo(pr.p);
+    conferir('Atlas: 19 fichas (12 doenças e 7 pragas) com foto e o item no menu', (await pr.p.locator('.ac-atlas-cartao').count()) === 19 && (await pr.p.locator('.ac-menu a:has-text("Atlas")').count()) === 1 && /12 doenças e\s*7 pragas/.test(t.replace(/\s+/g, ' ')));
+    await pr.p.goto(SITE + '/academy/atlas?tipo=praga', { waitUntil: 'networkidle' });
+    conferir('filtro "só pragas" mostra 7', (await pr.p.locator('.ac-atlas-cartao').count()) === 7);
+    await pr.p.goto(SITE + '/academy/atlas?q=ferrugem', { waitUntil: 'networkidle' });
+    conferir('busca por "ferrugem" acha a ficha e oferece Embrapa/Incaper', (await pr.p.locator('.ac-atlas-cartao').count()) === 1 && (await pr.p.locator('a:has-text("Procurar na Embrapa")').count()) === 1 && (await pr.p.locator('a:has-text("Procurar no Incaper")').count()) === 1);
+    await pr.p.goto(SITE + '/academy/atlas?q=zzzzz', { waitUntil: 'networkidle' });
+    conferir('busca sem resultado explica e mantém os atalhos de pesquisa', /Nada encontrado no Atlas/.test(await corpo(pr.p)) && (await pr.p.locator('a:has-text("Procurar na Embrapa")').count()) >= 1);
+    const rel = await pr.p.locator('a:has-text("Procurar na Embrapa")').first().getAttribute('rel');
+    conferir('atalho externo abre em outra aba sem repassar a origem', /noopener/.test(rel ?? ''));
+
+    await pr.p.goto(SITE + '/academy/atlas/ferrugem-alaranjada', { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
+    await pr.p.locator('.ac-atlas-galeria img').last().scrollIntoViewIfNeeded();
+    await pr.p.waitForTimeout(400);
+    const fotosOk = await pr.p.evaluate(() => [...document.querySelectorAll('.ac-atlas-galeria img')].map((i) => i.complete && i.naturalWidth > 0));
+    conferir('ficha: 3 fotos carregam (estáticas, sob a CSP)', fotosOk.length === 3 && fotosOk.every(Boolean), JSON.stringify(fotosOk));
+    conferir('ficha: o que é, o que favorece, como manejar e monitorar', /Hemileia vastatrix/.test(t) && /O que favorece/.test(t) && /Como manejar/.test(t) && /Como monitorar/.test(t));
+    conferir('ficha: avisa que produto e dose são do agrônomo e que as condições são da Amazônia', /Produto, dose e época de aplicação são decisão do seu agrônomo/.test(t) && /Amazônia/.test(t));
+    const fonte = pr.p.locator('.ac-atlas-fonte a:has-text("Abrir o documento original")');
+    conferir('ficha: cita a Embrapa e leva ao documento original (https, nova aba)', /Embrapa Rondônia/.test(t) && /^https:\/\/www\.infoteca\.cnptia\.embrapa\.br\//.test((await fonte.getAttribute('href')) ?? '') && /noopener/.test((await fonte.getAttribute('rel')) ?? ''));
+    conferir('ficha: não mostra dose nem produto', !/\d\s*(L|mL|kg)\s*\/\s*ha/i.test(t) && !/tebuconazol|clorpirif|abamectina/i.test(t));
+    await pr.p.goto(SITE + '/academy/atlas/ficha-que-nao-existe', { waitUntil: 'networkidle' });
+    conferir('ficha inexistente dá "não encontrada"', !/Hemileia/.test(await corpo(pr.p)));
+
+    // do Atlas para o Connect: pedido já marcado como vindo da ficha
+    await pr.p.goto(SITE + '/academy/atlas/broca-do-cafe', { waitUntil: 'networkidle' });
+    await pr.p.click('a:has-text("Suspeito disso na minha lavoura")');
+    await pr.p.waitForURL(/\/connect\/pedidos\/novo/, { timeout: 8000 }).catch(() => {});
+    conferir('"Suspeito disso" abre o pedido com assunto, tipo e origem preenchidos', (await pr.p.inputValue('input[name=assunto]')) === 'Suspeita de broca-do-café' && (await pr.p.locator('.cn-categoria input[value=problema_lavoura]').isChecked()) && (await pr.p.locator('input[type=hidden][name=origem][value=atlas]').count()) === 1, pr.p.url());
+    let antes = chamadas('POST', 'atendimentos');
+    await pr.p.click('button:has-text("Enviar pedido")');
+    await esperarEscrita('POST', 'atendimentos', antes);
+    await pr.p.waitForURL(/\/connect\/pedidos\/63/, { timeout: 8000 }).catch(() => {});
+    const idNovo = (pr.p.url().match(/pedidos\/([0-9a-f-]{36})/) ?? [])[1] ?? '';
+    conferir('o pedido nasce com origem "atlas"', chamadas('POST', 'atendimentos') > antes && idNovo !== '', pr.p.url());
+    conferir('Atlas e Connect sem violação de CSP nem erro de JS', pr.problemas.length === 0, pr.problemas.join(' | '));
+    await pr.contexto.close();
+
+    // equipe: vê de onde veio e aponta uma ficha na resposta
+    const eq = await pagina({ perfis: 'agronomico' });
+    await eq.p.goto(SITE + '/connect/atendimentos/' + idNovo, { waitUntil: 'networkidle' });
+    conferir('a equipe vê que o pedido veio de uma ficha do Atlas', /veio de uma ficha do Atlas/.test(await corpo(eq.p)));
+    antes = chamadas('POST', 'atendimento_mensagens');
+    await eq.p.fill('.cn-resposta textarea', 'Parece broca mesmo. Vamos ver na visita.');
+    await eq.p.selectOption('select[name=ficha]', 'broca-do-cafe');
+    await eq.p.click('.cn-resposta button[type=submit]');
+    await esperarEscrita('POST', 'atendimento_mensagens', antes);
+    await eq.p.locator('.cn-msg a:has-text("ficha: Broca-do-café")').waitFor({ timeout: 8000 }).catch(() => {});
+    const href = await eq.p.locator('.cn-msg a:has-text("ficha: Broca-do-café")').first().getAttribute('href').catch(() => null);
+    conferir('a resposta aponta a ficha e a conversa mostra o link', chamadas('POST', 'atendimento_mensagens') > antes && href === '/academy/atlas/broca-do-cafe', String(href));
+    await eq.contexto.close();
+
+    // celular
+    const cel = await pagina({ papel: 'produtor', largura: 390, altura: 844, celular: true });
+    for (const rota of ['/academy/atlas', '/academy/atlas/bicho-mineiro']) {
+      await cel.p.goto(SITE + rota, { waitUntil: 'networkidle' });
+      const larguras = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+      conferir(`celular: ${rota} não rola para o lado`, larguras.doc <= larguras.janela + 1, JSON.stringify(larguras));
+    }
+    await cel.contexto.close();
+  },
+
   async connect_equipe() {
     await subir();
     const AT = { folhas: '63aaaaaa-0000-0000-0000-000000000001', broca: '63aaaaaa-0000-0000-0000-000000000004' };

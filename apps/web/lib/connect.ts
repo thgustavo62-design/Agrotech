@@ -172,8 +172,9 @@ export function textoParaWhatsApp(nomeProdutor: string | null, assunto: string):
  * Link para o produtor pedir ajuda a partir de outra tela (laudo, recomendação, talhão), com o assunto e o talhão já
  * preenchidos. Só repassa o que é seguro: tipo conhecido, assunto curto, id no formato de UUID.
  */
-export function linkPedirAjuda(o: { assunto?: string; categoria?: CategoriaPedido; talhaoId?: string }): string {
+export function linkPedirAjuda(o: { assunto?: string; categoria?: CategoriaPedido; talhaoId?: string; origem?: 'atlas' }): string {
   const q = new URLSearchParams();
+  if (o.origem === 'atlas') q.set('origem', 'atlas');
   if (o.categoria && CATEGORIAS.includes(o.categoria)) q.set('categoria', o.categoria);
   const assunto = (o.assunto ?? '').trim().slice(0, 160);
   if (assunto) q.set('assunto', assunto);

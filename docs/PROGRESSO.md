@@ -9,6 +9,18 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Atlas de doenças e pragas — fatia 1 (2026-10-09)
+
+Pedido do dono: o Atlas pesquisa no manual técnico do agrônomo, na Embrapa e em outras fontes; **dono informou que a Embrapa autoriza a reprodução**. Detalhes e escolhas: [ATLAS.md](ATLAS.md).
+
+- [x] 19 fichas-base de café conilon (Embrapa Rondônia), 44 fotos extraídas dos PDFs originais, com fonte, autoria e link do documento; **sem tabelas de defensivos, produtos nem doses** (teste automático confere).
+- [x] Busca (nome, científico, parte da planta, texto; sem acento), filtro doença/praga e atalhos "Procurar na Embrapa/Incaper" (links externos, nada consultado por trás).
+- [x] Ligação com o Connect: "Suspeito disso na minha lavoura" (pedido com origem `atlas`) e "Apontar uma ficha do Atlas" na resposta da equipe (vira link na conversa).
+- [x] Testes: `lib/atlas.test.ts` (9) e cenário de navegador `atlas`.
+- [ ] **Depois:** fichas do escritório (manual do agrônomo) com fotos próprias no Estúdio; mais culturas/Incaper; "qual ficha parece?" com IA de visão (pede aprovação).
+
+---
+
 ## Connect — fatia 1: pedido do produtor e fila de atendimento (2026-10-09)
 
 Segundo site do plano de expansão (pedido "continue"). O produtor pede ajuda ao técnico com foto e acompanha; a equipe atende numa fila com responsável, prazo e histórico. Funcionamento e regras: [CONNECT.md](CONNECT.md).

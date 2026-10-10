@@ -327,7 +327,7 @@ function atender(req, res) {
         if (req.method === 'POST') {
           const novas = (Array.isArray(b) ? b : [b]).map((r) => {
             const nova = { id: `63${String(++seq).padStart(6, '0')}-0000-0000-0000-000000000000`, criado_em: agora, ...r };
-            if (tabela === 'atendimentos') Object.assign(nova, { ...atBase, ...r, id: nova.id, status: 'novo', origem: papel === 'produtor' ? 'portal' : 'equipe', ultima_interacao_em: agora, produtores_id: r.produtor_id, criado_em: agora });
+            if (tabela === 'atendimentos') Object.assign(nova, { ...atBase, ...r, id: nova.id, status: 'novo', origem: papel === 'produtor' ? (r.origem === 'atlas' ? 'atlas' : 'portal') : 'equipe', ultima_interacao_em: agora, produtores_id: r.produtor_id, criado_em: agora });
             if (tabela === 'atendimento_mensagens') {
               nova.autor_id = U; nova.autor_tipo = papel === 'produtor' ? 'produtor' : 'equipe'; if (papel === 'produtor') nova.interna = false;
               const at = T.atendimentos.find((x) => x.id === nova.atendimento_id);

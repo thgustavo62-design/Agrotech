@@ -17,6 +17,7 @@ export function CabecalhoAcademy({ nome, ehAluno, ehEstudio }: { nome: string | 
     { href: '/academy', rotulo: 'Início', exato: true },
     { href: '/academy/cursos', rotulo: 'Cursos' },
     ...(ehAluno ? [{ href: '/academy/meus-cursos', rotulo: 'Meus cursos' }] : []),
+    { href: '/academy/atlas', rotulo: 'Atlas' },
     { href: '/academy/noticias', rotulo: 'Notícias' },
     ...(ehEstudio ? [{ href: '/academy/estudio', rotulo: 'Estúdio' }] : []),
   ];

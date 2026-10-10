@@ -7,6 +7,8 @@ import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { criarClienteServidor, perfilAtual, produtorAtual } from '@/lib/supabase/server';
 import { exigir } from '@/lib/permissoes-servidor';
+import { fichaPorSlug } from '@/lib/atlas-base';
+import { textoDaFicha } from '@/lib/atlas';
 import { COOKIE_AVISO, PARAM_AVISO, comAviso, ErroDeUsuario, lancarDoBanco } from '@/lib/acao';
 import {
   MAX_BYTES_ARQUIVO, MAX_FOTOS_POR_ENVIO, STATUS, dataValida, nomeSeguroDeAnexo, validarMensagem, validarPedido,
@@ -103,6 +105,8 @@ async function criarPedidoImpl(fd: FormData) {
     talhao_id: idOuNulo(fd, 'talhao_id'),
     assunto: v.dados.assunto,
     descricao: v.dados.descricao,
+    // só o produtor marca "veio do Atlas"; para a equipe o banco grava sempre 'equipe'
+    ...(!ehEquipe && texto(fd, 'origem') === 'atlas' ? { origem: 'atlas' } : {}),
     categoria: v.dados.categoria,
     prioridade: v.dados.prioridade,
     ...extra,
@@ -124,7 +128,10 @@ async function responderPedidoImpl(fd: FormData) {
   if (ehEquipe) await exigir('atendimento.gerir');
   const pedidoId = idObrigatorio(fd, 'pedido_id');
   const arquivos = arquivosDoForm(fd);
-  const m = validarMensagem(texto(fd, 'corpo'), arquivos.length > 0);
+  // a equipe pode apontar uma ficha do Atlas: o texto ganha a frase e a conversa mostra como link
+  const ficha = ehEquipe ? fichaPorSlug(texto(fd, 'ficha')) : undefined;
+  const corpoBruto = [texto(fd, 'corpo').trim(), ficha ? textoDaFicha(ficha) : ''].filter(Boolean).join('\n\n');
+  const m = validarMensagem(corpoBruto, arquivos.length > 0);
   if (!m.ok) throw new ErroDeUsuario(m.erro);
 
   const sb = await criarClienteServidor();

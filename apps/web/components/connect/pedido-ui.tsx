@@ -6,6 +6,8 @@ import {
 } from '@/lib/connect';
 import type { ArquivoDoPedido, EventoDoPedido, Mensagem, PedidoResumo } from '@/lib/connect-dados';
 import { responderPedido } from '@/app/(connect)/connect/acoes';
+import { FICHAS } from '@/lib/atlas-base';
+import { partirComFichas } from '@/lib/atlas';
 import { CampoAnexos } from './campo-anexos';
 import { BotaoEnviar } from './botao-enviar';
 
@@ -59,7 +61,11 @@ export function Conversa({ mensagens, visao, nomes }: { mensagens: Mensagem[]; v
               {m.interna ? <Tag tom="alerta">nota interna</Tag> : null}
               <time dateTime={m.criado_em}>{dataHora(m.criado_em)}</time>
             </div>
-            <p className="cn-msg-corpo">{m.corpo === '(foto)' && m.arquivos.length > 0 ? '' : m.corpo}</p>
+            <p className="cn-msg-corpo">
+              {m.corpo === '(foto)' && m.arquivos.length > 0 ? '' : partirComFichas(m.corpo).map((parte, i) => (
+                parte.tipo === 'texto' ? parte.valor : <Link key={i} href={`/academy/atlas/${parte.slug}`}>ficha: {parte.nome}</Link>
+              ))}
+            </p>
             <Anexos arquivos={m.arquivos} />
           </li>
         );
@@ -94,6 +100,16 @@ export function FormResposta({ pedidoId, visao, rotuloBotao = 'Enviar mensagem' 
         <textarea name="corpo" rows={4} maxLength={4000} placeholder={visao === 'produtor' ? 'Escreva aqui…' : 'Escreva a resposta ao produtor…'} />
       </label>
       <CampoAnexos rotulo={visao === 'produtor' ? 'Fotos' : 'Fotos ou PDF'} permitirPdf={visao === 'equipe'} />
+      {visao === 'equipe' ? (
+        <label className="cn-rotulo">
+          Apontar uma ficha do Atlas <span className="cn-opcional">(opcional — vira link na conversa)</span>
+          <select name="ficha" defaultValue="">
+            <option value="">Nenhuma</option>
+            <optgroup label="Doenças">{FICHAS.filter((f) => f.tipo === 'doenca').map((f) => <option key={f.slug} value={f.slug}>{f.nome}</option>)}</optgroup>
+            <optgroup label="Pragas">{FICHAS.filter((f) => f.tipo === 'praga').map((f) => <option key={f.slug} value={f.slug}>{f.nome}</option>)}</optgroup>
+          </select>
+        </label>
+      ) : null}
       {visao === 'equipe' ? (
         <label className="cn-marcar"><input type="checkbox" name="interna" /> Nota interna <span className="nota">(só a equipe vê; o produtor não é avisado)</span></label>
       ) : null}

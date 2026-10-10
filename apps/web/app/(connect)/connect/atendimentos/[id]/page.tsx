@@ -40,7 +40,7 @@ export default async function Atendimento({ params }: { params: Promise<{ id: st
           <SeloStatus status={p.status} visao="equipe" />
           <SeloPrioridade prioridade={p.prioridade} />
           {atrasado ? <span className="tag ruim">prazo vencido</span> : null}
-          <span className="nota">{ROTULO_CATEGORIA[p.categoria]} · {p.origem === 'equipe' ? 'aberto pela equipe' : 'pedido do produtor'} · {dataBR(p.criado_em.slice(0, 10))}</span>
+          <span className="nota">{ROTULO_CATEGORIA[p.categoria]} · {p.origem === 'equipe' ? 'aberto pela equipe' : p.origem === 'atlas' ? 'veio de uma ficha do Atlas' : 'pedido do produtor'} · {dataBR(p.criado_em.slice(0, 10))}</span>
         </div>
       </header>
 
