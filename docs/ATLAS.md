@@ -29,9 +29,16 @@ O agrônomo escreve as fichas dele no **Estúdio → Atlas** (`/academy/estudio/
 - **No Connect:** a equipe pode apontar uma ficha do escritório na resposta (o grupo "Do seu escritório" aparece na lista) e a conversa mostra o link com o nome da ficha.
 - Banco: migração `0050_academy_atlas.sql` (`atlas_fichas`, `atlas_fotos`, regras, RLS, política de leitura das fotos no Storage); 23 testes em `packages/db-test/test/atlas.test.ts`. App: `lib/atlas-escritorio.ts` (regras, com testes), `lib/atlas-dados.ts`, `components/atlas/form-ficha.tsx`, `app/(academy)/academy/estudio/atlas/…`; cenário de navegador `atlas_escritorio`.
 
+## Indicar uma ficha a um produtor (fatia 3)
+
+Na página de qualquer ficha publicada (da Embrapa ou do escritório), quem tem a permissão de indicar (Agronômico, Campo e Proprietário; a Consulta não) vê **"Indicar a um produtor"**: escolhe o produtor, escreve um recado opcional e acompanha quem já recebeu e **se abriu** ("abriu" / "ainda não abriu"); dá para desfazer a indicação.
+
+- O produtor é avisado (aviso do portal, quando já tem login) e a ficha aparece no topo do Atlas em **"Indicadas para você"**, com o selo **Nova** até ele abrir; ao abrir, a página mostra "indicada para você" com o recado, e a abertura fica registrada (a hora é do servidor).
+- Regras do banco (migração `0051_atlas_indicacoes.sql`): uma ficha por produtor (sem repetir), só ficha **publicada** do mesmo escritório, produtor do mesmo escritório, visita/análise de contexto do mesmo produtor, quem indicou gravado pelo banco; o produtor só lê as próprias e só marca a abertura. Apagar a ficha do escritório leva as indicações. 12 testes no banco (db-test: 250 no total) e regras do app em `lib/atlas-indicacoes.ts`; cenário de navegador `atlas_indicacao`.
+
 ## Próximas fatias
 
-- **Indicar uma ficha a um produtor** (como já se indica um conteúdo) e botão "Indicar" dentro da ficha.
+- Atalho **"Indicar uma ficha"** nas telas de visita e de laudo do escritório (o banco já aceita visita/análise como contexto).
 - Importar o manual do agrônomo (PDF) em rascunhos de ficha, para revisão — leitura do arquivo sem serviço pago.
 - Mais culturas e o material do Incaper (conilon do ES), se houver autorização.
 - Foto do produtor + "qual ficha parece?" (IA com visão): serviço pago e envio de imagem a terceiro — só com aprovação.

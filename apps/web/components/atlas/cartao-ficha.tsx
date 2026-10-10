@@ -4,7 +4,7 @@ import { fotosDaFicha, type FichaAtlas } from '@/lib/atlas-base';
 const nivel = (n: string): 'alta' | 'media' | 'baixa' => (/extrema|elevada|alta/i.test(n) ? 'alta' : /m[eé]dia|moderada/i.test(n) ? 'media' : 'baixa');
 
 /** Cartão de ficha (foto, tipo, nome, nome científico e importância): usado nas fileiras e na grade do Atlas. */
-export function CartaoFicha({ ficha }: { ficha: FichaAtlas }) {
+export function CartaoFicha({ ficha, indicada = false, novaIndicacao = false }: { ficha: FichaAtlas; indicada?: boolean; novaIndicacao?: boolean }) {
   const foto = fotosDaFicha(ficha)[0];
   return (
     <Link className="ac-atlas-cartao" href={`/academy/atlas/${ficha.slug}`}>
@@ -16,7 +16,8 @@ export function CartaoFicha({ ficha }: { ficha: FichaAtlas }) {
           <span className="ac-atlas-sem-foto" aria-hidden="true">{ficha.nome.slice(0, 1)}</span>
         )}
         <span className="ac-atlas-selo" data-tipo={ficha.tipo}>{ficha.tipo === 'doenca' ? 'Doença' : 'Praga'}</span>
-        {ficha.origem === 'escritorio' ? <span className="ac-atlas-selo ac-atlas-selo-escritorio ac-atlas-selo-canto">Do escritório</span> : null}
+        {ficha.origem === 'escritorio' && !indicada ? <span className="ac-atlas-selo ac-atlas-selo-escritorio ac-atlas-selo-canto">Do escritório</span> : null}
+        {indicada ? <span className="ac-atlas-selo ac-atlas-selo-escritorio ac-atlas-selo-canto">{novaIndicacao ? 'Nova' : 'Indicada'}</span> : null}
       </span>
       <span className="ac-atlas-corpo">
         <b>{ficha.nome}</b>

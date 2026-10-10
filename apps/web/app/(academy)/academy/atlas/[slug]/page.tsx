@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { after } from 'next/server';
 import type { Metadata } from 'next';
 import { exigirConta } from '@/lib/guarda-de-site';
 import { FICHAS, ehDoEscritorio, fichaPorSlug, fonteDaFicha, fotosDaFicha, type FichaAtlas } from '@/lib/atlas-base';
@@ -11,6 +12,7 @@ import { linkPedirAjuda } from '@/lib/connect';
 import { dominioDoLink } from '@/lib/academy';
 import { GaleriaAtlas } from '@/components/atlas/galeria';
 import { CartaoFicha } from '@/components/atlas/cartao-ficha';
+import { IndicarFicha, type IndicacaoLinha, type ProdutorOpcao } from '@/components/atlas/indicar-ficha';
 import { Tag } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -25,8 +27,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 const nivel = (n: string): 'alta' | 'media' | 'baixa' => (/extrema|elevada|alta/i.test(n) ? 'alta' : /m[eé]dia|moderada/i.test(n) ? 'media' : 'baixa');
 
-export default async function FichaDoAtlas({ params }: { params: Promise<{ slug: string }> }) {
+export default async function FichaDoAtlas({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ indicado?: string }> }) {
   const { slug } = await params;
+  const { indicado } = await searchParams;
   const { sb, perfil, ehAluno, ehEquipe } = await exigirConta('academy');
 
   let f: FichaAtlas | undefined = fichaPorSlug(slug);
@@ -45,6 +48,29 @@ export default async function FichaDoAtlas({ params }: { params: Promise<{ slug:
   const podeEditar = ehEquipe && pode(perfil.perfis, 'academy.gerenciar');
   const situacao = bruta ? ROTULO_STATUS_FICHA[bruta.status] : null;
   const fonte = doEscritorio ? null : fonteDaFicha(f);
+
+  // indicação: a equipe indica e acompanha; o produtor vê o recado e a abertura é registrada
+  const publicada = !bruta || bruta.status === 'publicado';
+  const coluna = doEscritorio ? 'ficha_id' : 'ficha_slug';
+  const { data: dadosInd } = await sb.schema('agro').from('atlas_indicacoes')
+    .select('id, produtor_id, mensagem, criado_em, aberto_em, produtor:produtor_id(nome)').eq(coluna, f.slug).order('criado_em', { ascending: false });
+  type LinhaInd = { id: string; produtor_id: string; mensagem: string | null; criado_em: string; aberto_em: string | null; produtor: { nome: string } | { nome: string }[] | null };
+  const indicacoes: IndicacaoLinha[] = ((dadosInd ?? []) as unknown as LinhaInd[]).map((i) => ({
+    id: i.id, produtor_id: i.produtor_id, mensagem: i.mensagem, criado_em: i.criado_em, aberto_em: i.aberto_em,
+    produtor: (Array.isArray(i.produtor) ? i.produtor[0]?.nome : i.produtor?.nome) ?? 'Produtor',
+  }));
+  const podeIndicar = ehEquipe && pode(perfil.perfis, 'academy.indicar') && publicada;
+  let produtores: ProdutorOpcao[] = [];
+  if (podeIndicar) {
+    const { data: prod } = await sb.schema('agro').from('produtores').select('id, nome').order('nome').limit(1000);
+    produtores = (prod ?? []) as ProdutorOpcao[];
+  }
+  const minhaIndicacao = ehAluno ? indicacoes[0] : undefined;
+  if (minhaIndicacao && !minhaIndicacao.aberto_em) {
+    const idIndicacao = minhaIndicacao.id;
+    // marca que abriu depois de enviar a página (o banco grava a hora)
+    after(async () => { await sb.schema('agro').from('atlas_indicacoes').update({ aberto_em: new Date().toISOString() }).eq('id', idIndicacao); });
+  }
 
   return (
     <>
@@ -70,6 +96,9 @@ export default async function FichaDoAtlas({ params }: { params: Promise<{ slug:
               {podeEditar && bruta ? <Link className="btn sec" href={`/academy/estudio/atlas/${bruta.id}`}>Editar no Estúdio</Link> : null}
             </div>
           </div>
+          {minhaIndicacao ? (
+            <p className="ac-atlas-rascunho"><Tag tom="ok">indicada para você</Tag> Seu agrônomo indicou esta ficha{minhaIndicacao.mensagem ? <>: “{minhaIndicacao.mensagem}”</> : '.'}</p>
+          ) : null}
           {situacao && bruta && bruta.status !== 'publicado' ? (
             <p className="ac-atlas-rascunho"><Tag tom={situacao.tom}>{situacao.txt}</Tag> Só a equipe vê esta ficha. Os produtores só enxergam depois de publicada.</p>
           ) : null}
@@ -136,6 +165,8 @@ export default async function FichaDoAtlas({ params }: { params: Promise<{ slug:
             </>
           )}
         </aside>
+
+        {podeIndicar ? <IndicarFicha referencia={f.slug} produtores={produtores} indicacoes={indicacoes} jaIndicou={indicado === '1'} /> : null}
 
         {parecidas.length > 0 ? (
           <section className="ac-atlas-trilha" aria-labelledby="t-parecidas">

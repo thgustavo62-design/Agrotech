@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { exigirConta } from '@/lib/guarda-de-site';
 import { carregarFichasPublicadas } from '@/lib/atlas-dados';
+import { chaveDaIndicacao, type IndicacaoDeFicha } from '@/lib/atlas-indicacoes';
 import { FICHAS } from '@/lib/atlas-base';
 import { GRUPOS_DE_PARTE, buscarFichas, linksDePesquisa, maisImportantes, noGrupo } from '@/lib/atlas';
 import { CartaoFicha } from '@/components/atlas/cartao-ficha';
@@ -17,7 +18,7 @@ type Busca = { q?: string; tipo?: string; parte?: string };
  * organizam as fichas pelo lugar onde o problema aparece na planta. Com busca ou filtro, vira uma grade de resultados.
  */
 export default async function AtlasDeDoencasEPragas({ searchParams }: { searchParams: Promise<Busca> }) {
-  const { sb } = await exigirConta('academy');
+  const { sb, ehAluno } = await exigirConta('academy');
   const f = await searchParams;
   // fichas-base (Embrapa, no código) + as publicadas pelo escritório (banco)
   const todas = [...FICHAS, ...(await carregarFichasPublicadas(sb))];
@@ -25,6 +26,17 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
   const PRAGAS = todas.filter((x) => x.tipo === 'praga').length;
   const FOTOS = todas.reduce((s, x) => s + x.fotos, 0);
   const doEscritorio = todas.filter((x) => x.origem === 'escritorio').length;
+
+  // fichas que o agrônomo indicou a este produtor (a RLS só entrega as dele)
+  type Ficha = (typeof todas)[number];
+  let indicadas: Array<{ ficha: Ficha; nova: boolean }> = [];
+  if (ehAluno) {
+    const { data: ind } = await sb.schema('agro').from('atlas_indicacoes')
+      .select('id, produtor_id, ficha_id, ficha_slug, titulo, mensagem, criado_em, aberto_em').order('criado_em', { ascending: false }).limit(12);
+    indicadas = ((ind ?? []) as IndicacaoDeFicha[])
+      .map((i) => ({ ficha: todas.find((x) => x.slug === chaveDaIndicacao(i)), nova: !i.aberto_em }))
+      .filter((x): x is { ficha: Ficha; nova: boolean } => Boolean(x.ficha));
+  }
   const tipo = f.tipo === 'doenca' || f.tipo === 'praga' ? f.tipo : '';
   const parte = GRUPOS_DE_PARTE.some((g) => g.id === f.parte) ? (f.parte as string) : '';
   const q = (f.q ?? '').slice(0, 80);
@@ -106,6 +118,16 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
           )
         ) : (
           <>
+            {indicadas.length > 0 ? (
+              <section className="ac-atlas-trilha" aria-labelledby="t-indicadas">
+                <div className="ac-atlas-trilha-topo">
+                  <h2 id="t-indicadas">Indicadas para você</h2>
+                  <p>Fichas que o seu agrônomo separou para você.</p>
+                </div>
+                <div className="ac-atlas-fila">{indicadas.map((x) => <CartaoFicha key={x.ficha.slug} ficha={x.ficha} indicada novaIndicacao={x.nova} />)}</div>
+              </section>
+            ) : null}
+
             <section className="ac-atlas-trilha" aria-labelledby="t-importantes">
               <div className="ac-atlas-trilha-topo">
                 <h2 id="t-importantes">As mais importantes no campo</h2>

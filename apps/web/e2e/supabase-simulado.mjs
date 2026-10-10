@@ -159,21 +159,28 @@ const atlas_fotos = [
   { id: '64bbbbbb-0000-0000-0000-000000000001', org_id: O, ficha_id: FI.publicada, storage_path: `${O}/atlas/${FI.publicada}/f1.jpg`, legenda: null, posicao: 0, criado_em: dia(-3) + 'T10:00:00Z' },
   { id: '64bbbbbb-0000-0000-0000-000000000002', org_id: O, ficha_id: FI.publicada, storage_path: `${O}/atlas/${FI.publicada}/f2.jpg`, legenda: 'Folha atacada', posicao: 1, criado_em: dia(-3) + 'T10:05:00Z' },
 ];
+// Atlas — indicações a produtores: uma já feita para o produtor logado (ficha-base, ainda não aberta)
+const atlas_indicacoes = [
+  { id: '64cccccc-0000-0000-0000-000000000001', org_id: O, produtor_id: produtores[0].id, ficha_id: null, ficha_slug: 'ferrugem-alaranjada', titulo: 'Ferrugem-alaranjada', indicado_por: U, visita_id: null, analise_id: null, mensagem: 'Veja antes da nossa visita de quinta.', criado_em: dia(-1) + 'T10:00:00Z', aberto_em: null, produtor_id_fk: null },
+];
+for (const i of atlas_indicacoes) i.produtor = { nome: produtores[0].nome };
+// um produtor extra, só para a lista de escolha da equipe (o id precisa ser um UUID válido)
+const produtorDoAtlas = { id: 'f0000007-0000-0000-0000-000000000000', org_id: O, nome: 'Produtor de teste do Atlas', email: 'atlas@exemplo.com', telefone: null, fone: null, municipio: 'Colatina', user_id: null, cpf_cnpj: null, criado_em: dia(-5) };
 const T = {
   profiles: [{ id: U, org_id: O, role: process.env.PAPEL ?? 'consultor', nome: process.env.PAPEL === 'produtor' ? 'José da Silva Pereira' : 'Maria Souza', crea: 'ES-12345', art: null, fone: '(27) 99999-0000', titulo: 'Engenheira Agrônoma' }],
   orgs: [{ id: O, nome: 'Campo Forte Assistência Técnica', municipio: 'Colatina', uf: 'ES', plano: 'pro', cnpj: null, criado_em: dia(-200) }],
-  produtores, propriedades, talhoes, analises, visitas, visita_ocorrencias: ocorrencias, visita_fotos: fotos, agenda_eventos: agenda, notificacoes, documentos, recomendacoes,
+  produtores: [...produtores, produtorDoAtlas], propriedades, talhoes, analises, visitas, visita_ocorrencias: ocorrencias, visita_fotos: fotos, agenda_eventos: agenda, notificacoes, documentos, recomendacoes,
   vw_talhao_situacao: talhoes.map((t, i) => ({ talhao_id: t.id, nome: t.nome, cultura: t.cultura, area_ha: t.area_ha, data_coleta: analises[i % 6]?.data_coleta ?? null, situacao: ['precisa_correcao', 'em_ordem', 'sem_analise'][i % 3], produtor_id: t.produtor_id })),
   tabelas_referencia: [], financeiro_lancamentos: lancamentos, financeiro_escrit_lancamentos: lancamentos.map((l) => ({ ...l, produtor_id: null })),
   financeiro_categorias: [], financeiro_contas: [], financeiro_centros_custo: [], financeiro_orcamentos: [], financeiro_escrit_contas: [], financeiro_escrit_categorias: [],
   planos, assinaturas: [{ id: 's1', org_id: O, plano: 'pro', planos_id: 'pro', status: 'ativa', trial_expira_em: null, atual_ate: dia(20) }], cobrancas: [], convites_equipe: convitesEquipe, convites: [], compartilhamentos: [], safras: [], producao_registros: [],
   metricas_diarias: [], audit_log: auditoria, academy_conteudos, academy_publicos, academy_indicacoes,
   academy_cursos, academy_curso_modulos, academy_curso_aulas, academy_curso_publicos: [], academy_matriculas, academy_progresso, academy_certificados,
-  atendimentos, atendimento_mensagens, atendimento_arquivos, atendimento_eventos, atlas_fichas, atlas_fotos,
+  atendimentos, atendimento_mensagens, atendimento_arquivos, atendimento_eventos, atlas_fichas, atlas_fotos, atlas_indicacoes,
 };
 const TABELAS_CONNECT = ['atendimentos', 'atendimento_mensagens', 'atendimento_arquivos', 'atendimento_eventos'];
 // tabelas que guardam de verdade o que o app grava (POST/PATCH)
-const PERSISTE = [...TABELAS_CONNECT, 'atlas_fichas', 'atlas_fotos'];
+const PERSISTE = [...TABELAS_CONNECT, 'atlas_fichas', 'atlas_fotos', 'atlas_indicacoes'];
 
 // LAUDO_PAYLOAD=arquivo.json: extração (com recortes) para o laudo em conferência d0, para olhar a tela de conferência
 if (process.env.LAUDO_PAYLOAD) documentos[0].payload = JSON.parse(readFileSync(process.env.LAUDO_PAYLOAD, 'utf8'));
@@ -321,6 +328,7 @@ function atender(req, res) {
     let linhas = [...(T[tabela] ?? [])];
     // o simulador não tem RLS: para o produtor, as tabelas do Connect mostram só o que o banco mostraria
     if (papel === 'produtor' && TABELAS_CONNECT.includes(tabela)) linhas = linhas.filter((r) => r.produtor_id === produtores[0].id && !r.interna);
+    if (papel === 'produtor' && tabela === 'atlas_indicacoes') linhas = linhas.filter((r) => r.produtor_id === produtores[0].id);
     if (papel === 'produtor' && tabela === 'atlas_fichas') linhas = linhas.filter((r) => r.status === 'publicado');
     if (papel === 'produtor' && tabela === 'atlas_fotos') linhas = linhas.filter((r) => T.atlas_fichas.find((f) => f.id === r.ficha_id)?.status === 'publicado');
     for (const [k, v] of url.searchParams) {

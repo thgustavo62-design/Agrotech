@@ -793,6 +793,74 @@ const cenarios = {
     await cel.contexto.close();
   },
 
+  async atlas_indicacao() {
+    await subir();
+    const EXTRA = 'f0000007-0000-0000-0000-000000000000';
+    const FI = '64aaaaaa-0000-0000-0000-000000000001'; // ficha do escritório publicada (semente)
+    const FR = '64aaaaaa-0000-0000-0000-000000000002'; // rascunho
+
+    // produtor: a ficha indicada aparece no topo do Atlas, marcada como nova
+    const pr = await pagina({ papel: 'produtor' });
+    await pr.p.goto(SITE + '/academy/atlas', { waitUntil: 'networkidle' });
+    const sec = pr.p.locator('#t-indicadas');
+    conferir('produtor: "Indicadas para você" no topo do Atlas, com a ficha e o selo "Nova"', (await sec.count()) === 1 && (await pr.p.locator('section[aria-labelledby=t-indicadas] a.ac-atlas-cartao[href$="/ferrugem-alaranjada"]').count()) === 1 && /nova/i.test(await pr.p.locator('section[aria-labelledby=t-indicadas]').innerText()));
+    await pr.p.goto(SITE + '/academy/atlas/ferrugem-alaranjada', { waitUntil: 'networkidle' });
+    let t = await corpo(pr.p);
+    conferir('produtor: a ficha mostra "indicada para você" com o recado do agrônomo', /indicada para você/.test(t) && /Veja antes da nossa visita de quinta/.test(t));
+    conferir('produtor: não vê o formulário de indicar (é da equipe)', (await pr.p.locator('text=Indicar a um produtor').count()) === 0);
+    for (let i = 0; i < 40 && chamadas('PATCH', 'atlas_indicacoes') < 1; i++) await new Promise((r) => setTimeout(r, 150));
+    conferir('abrir a ficha registra a abertura da indicação', chamadas('PATCH', 'atlas_indicacoes') >= 1);
+    await pr.p.goto(SITE + '/academy/atlas', { waitUntil: 'networkidle' });
+    conferir('depois de aberta, o selo passa de "Nova" para "Indicada"', /indicada/i.test(await pr.p.locator('section[aria-labelledby=t-indicadas]').innerText()) && !/nova/i.test(await pr.p.locator('section[aria-labelledby=t-indicadas]').innerText()));
+    conferir('Atlas do produtor sem violação de CSP nem erro de JS', pr.problemas.length === 0, pr.problemas.join(' | '));
+    await pr.contexto.close();
+
+    // equipe com permissão: indica uma ficha-base e uma do escritório
+    const ag = await pagina({ perfis: 'agronomico' });
+    await ag.p.goto(SITE + '/academy/atlas/broca-do-cafe', { waitUntil: 'networkidle' });
+    conferir('equipe: a ficha traz "Indicar a um produtor" com a lista de produtores', (await ag.p.locator('#t-indicar').count()) === 1 && (await ag.p.locator('select[name=produtor_id] option').count()) >= 3);
+    let antes = chamadas('POST', 'atlas_indicacoes');
+    await ag.p.selectOption('select[name=produtor_id]', EXTRA);
+    await ag.p.fill('textarea[name=mensagem]', 'Confira na próxima colheita.');
+    await ag.p.click('button:has-text("Indicar ficha")');
+    await esperarEscrita('POST', 'atlas_indicacoes', antes);
+    await ag.p.waitForURL(/indicado=1/, { timeout: 8000 }).catch(() => {});
+    await ag.p.locator('.ac-atlas-ok').waitFor({ timeout: 8000 }).catch(() => {});
+    t = await corpo(ag.p);
+    conferir('indicar grava, avisa e mostra quem recebeu (ainda não abriu)', chamadas('POST', 'atlas_indicacoes') > antes && /Indicação enviada/.test(t) && /Produtor de teste do Atlas/.test(t) && /ainda não abriu/.test(t) && /Confira na próxima colheita/.test(t));
+    conferir('quem já recebeu sai da lista de escolha', (await ag.p.locator(`select[name=produtor_id] option[value="${EXTRA}"]`).count()) === 0);
+
+    await ag.p.goto(SITE + '/academy/atlas/' + FI, { waitUntil: 'networkidle' });
+    antes = chamadas('POST', 'atlas_indicacoes');
+    await ag.p.selectOption('select[name=produtor_id]', EXTRA);
+    await ag.p.click('button:has-text("Indicar ficha")');
+    await esperarEscrita('POST', 'atlas_indicacoes', antes);
+    conferir('também indica uma ficha do escritório', chamadas('POST', 'atlas_indicacoes') > antes);
+
+    await ag.p.goto(SITE + '/academy/atlas/ferrugem-alaranjada', { waitUntil: 'networkidle' });
+    antes = chamadas('DELETE', 'atlas_indicacoes');
+    await ag.p.click('button:has-text("Desfazer")');
+    for (let i = 0; i < 40 && chamadas('DELETE', 'atlas_indicacoes') <= antes; i++) await new Promise((r) => setTimeout(r, 150));
+    conferir('"Desfazer" apaga a indicação', chamadas('DELETE', 'atlas_indicacoes') > antes);
+
+    await ag.p.goto(SITE + '/academy/atlas/' + FR, { waitUntil: 'networkidle' });
+    conferir('rascunho não pode ser indicado: o formulário nem aparece', (await ag.p.locator('#t-indicar').count()) === 0);
+    await ag.contexto.close();
+
+    // perfil de consulta não indica
+    const le = await pagina({ perfis: 'leitura' });
+    await le.p.goto(SITE + '/academy/atlas/broca-do-cafe', { waitUntil: 'networkidle' });
+    conferir('perfil Consulta vê a ficha, mas não o formulário de indicar', (await le.p.locator('h1:has-text("Broca-do-café")').count()) === 1 && (await le.p.locator('#t-indicar').count()) === 0);
+    await le.contexto.close();
+
+    // celular
+    const cel = await pagina({ perfis: 'agronomico', largura: 390, altura: 844, celular: true });
+    await cel.p.goto(SITE + '/academy/atlas/broca-do-cafe', { waitUntil: 'networkidle' });
+    const larguras = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+    conferir('celular: a ficha com o formulário de indicar não rola para o lado', larguras.doc <= larguras.janela + 1, JSON.stringify(larguras));
+    await cel.contexto.close();
+  },
+
   async connect_equipe() {
     await subir();
     const AT = { folhas: '63aaaaaa-0000-0000-0000-000000000001', broca: '63aaaaaa-0000-0000-0000-000000000004' };

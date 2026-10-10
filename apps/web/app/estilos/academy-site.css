@@ -352,3 +352,14 @@ a.ac-linha:hover { background: var(--folha-clara); }
 .ac-estudio-fotos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; border: 1px solid var(--linha-forte); display: block; background: var(--papel-3); }
 .ac-estudio-fotos small { color: var(--grafite); font-size: 12px; }
 .ac-estudio-envio { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--linha); padding-top: 14px; }
+
+/* Atlas: indicar a um produtor */
+.ac-atlas-indicar { background: #fff; border: 1px solid var(--linha); border-radius: 16px; padding: 18px 20px; margin-bottom: 26px; }
+.ac-atlas-indicar h2 { font-size: 18px; margin: 0 0 12px; letter-spacing: -.01em; }
+.ac-atlas-indicar-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto; gap: 12px; align-items: end; }
+.ac-atlas-ok { background: #e7f4ec; border: 1px solid #b9dcc6; color: #1c5a37; border-radius: 10px; padding: 9px 12px; margin: 0 0 12px; font-size: 14px; }
+.ac-atlas-indicados { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ac-atlas-indicados li { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px solid var(--linha); border-radius: 12px; padding: 10px 14px; }
+.ac-atlas-indicados li > div { flex: 1 1 220px; display: flex; flex-direction: column; gap: 2px; }
+.ac-atlas-indicados small { color: var(--grafite); font-size: 12.5px; }
+@media (max-width: 760px) { .ac-atlas-indicar-form { grid-template-columns: minmax(0, 1fr); } }

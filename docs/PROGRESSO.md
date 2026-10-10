@@ -9,6 +9,12 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Atlas — fatia 3: indicar uma ficha a um produtor (2026-10-10)
+
+Quem pode indicar (Agronômico, Campo, Proprietário) escolhe o produtor na página da ficha e acompanha se ele abriu; o produtor vê "Indicadas para você" no topo do Atlas (selo Nova até abrir) e recebe aviso. Migração **0051**, 12 testes no banco (db-test 250), regras do app testadas e cenário de navegador `atlas_indicacao`. Detalhes: [ATLAS.md](ATLAS.md).
+
+---
+
 ## Atlas — fatia 2: fichas do escritório (2026-10-09)
 
 O agrônomo cadastra as próprias fichas (manual técnico) no Estúdio, com até 8 fotos; entram na mesma busca, filtros e trilhas do Atlas, com o selo "Do escritório", e podem ser apontadas nas respostas do Connect. Migração **0050** (`atlas_fichas`, `atlas_fotos`, RLS, Storage), 23 testes no banco (db-test agora 238), regras testadas no app e cenário de navegador `atlas_escritorio`. Detalhes: [ATLAS.md](ATLAS.md).
