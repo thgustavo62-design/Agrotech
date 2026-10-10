@@ -54,11 +54,13 @@ export function BarrasAgrupadas({ categorias, series, resumo }: { categorias: st
           <li key={s.nome}><i className={`gr-${s.classe}`} /> {s.nome} <b>{s.valores.reduce((a, b) => a + b, 0)}</b></li>
         ))}
       </ul>
-      <table className="gr-tabela-leitor">
+      <div className="gr-leitor">
+      <table>
         <caption>{resumo}</caption>
         <thead><tr><th>Mês</th>{series.map((s) => <th key={s.nome}>{s.nome}</th>)}</tr></thead>
         <tbody>{categorias.map((c, i) => <tr key={c}><td>{c}</td>{series.map((s) => <td key={s.nome}>{s.valores[i] ?? 0}</td>)}</tr>)}</tbody>
       </table>
+      </div>
     </figure>
   );
 }

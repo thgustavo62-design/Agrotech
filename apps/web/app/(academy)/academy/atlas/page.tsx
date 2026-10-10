@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { exigirConta } from '@/lib/guarda-de-site';
-import { FICHAS, fotosDaFicha } from '@/lib/atlas-base';
+import { FICHAS } from '@/lib/atlas-base';
 import { GRUPOS_DE_PARTE, buscarFichas, linksDePesquisa, maisImportantes, noGrupo } from '@/lib/atlas';
 import { CartaoFicha } from '@/components/atlas/cartao-ficha';
 
@@ -39,7 +39,7 @@ export default async function AtlasDeDoencasEPragas({ searchParams }: { searchPa
 
   return (
     <>
-      <section className="ac-atlas-hero" style={{ backgroundImage: `linear-gradient(100deg, rgba(20,12,3,.92) 0%, rgba(30,18,4,.72) 55%, rgba(30,18,4,.35) 100%), url(${fotosDaFicha(FICHAS[0]!)[0]})` }}>
+      <section className="ac-atlas-hero">
         <div className="ac-atlas-hero-interno">
           <p className="ac-atlas-olho">Atlas · café conilon</p>
           <h1>Reconheça doenças e pragas da sua lavoura</h1>

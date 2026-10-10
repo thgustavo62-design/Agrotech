@@ -26,7 +26,7 @@
 .gr-rosca .gr-legenda { flex: 1 1 170px; }
 
 /* só para leitor de tela */
-.gr-tabela-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.gr-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---------- panorama (início do escritório) ---------- */
 .panorama { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 14px; margin-top: 14px; align-items: stretch; }

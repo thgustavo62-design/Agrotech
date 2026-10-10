@@ -177,3 +177,12 @@
   .cn-conta-nome { display: none; }
   .cn-msg { max-width: 100%; }
 }
+
+/* celular: marca e conta na primeira linha, menu inteiro na segunda (rolável) */
+@media (max-width: 720px) {
+  .cn-topo-interno { gap: 2px 12px; padding-bottom: 8px; }
+  .cn-marca { flex: 1; }
+  .cn-menu { order: 3; flex: 1 1 100%; gap: 6px; padding-bottom: 2px; }
+  .cn-menu a { padding: 8px 14px; background: rgba(255,255,255,.06); }
+  .cn-menu a[data-ativo="true"] { background: rgba(56,189,248,.22); }
+}

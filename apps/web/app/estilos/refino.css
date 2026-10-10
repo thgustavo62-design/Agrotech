@@ -96,7 +96,8 @@ h2 { font-size: 20px; letter-spacing: -.03em; }
 
 /* ---------- topo e barra lateral ---------- */
 .topo { padding: 10px 22px; background: linear-gradient(180deg, #16231b 0%, #101914 100%); box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 6px 18px -14px rgba(0, 0, 0, .6); }
-.busca-gatilho { border-radius: 99px; padding: 7px 12px 7px 14px; border-color: #2c3a30; min-width: 230px; }
+.busca-gatilho { border-radius: 99px; padding: 7px 12px 7px 14px; border-color: #2c3a30; }
+@media (min-width: 960px) { .busca-gatilho { min-width: 230px; } }
 .lateral { width: 248px; padding: 18px 12px 90px; background: #fff; box-shadow: 1px 0 0 var(--linha); }
 .lateral-grupo { margin-bottom: 20px; }
 .lateral-grupo-titulo { padding: 0 12px 8px; font-size: 10.5px; letter-spacing: .14em; }

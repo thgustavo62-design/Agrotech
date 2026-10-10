@@ -246,7 +246,7 @@ a.ac-linha:hover { background: var(--folha-clara); }
 
 /* ---------- Atlas de doenças e pragas ---------- */
 .ac-atlas-pagina { padding-top: 22px; }
-.ac-atlas-hero { background-size: cover; background-position: center; color: #fff; }
+.ac-atlas-hero { color: #fff; background: radial-gradient(900px 340px at 85% -40px, rgba(245,178,50,.28), transparent 70%), radial-gradient(700px 300px at 0% 110%, rgba(31,90,56,.35), transparent 70%), linear-gradient(135deg, #1f1204 0%, #3a2108 60%, #4a2a08 100%); }
 .ac-atlas-hero-interno { width: 100%; max-width: 1200px; margin: 0 auto; padding: 46px 20px 40px; }
 .ac-atlas-olho { text-transform: uppercase; letter-spacing: .2em; font-size: 12px; font-weight: 700; color: var(--ac-ouro); margin: 0 0 10px; }
 .ac-atlas-hero h1 { font-size: clamp(28px, 4.4vw, 46px); line-height: 1.08; letter-spacing: -.035em; margin: 0 0 12px; max-width: 760px; }
@@ -327,3 +327,13 @@ a.ac-linha:hover { background: var(--folha-clara); }
 .ac-atlas-rodape-aviso { background: #fff; border: 1px dashed var(--linha-forte); border-radius: 12px; padding: 12px 16px; font-size: 14px; color: var(--grafite); }
 @media (max-width: 900px) { .ac-atlas-ficha { grid-template-columns: minmax(0, 1fr); } .ac-atlas-galeria { position: static; } }
 @media (max-width: 640px) { .ac-atlas-hero-interno { padding: 30px 16px 28px; } .ac-atlas-fila > * { flex-basis: 220px; } .ac-atlas-numeros b { font-size: 18px; } }
+
+/* celular: a busca do topo sai (o início e a lista de cursos têm a própria); menu rolável em linha própria */
+@media (max-width: 720px) {
+  .ac-topo .ac-busca { display: none; }
+  .ac-topo-interno { gap: 2px 12px; padding-bottom: 8px; }
+  .ac-marca { flex: 1; }
+  .ac-menu { order: 3; flex: 1 1 100%; gap: 6px; }
+  .ac-menu a { background: rgba(255,255,255,.07); padding: 8px 14px; }
+  .ac-menu a[data-ativo="true"] { background: rgba(245,178,50,.2); }
+}
