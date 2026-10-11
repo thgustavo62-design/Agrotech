@@ -9,7 +9,8 @@ Detalhe de cada entrega: [PROGRESSO.md](PROGRESSO.md). Banco: migrações `0046`
 
 | Tela | O que tem |
 |---|---|
-| **Início** (`/academy`) | Hero com busca, "Continue de onde parou", "Indicado pelo seu agrônomo", cursos para você, explorar por tema, aulas avulsas, notícias do agro |
+| **Início** (`/academy`) | Apresentação geral, no molde do SENAR EAD: título "Explore tudo o que você pode aprender", números reais (cursos, aulas e materiais, fichas do Atlas), mosaico de fotos do Atlas, busca em faixa, "Continue de onde parou", "Indicado pelo seu agrônomo", curso em destaque, "Como você quer aprender?" (6 formatos com a contagem real), novidade do Atlas, cursos, temas, notícias e rodapé completo |
+| **Aulas e materiais** (`/academy/biblioteca`) | Vídeos, artigos e cartilhas fora de curso, com filtro por formato e tema |
 | **Cursos** (`/academy/cursos`) | Catálogo com busca (sem acento) e filtros por tema, nível e cultura; aulas avulsas que combinam com a busca |
 | **Curso** (`/academy/cursos/[id]`) | Capa, resumo, "sobre", módulos e aulas (com ✓ nas concluídas), progresso, "Começar/Continuar", certificado quando concluído |
 | **Aula** (`/academy/aula/[id]`) | Vídeo (o player do YouTube/Vimeo só carrega depois do clique), artigo, material ou notícia; roteiro do curso ao lado; "Concluir e ir para a próxima" |

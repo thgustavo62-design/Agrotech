@@ -9,6 +9,10 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Academy — primeira página de apresentação (2026-10-11)
+
+- `/academy` reescrita como apresentação geral: hero com números reais, vitrine em mosaico, busca em faixa, banner do curso em destaque, 6 cartões de formato, faixa do Atlas, rodapé em colunas. Nova `/academy/biblioteca` (aulas e materiais avulsos, filtros por formato e tema). Ícones em `components/academy/icones-formato.tsx`. CSS no fim de `academy-site.css`. Verificado no cenário e2e `academy_aluno`.
+
 ## Academy — painel de uso (2026-10-11)
 
 Estúdio → **Uso** (`/academy/estudio/uso`): produtores ativos nos últimos 30 dias, matrículas, taxa de conclusão e certificados; tabela de cursos (matriculados, concluídos, taxa); aulas mais concluídas; atividade dos 6 meses; lista de produtores com última atividade e indicações sem abrir; e **indicações para cobrar** (sem abrir há 7 dias ou mais, de conteúdo, curso e ficha do Atlas), além dos pedidos do Connect que nasceram de uma ficha. **Sem mudança no banco**: soma o que já existe (a RLS limita ao escritório). Regras puras em `lib/academy-uso.ts` (9 testes) e cenário de navegador `academy_uso`. Indicação enviada e não aberta não conta como atividade do produtor. Detalhes em [ACADEMY.md](ACADEMY.md).

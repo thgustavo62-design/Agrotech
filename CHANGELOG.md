@@ -3,6 +3,10 @@
 O que mudou no AgroTech, mais recente primeiro. Detalhe técnico de cada entrega: [docs/PROGRESSO.md](docs/PROGRESSO.md).
 Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produção só depois dos testes.
 
+## 2026-10-11
+
+- **Primeira página da Academy como apresentação geral** (no molde do SENAR EAD): título de boas-vindas, números reais (cursos, aulas e materiais, fichas do Atlas), fotos do Atlas, busca em destaque, curso em destaque, "Como você quer aprender?" com seis formatos (cursos, vídeos, artigos, cartilhas, Atlas, notícias), faixa de novidade e rodapé completo com conferência de certificado. Nova tela **Aulas e materiais** com filtro por formato. Ver [docs/ACADEMY.md](docs/ACADEMY.md).
+
 ## 2026-10-09
 
 - **Painel de uso da Academy** (Estúdio → Uso): quantos produtores estão ativos, matrículas e taxa de conclusão por curso, as aulas mais concluídas, a atividade dos últimos 6 meses, quem ainda não acessou e as **indicações sem resposta há 7 dias ou mais** (conteúdos, cursos e fichas do Atlas) para a equipe cobrar. Tudo calculado do que os produtores fizeram; sem rastrear navegação.

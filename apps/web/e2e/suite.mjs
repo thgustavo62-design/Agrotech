@@ -351,7 +351,19 @@ const cenarios = {
     // vitrine
     await pr.p.goto(SITE + '/academy', { waitUntil: 'networkidle' });
     let t = await corpo(pr.p);
-    conferir('início: hero, busca e faixa de números', (await pr.p.locator('.ac-hero').count()) === 1 && /Aprenda no seu ritmo/.test(t) && (await pr.p.locator('.ac-busca-grande input').count()) === 1);
+    conferir('início: abertura de apresentação (título, busca e atalho para os cursos)', (await pr.p.locator('.ac-hero.ac-apresentacao').count()) === 1 && /Explore tudo o que você pode aprender/.test(t) && (await pr.p.locator('.ac-busca-grande input').count()) === 1 && (await pr.p.locator('.ac-vitrine a:has-text("Ver os cursos")').count()) === 1);
+    const numeros = (await pr.p.locator('.ac-numeros-apresentacao').innerText()).replace(/\s+/g, ' ');
+    conferir('início: os três números são os reais (2 cursos publicados, 3 aulas e materiais, 19+1 fichas)', /2 cursos/.test(numeros) && /3 aulas e materiais/.test(numeros) && /20 fichas/.test(numeros), numeros);
+    const formatosTxt = (await pr.p.locator('.ac-formatos').innerText()).replace(/\s+/g, ' ');
+    conferir('início: "Como você quer aprender?" com os 6 formatos e as quantidades', (await pr.p.locator('.ac-formato').count()) === 6 && /2 cursos/.test(formatosTxt) && /1 vídeo/.test(formatosTxt) && /20 fichas/.test(formatosTxt) && /1 notícia/.test(formatosTxt), formatosTxt);
+    conferir('início: banner do curso em destaque e a faixa de novidade do Atlas', (await pr.p.locator('.ac-banner-destaque').count()) === 1 && /Calagem e adubação do café na prática/.test(await pr.p.locator('.ac-banner-destaque').innerText()) && /novidade/i.test(await pr.p.locator('.ac-novidade').innerText()) && (await pr.p.locator('.ac-novidade a:has-text("Conhecer o Atlas")').count()) === 1);
+    conferir('início: rodapé completo com colunas e a conferência de certificado', (await pr.p.locator('.ac-rodape-colunas nav').count()) === 3 && (await pr.p.locator('.ac-rodape-colunas a[href="/validar"]').count()) === 1 && (await pr.p.locator('.ac-rodape-colunas a[href="/academy/atlas"]').count()) === 1 && /Leve no celular/.test(await pr.p.locator('.ac-rodape-app').innerText()));
+    await pr.p.goto(SITE + '/academy/biblioteca', { waitUntil: 'networkidle' });
+    conferir('aulas e materiais: lista as aulas avulsas e oferece os filtros por formato', (await pr.p.locator('a.ac-aula-cartao').count()) >= 1 && (await pr.p.locator('.ac-atlas-chips a').count()) === 4);
+    await pr.p.goto(SITE + '/academy/biblioteca?tipo=video', { waitUntil: 'networkidle' });
+    conferir('aulas e materiais: filtro "Vídeos" mostra só vídeo', (await pr.p.locator('a.ac-aula-cartao').count()) === 1 && /Calagem na prática/.test(await corpo(pr.p)));
+    await pr.p.goto(SITE + '/academy', { waitUntil: 'networkidle' });
+    t = await corpo(pr.p);
     conferir('início: "Continue de onde parou" com o curso em andamento', /continue de onde parou/i.test(t) && /Calagem e adubação do café na prática/.test(t));
     conferir('início: "Indicado pelo seu agrônomo" e temas', /indicado pelo seu agrônomo/i.test(t) && (await pr.p.locator('.ac-tema').count()) >= 2);
     conferir('início: notícias do agro com fonte', /Notícias do agro/.test(t) && /Chuva volta ao Norte do ES/.test(t));
