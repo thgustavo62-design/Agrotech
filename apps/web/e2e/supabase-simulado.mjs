@@ -302,6 +302,13 @@ function atender(req, res) {
     if (fn === 'painel_consultor') return json(painel);
     if (fn === 'tenho_feature') return json(true);
     if (fn === 'producao_visivel_consultor' || fn === 'casar_produtor') return json([]);
+    if (fn === 'certificado_publico') { // só o que está impresso no certificado, e só com o código certo (0053)
+      return corpoJson(req, (b) => {
+        const cod = String(b.p_codigo ?? '').trim().toUpperCase();
+        const c = /^AT-[0-9A-F]{5}-[0-9A-F]{5}$/.test(cod) ? T.academy_certificados.find((x) => x.codigo === cod) : null;
+        json(c ? [{ aluno_nome: c.aluno_nome, titulo_curso: c.titulo_curso, escritorio_nome: c.escritorio_nome, emitido_em: c.emitido_em, carga_min: c.carga_min, aulas: c.aulas, responsavel_nome: c.responsavel_nome }] : []);
+      });
+    }
     if (fn === 'avaliar_atendimento') { // regras da função do banco (0049), no essencial
       return corpoJson(req, (b) => {
         const a = T.atendimentos.find((x) => x.id === b.p_id);

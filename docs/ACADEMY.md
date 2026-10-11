@@ -40,6 +40,10 @@ Abrir a primeira aula de um curso matricula o aluno; concluir todas as aulas con
 
 É **certificado de participação do escritório**. O texto da tela diz que não equivale a certificação acadêmica nem a habilitação profissional e que a carga horária é a **prevista** nas aulas (soma da duração declarada), não tempo medido. A conferência é pelo código (`AT-XXXXX-XXXXX`): hoje o aluno informa o código ao escritório; uma página pública de validação exigiria abrir uma função ao público e fica para quando for decidido.
 
+## Conferência pública do certificado
+
+Quem recebe um certificado confere em **`/validar`** (sem login): digita o código `AT-XXXXX-XXXXX` (minúsculas, espaços e travessões são tolerados) e vê, se for verdadeiro, **participante, curso concluído, data, aulas/carga prevista e escritório emissor**. Nada além do que está impresso: sem CREA, ids ou e-mail. O código é o segredo de quem mostra o certificado (cerca de 10^12 possibilidades). Código inexistente → "não encontrado" com a orientação de não aceitar o certificado; fora do formato → recusado antes de consultar. A função do banco é `agro.certificado_publico(codigo)` (migração 0053), executável por `anon` — a quarta função pública, listada no teste de segurança. O certificado traz o endereço de conferência e um atalho para a página.
+
 ## Decisões
 
 - **Vídeo embutido só do YouTube (modo sem cookies) e do Vimeo**, depois do clique. A CSP ganhou `frame-src` apenas com esses dois endereços; o identificador do vídeo é conferido letra a letra antes de ir para o iframe.
@@ -48,8 +52,9 @@ Abrir a primeira aula de um curso matricula o aluno; concluir todas as aulas con
 
 ## O que falta
 
-1. **Atlas de doenças e pragas** (fichas editoriais) e **suspeita fitossanitária com fotos** ao consultor — esta última depende do Connect (pedido com foto).
-2. Botão **"Indicar conteúdo"** dentro das telas de visita e de laudo da Assistência (a indicação já aceita o contexto `?produtor=&visita=&analise=`).
-3. **Quiz** por aula/curso com nota mínima para concluir.
-4. **Painel de uso** (quem acessou, quais aulas funcionam) e página pública de **validação do certificado**.
-5. Pré-requisitos do plano de expansão: backup dos arquivos do Storage (inclui o bucket `academy`), staging, proteção da `main`, textos jurídicos revisados.
+Feito desde a primeira versão: Atlas de doenças e pragas (fichas da Embrapa e do escritório, indicação ao produtor, atalho nas telas de análise e visita — ver [ATLAS.md](ATLAS.md)), pedido com foto no Connect, conferência pública do certificado.
+
+1. **Quiz** por aula/curso com nota mínima para concluir.
+2. **Painel de uso** (quem acessou, quais aulas funcionam, quanto tempo falta para concluir).
+3. Botão **"Indicar conteúdo"** (vídeo/artigo/curso da biblioteca) nas telas de visita e de análise, como já existe para as fichas do Atlas (a indicação já aceita o contexto `?produtor=&visita=&analise=`).
+4. Pré-requisitos do plano de expansão: backup dos arquivos do Storage (inclui os buckets `academy` e `atendimentos`), staging, proteção da `main`, textos jurídicos revisados.

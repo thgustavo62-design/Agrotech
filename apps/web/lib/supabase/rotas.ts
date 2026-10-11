@@ -10,7 +10,7 @@ import { destinoDoSite, loginDoSite, type SiteId } from '../sites';
 export type Papel = 'consultor' | 'admin' | 'produtor' | null;
 
 /** Rotas que nunca exigem nem consultam a sessão. */
-const PUBLICAS = ['/demo', '/r', '/offline', '/icones-pwa', '/privacidade', '/termos', '/api/saude'];
+const PUBLICAS = ['/demo', '/r', '/validar', '/offline', '/icones-pwa', '/privacidade', '/termos', '/api/saude'];
 const PUBLICAS_EXATAS = ['/sw.js', '/manifest.webmanifest'];
 
 const noSegmento = (caminho: string, base: string) => caminho === base || caminho.startsWith(base + '/');

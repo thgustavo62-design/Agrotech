@@ -415,6 +415,29 @@ const cenarios = {
     t = await corpo(pr.p);
     conferir('certificado: aluno, curso, responsável e código', /José da Silva Pereira/.test(t) && /Manejo de pragas e doenças do cafeeiro/.test(t) && /AT-1A2B3-C4D5E/.test(t) && /CREA ES-12345/.test(t));
     conferir('certificado: diz que é de participação e não equivale a certificação', /não equivale a certificação acadêmica/i.test(t));
+    conferir('certificado: mostra o endereço público de conferência e o atalho para a página', /\/validar\?codigo=AT-1A2B3-C4D5E/.test(await corpo(pr.p)) && (await pr.p.locator('a[href="/validar?codigo=AT-1A2B3-C4D5E"]').count()) === 1);
+    // conferência pública: qualquer pessoa, sem login
+    const publico = await pagina({ anonimo: true });
+    await publico.p.goto(SITE + '/validar?codigo=AT-1A2B3-C4D5E', { waitUntil: 'networkidle' });
+    t = await corpo(publico.p);
+    conferir('conferência pública: o código certo mostra "verdadeiro" com o que está impresso, sem pedir login', /Certificado verdadeiro/.test(t) && /José da Silva Pereira/.test(t) && /Manejo de pragas e doenças do cafeeiro/.test(t) && /Campo Forte Assistência Técnica/.test(t) && /\/validar/.test(publico.p.url()));
+    conferir('conferência pública: não mostra o CREA nem dados internos', !/ES-12345/.test(t) && !/62fffff2/.test(t));
+    await publico.p.goto(SITE + '/validar?codigo=' + encodeURIComponent('  at 1a2b3 c4d5e '), { waitUntil: 'networkidle' });
+    conferir('conferência pública: minúsculas e espaços não atrapalham', /Certificado verdadeiro/.test(await corpo(publico.p)));
+    await publico.p.goto(SITE + '/validar?codigo=AT-00000-00000', { waitUntil: 'networkidle' });
+    conferir('conferência pública: código que não existe → "não encontrado" e orienta a não aceitar', /Certificado não encontrado/.test(await corpo(publico.p)) && /Não aceite o certificado/.test(await corpo(publico.p)));
+    await publico.p.goto(SITE + "/validar?codigo=abc'%20or%201=1", { waitUntil: 'networkidle' });
+    conferir('conferência pública: texto fora do formato é recusado antes de consultar', /Código em formato inválido/.test(await corpo(publico.p)));
+    await publico.p.goto(SITE + '/validar', { waitUntil: 'networkidle' });
+    conferir('conferência pública: sem código mostra só o formulário', (await publico.p.locator('input[name=codigo]').count()) === 1 && !/não encontrado|verdadeiro|formato inválido/i.test(await corpo(publico.p)));
+    conferir('conferência pública: sem violação de CSP nem erro de JS', publico.problemas.length === 0, publico.problemas.join(' | '));
+    await publico.contexto.close();
+    const celPub = await pagina({ anonimo: true, largura: 390, altura: 844, celular: true });
+    await celPub.p.goto(SITE + '/validar?codigo=AT-1A2B3-C4D5E', { waitUntil: 'networkidle' });
+    const largPub = await celPub.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+    conferir('celular: a conferência pública não rola para o lado', largPub.doc <= largPub.janela + 1, JSON.stringify(largPub));
+    await celPub.contexto.close();
+
     await pr.p.goto(SITE + '/academy/noticias', { waitUntil: 'networkidle' });
     conferir('notícias: lista com a notícia do escritório', (await pr.p.locator('.ac-aula-cartao').count()) === 1);
     conferir('o aluno não vê o Estúdio no menu', (await pr.p.locator('.ac-menu a:has-text("Estúdio")').count()) === 0);

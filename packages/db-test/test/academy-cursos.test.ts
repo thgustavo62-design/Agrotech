@@ -293,6 +293,35 @@ describe('concluir o curso emite o certificado', () => {
     await como(db, ID.consultorB, async () => expect(await contar(db, `select count(*) n from agro.academy_certificados`)).toBe(0));
   });
 
+  it('conferência pública: com o código certo, sem login, devolve só o que está impresso', async () => {
+    const codigo = (await db.query<{ codigo: string }>(`select codigo from agro.academy_certificados limit 1`)).rows[0]!.codigo;
+    await db.query("select set_config('request.jwt.claims', '', false)");
+    await db.exec('set role anon');
+    try {
+      const { rows } = await db.query<Record<string, unknown>>(`select * from agro.certificado_publico('${codigo}')`);
+      expect(rows).toHaveLength(1);
+      expect(Object.keys(rows[0]!).sort()).toEqual(['aluno_nome', 'aulas', 'carga_min', 'emitido_em', 'escritorio_nome', 'responsavel_nome', 'titulo_curso']);
+      expect(rows[0]).toMatchObject({ aluno_nome: 'Produtor A', titulo_curso: 'Fundamentos da análise de solo', escritorio_nome: 'Campo Forte Assistência' });
+      // minúsculas e espaços não atrapalham quem digitou
+      expect((await db.query(`select * from agro.certificado_publico('  ${codigo.toLowerCase()} ')`)).rows).toHaveLength(1);
+    } finally {
+      await db.exec('reset role');
+    }
+  });
+
+  it('conferência pública: código errado, mal formado ou vazio não devolve nada (e anon continua sem acesso à tabela)', async () => {
+    await db.query("select set_config('request.jwt.claims', '', false)");
+    await db.exec('set role anon');
+    try {
+      for (const ruim of ['AT-00000-00000', 'AT-ZZZZZ-ZZZZZ', "x' or '1'='1", '', '%', 'AT-1A2B3-C4D5E-EXTRA']) {
+        expect((await db.query(`select * from agro.certificado_publico($1)`, [ruim])).rows, ruim).toHaveLength(0);
+      }
+      await expect(db.query('select * from agro.academy_certificados')).rejects.toThrow();
+    } finally {
+      await db.exec('reset role');
+    }
+  });
+
   it('o produtor não escreve nem apaga certificado, e a equipe também não', async () => {
     await como(db, ID.produtorA, async () => {
       expect(await tenta(`insert into agro.academy_certificados (org_id, curso_id, produtor_id, codigo, titulo_curso, aluno_nome, escritorio_nome) values ('${ID.orgA}','${K.sel}','${ID.cadA}','AT-FORJA-00000','x','x','x')`)).toBe('42501');

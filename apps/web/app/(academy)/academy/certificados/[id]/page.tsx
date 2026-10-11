@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
+import { enderecoDeConferencia } from '@/lib/certificado';
 import { exigirConta } from '@/lib/guarda-de-site';
 import { formatarCarga } from '@/lib/academy-cursos';
 import { dataBR } from '@/lib/formato';
@@ -35,12 +37,18 @@ export default async function PaginaDoCertificado({ params }: { params: Promise<
     .eq('id', id).maybeSingle();
   if (!data) notFound();
   const c = data as unknown as Certificado;
+  // endereço onde qualquer pessoa confere este certificado pelo código (sem login)
+  const h = await headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host');
+  const base = process.env.NEXT_PUBLIC_APP_URL?.trim() || (host ? `${h.get('x-forwarded-proto') ?? 'https'}://${host}` : '');
+  const endereco = enderecoDeConferencia(base, c.codigo);
 
   return (
     <main className="ac-principal">
       <div className="nao-imprime" style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
         <BotaoImprimir />
         <Link className="btn sec" href="/academy/meus-cursos?aba=concluidos">Voltar</Link>
+        <Link className="btn sec" href={`/validar?codigo=${encodeURIComponent(c.codigo)}`} target="_blank" rel="noopener">Ver a página de conferência</Link>
       </div>
 
       <section className="ac-certificado" aria-label={`Certificado de participação de ${c.aluno_nome}`}>
@@ -72,7 +80,7 @@ export default async function PaginaDoCertificado({ params }: { params: Promise<
         <p className="ac-cert-aviso">
           Certificado de participação emitido pelo escritório indicado, com base nas aulas concluídas na AgroTech Academy.
           A carga horária é a prevista nas aulas, não tempo medido. Não equivale a certificação acadêmica nem a habilitação profissional.
-          Para conferir a autenticidade, informe o código ao escritório.
+          Para conferir a autenticidade, acesse <b>{endereco.replace(/^https?:\/\//, '')}</b> ou informe o código ao escritório.
         </p>
       </section>
     </main>

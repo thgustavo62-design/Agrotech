@@ -9,6 +9,12 @@ abaixo (que seguem o roadmap original de `AGROTECH.md`).
 
 ---
 
+## Academy — conferência pública do certificado (2026-10-11)
+
+`/validar?codigo=AT-XXXXX-XXXXX` (sem login): "Certificado verdadeiro" com participante, curso, data, aulas/carga e escritório — nunca CREA, ids ou e-mail; código errado ou fora do formato é recusado. Migração **0053** (`certificado_publico`, a **quarta** função liberada ao público; o teste de segurança lista as quatro), 2 testes de banco (db-test 258), regras do código digitado em `lib/certificado.ts` e cenário de navegador no `academy_aluno`. O certificado impresso passou a trazer o endereço de conferência. Detalhes em [ACADEMY.md](ACADEMY.md).
+
+---
+
 ## Avisos no celular — Web Push (2026-10-10)
 
 Próximo passo recomendado e aprovado pelo dono: o produtor precisa saber que o técnico respondeu sem abrir o site. Migração **0052** (`push_assinaturas`, marca de envio nas notificações), despacho depois das ações do servidor, service worker com aviso e abertura da tela certa, bloco "Avisos no celular" nas telas de avisos (produtor e equipe). 6 testes no banco (db-test 256), testes de conteúdo/despacho e cenários de navegador. **Para ligar em produção:** colocar `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` na Vercel e reimplantar — ver [AVISOS-NO-CELULAR.md](AVISOS-NO-CELULAR.md).

@@ -47,11 +47,11 @@ describe('catálogo do schema agro', () => {
     expect(rows.map((r) => r.proname)).toEqual([]);
   });
 
-  it('a única superfície executável por anon são as três funções com token (0034)', async () => {
+  it('a única superfície executável por anon são as três funções com token (0034) e a conferência pública de certificado (0053)', async () => {
     const { rows } = await db.query<{ proname: string }>(`
       select distinct p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'agro' and has_function_privilege('anon', p.oid, 'execute') order by 1`);
-    expect(rows.map((r) => r.proname)).toEqual(['convite_equipe_resumo', 'convite_resumo', 'resultados_por_token']);
+    expect(rows.map((r) => r.proname)).toEqual(['certificado_publico', 'convite_equipe_resumo', 'convite_resumo', 'resultados_por_token']);
   });
 
   it('toda chave estrangeira simples tem índice na coluna filha (0036)', async () => {
