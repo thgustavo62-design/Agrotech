@@ -953,6 +953,39 @@ const cenarios = {
     await cel.contexto.close();
   },
 
+  async academy_uso() {
+    await subir();
+    const ag = await pagina({ perfis: 'agronomico' });
+    await ag.p.goto(SITE + '/academy/estudio/uso', { waitUntil: 'networkidle' });
+    let t = (await corpo(ag.p)).replace(/\s+/g, ' ');
+    conferir('Estúdio: aba "Uso" no menu e o painel abre', (await ag.p.locator('.ac-estudio-abas a:has-text("Uso")').count()) === 1 && /Como a Academy está sendo usada/.test(t));
+    const metricas = await ag.p.locator('.metrica').allInnerTexts();
+    const m = metricas.map((x) => x.replace(/\s+/g, ' ').trim());
+    conferir('números: 1 produtor ativo em 7, 2 matrículas (1 concluída), taxa 50%, 2 aulas concluídas', m.some((x) => /ativos \(30 dias\)\s*1/i.test(x) && /de 7 cadastrados/.test(x)) && m.some((x) => /Matrículas\s*2/i.test(x) && /1 concluída/.test(x)) && m.some((x) => /Taxa de conclusão\s*50%/i.test(x) && /1 certificado/.test(x)) && m.some((x) => /Aulas concluídas\s*2/i.test(x)), m.join(' | '));
+    conferir('indicações: 5 enviadas e 4 sem abrir (conteúdo, curso e ficha do Atlas juntos)', m.some((x) => /Indicações enviadas\s*5/i.test(x)) && m.some((x) => /Indicações sem abrir\s*4/i.test(x)), m.join(' | '));
+    conferir('gráfico de atividade dos 6 meses com as 3 séries', (await ag.p.locator('svg.gr .gr-barra').count()) === 18 && /Matrículas/.test(await ag.p.locator('.gr-legenda').innerText()));
+    const cobrar = (await ag.p.locator('text=Indicações sem resposta há 7 dias ou mais').locator('xpath=ancestor::div[contains(@class,"cartao")]').innerText()).replace(/\s+/g, ' ');
+    conferir('para cobrar: só a indicação antiga (12 dias, Maria); as recentes não aparecem', /Cercosporiose/.test(cobrar) && /12 dias sem abrir/.test(cobrar) && /Maria Aparecida Souza/.test(cobrar) && !/Ferrugem/.test(cobrar), cobrar);
+    const cursos = (await ag.p.locator('.rolagem table').nth(0).innerText()).replace(/\s+/g, ' ');
+    conferir('cursos: os dois com matrícula; o de pragas com 100% de conclusão', /Calagem e adubação do café na prática/.test(cursos) && /Manejo de pragas e doenças do cafeeiro/.test(cursos) && /100%/.test(cursos), cursos);
+    const linhasAlunos = await ag.p.locator('.rolagem table').nth(2).locator('tbody tr').allInnerTexts();
+    conferir('produtores: 7 linhas, o ativo primeiro e quem nunca acessou marcado', linhasAlunos.length === 7 && /José da Silva Pereira/.test(linhasAlunos[0] ?? '') && linhasAlunos.some((l) => /Maria Aparecida Souza/.test(l) && /ainda não acessou/.test(l)), linhasAlunos[0] ?? '');
+    conferir('o painel explica o que conta como atividade (e que não mede tempo de tela)', /não mede tempo de tela/.test(t));
+    conferir('painel de uso sem violação de CSP nem erro de JS', ag.problemas.length === 0, ag.problemas.join(' | '));
+    await ag.contexto.close();
+
+    const pr = await pagina({ papel: 'produtor' });
+    await pr.p.goto(SITE + '/academy/estudio/uso', { waitUntil: 'networkidle' });
+    conferir('o produtor não entra no painel de uso (volta para a vitrine)', /\/academy$/.test(pr.p.url()), pr.p.url());
+    await pr.contexto.close();
+
+    const cel = await pagina({ perfis: 'agronomico', largura: 390, altura: 844, celular: true });
+    await cel.p.goto(SITE + '/academy/estudio/uso', { waitUntil: 'networkidle' });
+    const larg = await cel.p.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: window.innerWidth }));
+    conferir('celular: o painel de uso não rola para o lado', larg.doc <= larg.janela + 1, JSON.stringify(larg));
+    await cel.contexto.close();
+  },
+
   async connect_equipe() {
     await subir();
     const AT = { folhas: '63aaaaaa-0000-0000-0000-000000000001', broca: '63aaaaaa-0000-0000-0000-000000000004' };

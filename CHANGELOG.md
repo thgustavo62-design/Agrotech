@@ -5,6 +5,7 @@ Migrações do banco entram numeradas (`0037`…); cada uma é aplicada em produ
 
 ## 2026-10-09
 
+- **Painel de uso da Academy** (Estúdio → Uso): quantos produtores estão ativos, matrículas e taxa de conclusão por curso, as aulas mais concluídas, a atividade dos últimos 6 meses, quem ainda não acessou e as **indicações sem resposta há 7 dias ou mais** (conteúdos, cursos e fichas do Atlas) para a equipe cobrar. Tudo calculado do que os produtores fizeram; sem rastrear navegação.
 - **Conferir certificado pelo código, sem login:** qualquer pessoa (um banco, uma cooperativa) confere em `/validar` se um certificado da Academy é verdadeiro; a página mostra só o que está impresso nele (participante, curso, data, escritório). O certificado agora traz o endereço de conferência. Migração `0053`.
 - **Avisos no celular:** quem liga o aviso (botão "Ligar avisos" em Avisos/Notificações) recebe no celular, mesmo com o site fechado, o que o AgroTech tiver para a pessoa — "o técnico respondeu seu pedido", novo pedido para a equipe, ficha indicada, recomendação nova. Sem custo (push do navegador). Migração `0052`. Ver [docs/AVISOS-NO-CELULAR.md](docs/AVISOS-NO-CELULAR.md).
 - **Atalho "Indicar ficha"** na análise e nas visitas do talhão: abre o Atlas com o produtor já escolhido e a indicação sai ligada à visita ou análise.

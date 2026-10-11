@@ -163,7 +163,8 @@ const atlas_fotos = [
 const atlas_indicacoes = [
   { id: '64cccccc-0000-0000-0000-000000000001', org_id: O, produtor_id: produtores[0].id, ficha_id: null, ficha_slug: 'ferrugem-alaranjada', titulo: 'Ferrugem-alaranjada', indicado_por: U, visita_id: null, analise_id: null, mensagem: 'Veja antes da nossa visita de quinta.', criado_em: dia(-1) + 'T10:00:00Z', aberto_em: null, produtor_id_fk: null },
 ];
-for (const i of atlas_indicacoes) i.produtor = { nome: produtores[0].nome };
+atlas_indicacoes.push({ id: '64cccccc-0000-0000-0000-000000000002', org_id: O, produtor_id: produtores[1].id, ficha_id: null, ficha_slug: 'cercosporiose', titulo: 'Cercosporiose', indicado_por: U, visita_id: null, analise_id: null, mensagem: null, criado_em: dia(-12) + 'T10:00:00Z', aberto_em: null });
+for (const i of atlas_indicacoes) i.produtor = { nome: i.produtor_id === produtores[0].id ? produtores[0].nome : produtores[1].nome };
 // um produtor extra, só para a lista de escolha da equipe (o id precisa ser um UUID válido)
 const produtorDoAtlas = { id: 'f0000007-0000-0000-0000-000000000000', org_id: O, nome: 'Produtor de teste do Atlas', email: 'atlas@exemplo.com', telefone: null, fone: null, municipio: 'Colatina', user_id: null, cpf_cnpj: null, criado_em: dia(-5) };
 const T = {

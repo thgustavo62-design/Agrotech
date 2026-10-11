@@ -9,6 +9,7 @@ const ABAS = [
   { href: '/academy/estudio/cursos', rotulo: 'Cursos' },
   { href: '/academy/estudio/conteudos', rotulo: 'Conteúdos' },
   { href: '/academy/estudio/atlas', rotulo: 'Atlas' },
+  { href: '/academy/estudio/uso', rotulo: 'Uso' },
 ];
 
 export function AbasDoEstudio() {

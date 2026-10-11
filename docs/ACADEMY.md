@@ -44,6 +44,10 @@ Abrir a primeira aula de um curso matricula o aluno; concluir todas as aulas con
 
 Quem recebe um certificado confere em **`/validar`** (sem login): digita o código `AT-XXXXX-XXXXX` (minúsculas, espaços e travessões são tolerados) e vê, se for verdadeiro, **participante, curso concluído, data, aulas/carga prevista e escritório emissor**. Nada além do que está impresso: sem CREA, ids ou e-mail. O código é o segredo de quem mostra o certificado (cerca de 10^12 possibilidades). Código inexistente → "não encontrado" com a orientação de não aceitar o certificado; fora do formato → recusado antes de consultar. A função do banco é `agro.certificado_publico(codigo)` (migração 0053), executável por `anon` — a quarta função pública, listada no teste de segurança. O certificado traz o endereço de conferência e um atalho para a página.
 
+## Painel de uso (Estúdio → Uso)
+
+A equipe vê como a Academy está sendo usada, sem rastrear navegação: **matrículas, aulas iniciadas/concluídas, certificados e indicações** (de conteúdo, de curso e de ficha do Atlas). Mostra produtores ativos nos últimos 30 dias, taxa de conclusão por curso, aulas mais concluídas, atividade por mês e, por produtor, a última atividade e as indicações sem abrir; a lista **"para cobrar"** reúne as indicações sem resposta há 7 dias ou mais. Também conta quantos pedidos do Connect nasceram de uma ficha do Atlas. "Atividade" = matrícula, aula iniciada ou concluída, indicação aberta. A Academy **não mede tempo de tela** nem por onde a pessoa navegou. Código: `lib/academy-uso.ts` (regras puras, testadas) e `app/(academy)/academy/estudio/uso/page.tsx`.
+
 ## Decisões
 
 - **Vídeo embutido só do YouTube (modo sem cookies) e do Vimeo**, depois do clique. A CSP ganhou `frame-src` apenas com esses dois endereços; o identificador do vídeo é conferido letra a letra antes de ir para o iframe.
@@ -55,6 +59,5 @@ Quem recebe um certificado confere em **`/validar`** (sem login): digita o códi
 Feito desde a primeira versão: Atlas de doenças e pragas (fichas da Embrapa e do escritório, indicação ao produtor, atalho nas telas de análise e visita — ver [ATLAS.md](ATLAS.md)), pedido com foto no Connect, conferência pública do certificado.
 
 1. **Quiz** por aula/curso com nota mínima para concluir.
-2. **Painel de uso** (quem acessou, quais aulas funcionam, quanto tempo falta para concluir).
-3. Botão **"Indicar conteúdo"** (vídeo/artigo/curso da biblioteca) nas telas de visita e de análise, como já existe para as fichas do Atlas (a indicação já aceita o contexto `?produtor=&visita=&analise=`).
-4. Pré-requisitos do plano de expansão: backup dos arquivos do Storage (inclui os buckets `academy` e `atendimentos`), staging, proteção da `main`, textos jurídicos revisados.
+2. Botão **"Indicar conteúdo"** (vídeo/artigo/curso da biblioteca) nas telas de visita e de análise, como já existe para as fichas do Atlas (a indicação já aceita o contexto `?produtor=&visita=&analise=`).
+3. Pré-requisitos do plano de expansão: backup dos arquivos do Storage (inclui os buckets `academy` e `atendimentos`), staging, proteção da `main`, textos jurídicos revisados.
